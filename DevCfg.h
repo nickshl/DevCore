@@ -56,6 +56,7 @@
 
 // Include for all hardware stuff
 #include "main.h"
+#include "stm32f4xx.h"
 
 // ***   ADC   *****************************************************************
 #ifdef HAL_ADC_MODULE_ENABLED

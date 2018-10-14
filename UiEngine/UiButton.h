@@ -85,6 +85,11 @@ class UiButton : public VisObject
                      void* clbk_ptr, void* clbk_param_ptr, uint32_t clbk_param);
 
     // *************************************************************************
+    // ***   SetActive   *******************************************************
+    // *************************************************************************
+    void SetActive(bool is_active) {active = is_active;}
+
+    // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
@@ -100,10 +105,13 @@ class UiButton : public VisObject
     virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty);
 
   private:
-    // Callback params
+    // Callback function pointer
     void (*callback)(void* ptr, void* param_ptr, uint32_t param) = nullptr;
+    // Pointer to something(usually object)
     void* ptr = nullptr;
+    // Callback parameter pointer
     void* param_ptr = nullptr;
+    // Callback parameter
     uint32_t param = 0U;
     // String pointer
     const char* str = nullptr;
