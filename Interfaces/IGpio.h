@@ -1,18 +1,19 @@
 //******************************************************************************
-//  @file String.h
+//  @file IIic.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: String Visual Object Class, header
+//  @details DevCore: GPIO driver interface, header
 //
 //  @section LICENSE
 //
-//   Software License Agreement (BSD License)
+//   Software License Agreement (Modified BSD License)
 //
-//   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2018, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions are met:
+//
 //   1. Redistributions of source code must retain the above copyright
 //      notice, this list of conditions and the following disclaimer.
 //   2. Redistributions in binary form must reproduce the above copyright
@@ -21,6 +22,9 @@
 //   3. Neither the name of the Devtronic nor the names of its contributors
 //      may be used to endorse or promote products derived from this software
 //      without specific prior written permission.
+//   4. Redistribution and use of this software other than as permitted under
+//      this license is void and will automatically terminate your rights under
+//      this license.
 //
 //   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
 //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -33,119 +37,105 @@
 //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+//  @section SUPPORT
+//
+//   Devtronic invests time and resources providing this open source code,
+//   please support Devtronic and open-source hardware/software by
+//   donations and/or purchasing products from Devtronic.
+//
 //******************************************************************************
 
-#ifndef Strings_h
-#define Strings_h
+#ifndef IGpio_h
+#define IGpio_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "VisObject.h"
 
 // *****************************************************************************
-// ***   String Class   ********************************************************
+// ***   GPIO Driver Interface   ***********************************************
 // *****************************************************************************
-class String : public VisObject
+class IGpio
 {
   public:
-    // *************************************************************************
-    // ***   Enum with all fonts types   ***************************************
-    // *************************************************************************
-    typedef enum 
+    // ***   Polarity   ********************************************************
+    enum Polarity
     {
-      FONT_4x6,
-      FONT_6x8,
-      FONT_8x8,
-      FONT_8x12,
-      FONT_12x16,
-      FONTS_MAX
-    } FontType;
+       LOW = 0U,
+       HIGH
+    };
+
+    // ***   Type specifies the input or output   ******************************
+    enum Type
+    {
+       INPUT,
+       OUTPUT
+    };
 
     // *************************************************************************
-    // ***   Constructor   *****************************************************
+    // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    String() {};
- 
-    // *************************************************************************
-    // ***   Constructor   *****************************************************
-    // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, uint32_t tc, FontType ft = FONT_8x8);
+    explicit IGpio(Type type_parm, Polarity polarity_parm = LOW) : type(type_parm),
+                                                                   polarity(polarity_parm) {};
 
     // *************************************************************************
-    // ***   Constructor   *****************************************************
+    // ***   Public: Destructor   **********************************************
     // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, FontType ft = FONT_8x8);
+    virtual ~IGpio() {};
 
     // *************************************************************************
-    // ***   SetParams   *******************************************************
+    // ***   Public: Init   ****************************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, FontType ft);
+    virtual Result Init() {return Result::ERR_NOT_IMPLEMENTED;}
 
     // *************************************************************************
-    // ***   SetParams   *******************************************************
+    // ***   Public: DeInit   **************************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, FontType ft);
+    virtual Result DeInit() {return Result::ERR_NOT_IMPLEMENTED;}
 
     // *************************************************************************
-    // ***   SetString   *******************************************************
+    // ***   Public: Read   ****************************************************
     // *************************************************************************
-    void SetString(const char* str);
+    virtual Polarity Read() = 0;
 
     // *************************************************************************
-    // ***   SetString   *******************************************************
+    // ***   Public: Write   ***************************************************
     // *************************************************************************
-    void SetString(char* buffer, uint32_t n, const char* format, ...);
+    virtual void Write(Polarity polarity) = 0;
 
     // *************************************************************************
-    // ***   SetColor   ********************************************************
+    // ***   Public: SetHigh   *************************************************
     // *************************************************************************
-    void SetColor(uint32_t tc, uint32_t bgc = 0U, bool is_trnsp = true);
+    inline void SetHigh() {Write(HIGH);}
 
     // *************************************************************************
-    // ***   Put line in buffer   **********************************************
+    // ***   Public: SetLow   **************************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
-    
-    // *************************************************************************
-    // ***   Put line in buffer   **********************************************
-    // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    inline void SetLow() {Write(LOW);}
 
     // *************************************************************************
-    // ***   GetFontW   ********************************************************
+    // ***   Public: IsHigh   **************************************************
     // *************************************************************************
-    static uint32_t GetFontW(FontType ft);
+    inline bool IsHigh() {return (Read() == HIGH);}
 
     // *************************************************************************
-    // ***   GetFontH   ********************************************************
+    // ***   Public: IsLow   ***************************************************
     // *************************************************************************
-    static uint32_t GetFontH(FontType ft);
+    inline bool IsLow() {return (Read() == LOW);}
+
+  protected:
+    // Indicates type(Input/Output)
+    Type type;
+
+    // Indicates if this I/O is active low or active high
+    Polarity polarity;
 
   private:
-    // Pointer to string
-    // FIX ME: must be changed for prevent changing string during drawing
-    const uint8_t* string = nullptr;
-    // Text color
-    uint16_t txt_color = 0;
-    // Background color
-    uint16_t bg_color = 0;
-    // Font type
-    FontType font_type = FONT_8x8;
-    // Is background transparent ?
-    bool transpatent_bg = false;
-
-    typedef struct
-    {
-      uint8_t w; // Width of character
-      uint8_t h; // Height of character
-      uint8_t bytes_per_char; // Bytes Per Char
-      const uint8_t* font_data; // Pointer to font data
-    } FontProfile;
-
-    // Fonts structures. One for all String classes.
-    static const FontProfile fonts[FONTS_MAX];
+    // *************************************************************************
+    // ***   Private: Constructors and assign operator - prevent copying   *****
+    // *************************************************************************
+    IGpio(const IGpio&);
 };
 
 #endif

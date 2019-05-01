@@ -22,6 +22,8 @@
 #include "Fonts.h"
 
 #include <cstring> // for strlen()
+#include <cstring>
+#include <stdarg.h>
 
 // *****************************************************************************
 // *****************************************************************************
@@ -113,6 +115,21 @@ void String::SetString(const char* str)
   x_end = x_start + width - 1;
   // Unlock object after changes
   UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   SetString   ***********************************************************
+// *****************************************************************************
+void String::SetString(char* buf, uint32_t len, const char* format, ...)
+{
+  // Argument list
+  va_list arglist;
+  // Create string
+  va_start(arglist, format);
+  vsnprintf(buf, len, format, arglist);
+  va_end(arglist);
+  // Update string
+  SetString(buf);
 }
 
 // *****************************************************************************

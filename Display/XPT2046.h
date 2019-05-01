@@ -42,6 +42,9 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
+#include "ITouchscreen.h"
+#include "ISpi.h"
+#include "IGpio.h"
 
 // *****************************************************************************
 // ***   Defines   *************************************************************
@@ -49,51 +52,45 @@
 
 // *****************************************************************************
 // * XPT2046 class. Implements work with XPT2046 resistive touchscreen.
-class XPT2046
+class XPT2046 : public ITouchscreen
 {
   public:
-    // Coefficient for calibration
-    const static int32_t COEF = 100;
+    // *************************************************************************
+    // ***   Public: Constructor   *********************************************
+    // *************************************************************************
+    explicit XPT2046(ISpi& in_spi, IGpio& in_touch_cs, IGpio& in_touch_irq) :
+      spi(in_spi), touch_cs(in_touch_cs), touch_irq(in_touch_irq) {};
 
     // *************************************************************************
-    // ***   Constructor   *****************************************************
-    // *************************************************************************
-    // * This class hasn't task inside. For use this class user must provide
-    // * handle to SPI. Previously I think shape SPI between TFT and Touch.
-    // * But now it is two different SPI. Anyway main idea it is use this class
-    // * in DisplayDrv class for find pressed VisObjects.
-    XPT2046(SPI_HandleTypeDef* in_hspi) : hspi(in_hspi) {};
-
-    // *************************************************************************
-    // ***   Init   ************************************************************
+    // ***   Public: Init   ****************************************************
     // *************************************************************************
     // * Init function. Send init sequence to touchscreen controller.
-    void Init(void);
+    virtual Result Init(void);
 
     // *************************************************************************
-    // ***   IsTouch   *********************************************************
+    // ***   Public: IsTouch   *************************************************
     // *************************************************************************
     // * Check touched or not by T_IRQ pin. Return true if touched.
-    bool IsTouch(void);
+    virtual bool IsTouched(void);
 
     // *************************************************************************
-    // ***   GetRawXY   ********************************************************
+    // ***   Public: GetRawXY   ************************************************
     // *************************************************************************
     // * Return raw X and Y coordinates. If touched - return true.
-    bool GetRawXY(int32_t& x, int32_t& y);
+    virtual bool GetRawXY(int32_t& x, int32_t& y);
 
     // *************************************************************************
-    // ***   GetXY   ***********************************************************
+    // ***   Public: GetXY   ***************************************************
     // *************************************************************************
     // * Return recalculated using calibration constants X and Y coordinates.
     // * If touched - return true. Can be used for second calibration.
-    bool GetXY(int32_t& x, int32_t& y);
+    virtual bool GetXY(int32_t& x, int32_t& y);
 
     // *************************************************************************
-    // ***   SetCalibrationConsts   ********************************************
+    // ***   Public: SetCalibrationConsts   ************************************
     // *************************************************************************
     // * Set calibration constants. Must be call for calibration touchscreen.
-    void SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby);
+    virtual Result SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby);
 
   private:
     // Turn touchscreen ON
@@ -106,7 +103,10 @@ class XPT2046
     const static uint8_t CHY = 0xD0;
 
     // Handle to SPI used for touchscreen
-    SPI_HandleTypeDef* hspi = nullptr;
+    ISpi& spi;
+    // Reference to CS and IRQ - mandatory
+    IGpio& touch_cs;
+    IGpio& touch_irq;
 
     // Display width and height offset
     int32_t kx = -1097, ky = -1499;
@@ -114,13 +114,13 @@ class XPT2046
     int32_t bx = 334, by = 259;
     
     // *************************************************************************
-    // ***   SpiWrite   ********************************************************
+    // ***   Private: SpiWrite   ***********************************************
     // *************************************************************************
     // * Write byte to SPI
     inline void SpiWrite(uint8_t c);
 
     // *************************************************************************
-    // ***   SpiWriteRead   ****************************************************
+    // ***   Private: SpiWriteRead   *******************************************
     // *************************************************************************
     // * Write/read byte from/to SPI
     inline uint8_t SpiWriteRead(uint8_t c);

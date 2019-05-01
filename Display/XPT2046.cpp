@@ -21,12 +21,33 @@
 #include <XPT2046.h>
 
 // *****************************************************************************
-// ***   Init touchscreen   ****************************************************
+// ***   Public: Init touchscreen   ********************************************
 // *****************************************************************************
-void XPT2046::Init(void)
+Result XPT2046::Init(void)
 {
+  // Variable for original SPI clock
+  ISpi::Mode spi_mode = ISpi::MODE_0;
+  // Get original SPI clock
+  Result mode_result = spi.GetMode(spi_mode);
+  // If we successfully received speed
+  if(mode_result.IsGood())
+  {
+    // Set MODE_0 for SPI
+    mode_result = spi.SetMode(ISpi::MODE_0);
+  }
+  // Variable for original SPI clock
+  uint32_t spi_clock = 0U;
+  // Get original SPI clock
+  Result speed_result = spi.GetSpeed(spi_clock);
+  // If we successfully received speed
+  if(speed_result.IsGood())
+  {
+    // Set SPI speed - max 2 MHz
+    speed_result = spi.SetSpeed(2000000U);
+  }
+
   // Pull down CS
-  HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_RESET);
+  touch_cs.SetLow();
   // Send ON command
   SpiWrite(TON);
   // Send empty byte for skip answer
@@ -34,30 +55,65 @@ void XPT2046::Init(void)
   // Send empty byte for skip answer
   SpiWrite(EMP);
   // Pull up CS
-  HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_SET);
+  touch_cs.SetHigh();
+
+  // Restore original SPI clock
+  if(speed_result.IsGood())
+  {
+    spi.SetSpeed(spi_clock);
+  }
+  // Restore original SPI mode
+  if(mode_result.IsGood())
+  {
+    spi.SetMode(spi_mode);
+  }
+
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
-// ***   If touched - return true.   *******************************************
+// ***   Public: If touched - return true.   ***********************************
 // *****************************************************************************
-bool XPT2046::IsTouch(void)
+bool XPT2046::IsTouched(void)
 {
-  // Check T_IRQ input and return state
-  return(HAL_GPIO_ReadPin(T_IRQ_GPIO_Port, T_IRQ_Pin) == GPIO_PIN_RESET);
+  // Check T_IRQ input
+  return touch_irq.IsLow();
 }
 
 // *****************************************************************************
-// ***   Get X and Y coordinates. If touched - return true.   ******************
+// ***   Public: Get X and Y coordinates. If touched - return true.   **********
 // *****************************************************************************
 bool XPT2046::GetRawXY(int32_t& x, int32_t& y)
 {
   // Return value
   bool ret = false;
-  // If touch present
-  if(HAL_GPIO_ReadPin(T_IRQ_GPIO_Port, T_IRQ_Pin) == GPIO_PIN_RESET)
+  // If touch properly initialized and actual touch present
+  if(IsTouched())
   {
+    // Variable for original SPI clock
+    uint32_t spi_clock = 0U;
+    // Get original SPI clock
+    Result speed_result = spi.GetSpeed(spi_clock);
+    // If we successfully received speed
+    if(speed_result.IsGood())
+    {
+      // Set SPI speed - max 2 MHz
+      speed_result = spi.SetSpeed(2000000U);
+    }
+    // Variable for original SPI clock
+    ISpi::Mode spi_mode = ISpi::MODE_0;
+    // Get original SPI clock
+    Result mode_result = spi.GetMode(spi_mode);
+    // If we successfully received speed
+    if(mode_result.IsGood())
+    {
+      // Set MODE_0 for SPI
+      mode_result = spi.SetMode(ISpi::MODE_0);
+    }
+
     // Pull down CS
-    HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_RESET);
+    touch_cs.SetLow();
     // Request X coordinate
     SpiWrite(CHX);
     // Receive High byte for X
@@ -68,10 +124,10 @@ bool XPT2046::GetRawXY(int32_t& x, int32_t& y)
     // second rise edge
     x >>= 3;
     // Pull up CS
-    HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_SET);
+    touch_cs.SetHigh();
 
     // Pull down CS
-    HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_RESET);
+    touch_cs.SetLow();
     // Request Y coordinate
     SpiWrite(CHY);
     // Receive High byte for Y
@@ -82,7 +138,18 @@ bool XPT2046::GetRawXY(int32_t& x, int32_t& y)
     // second rise edge
     y >>= 3;
     // Pull up CS
-    HAL_GPIO_WritePin(TOUCH_CS_GPIO_Port, TOUCH_CS_Pin, GPIO_PIN_SET);
+    touch_cs.SetHigh();
+
+    // Restore original SPI clock
+    if(speed_result.IsGood())
+    {
+      spi.SetSpeed(spi_clock);
+    }
+    // Restore original SPI mode
+    if(mode_result.IsGood())
+    {
+      spi.SetMode(spi_mode);
+    }
 
     // Touch present
     ret = true;
@@ -92,7 +159,7 @@ bool XPT2046::GetRawXY(int32_t& x, int32_t& y)
 }
 
 // *****************************************************************************
-// ***   Get X and Y coordinates. If touched - return true.   ******************
+// ***   Public: Get X and Y coordinates. If touched - return true.   **********
 // *****************************************************************************
 bool XPT2046::GetXY(int32_t& x, int32_t& y)
 {
@@ -111,35 +178,37 @@ bool XPT2046::GetXY(int32_t& x, int32_t& y)
 }
 
 // *****************************************************************************
-// ***   SetCalibrationConsts   ************************************************
+// ***   Public: SetCalibrationConsts   ****************************************
 // *****************************************************************************
-void XPT2046::SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby)
+Result XPT2046::SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby)
 {
   // Save calibration constants
   kx = nkx;
   ky = nky;
   bx = nbx;
   by = nby;
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
-// ***   Write byte to SPI   ***************************************************
+// ***   Private: Write byte to SPI   ******************************************
 // *****************************************************************************
 inline void XPT2046::SpiWrite(uint8_t c)
 {
   // Call HAL function for send byte by SPI
-  (void) HAL_SPI_Transmit(hspi, &c, sizeof(c), 1U);
+  spi.Write(&c, sizeof(c));
 }
 
 // *****************************************************************************
-// ***   Write and read byte to/from SPI   *************************************
+// ***   Private: Write and read byte to/from SPI   ****************************
 // *****************************************************************************
 inline uint8_t XPT2046::SpiWriteRead(uint8_t c)
 {
   // Temporary variable for receive byte
-  uint8_t rcv;
+  uint8_t rcv = 0U;
   // Call HAL function for send/receive byte by SPI
-  (void) HAL_SPI_TransmitReceive(hspi, &c, &rcv, sizeof(uint8_t), 1U);
+  spi.Transfer(&c, &rcv, sizeof(uint8_t));
   // Return received byte
   return rcv;
 }

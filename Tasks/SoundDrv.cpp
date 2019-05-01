@@ -81,6 +81,11 @@ Result SoundDrv::Loop()
       Tone(0U);
     }
 
+    // Init ticks variable
+    if(sound_table_position == 0U)
+    {
+      last_wake_ticks = RtosTick::GetTickCount();
+    }
     // Get retry counter from table and calculate delay
     current_delay_ms *= sound_table[sound_table_position] & 0x0FU;
 
@@ -98,7 +103,7 @@ Result SoundDrv::Loop()
       else
       {
         // Otherwise stop playing sound
-        StopSound();
+        is_playing = false;
       }
     }
   }
@@ -112,12 +117,30 @@ Result SoundDrv::Loop()
   // sound playing.
   if(is_playing == false)
   {
+    // Stop playing sound before wait semaphore
+    StopSound();
     // Wait semaphore for start play melody
     sound_update.Take();
   }
 
   // Always run
   return Result::RESULT_OK;
+}
+
+// *****************************************************************************
+// ***   Click function   ******************************************************
+// *****************************************************************************
+void SoundDrv::Click()
+{
+  if((mute == false) && (sound_table != nullptr))
+  {
+    // Set Speaker output pin for click
+    HAL_GPIO_WritePin(SPEAKER_GPIO_Port, SPEAKER_Pin, GPIO_PIN_SET);
+    // Read when actual state changed
+    while(HAL_GPIO_ReadPin(SPEAKER_GPIO_Port, SPEAKER_Pin) == GPIO_PIN_RESET);
+    // Clear Speaker output pin
+    HAL_GPIO_WritePin(SPEAKER_GPIO_Port, SPEAKER_Pin, GPIO_PIN_RESET);
+  }
 }
 
 // *****************************************************************************

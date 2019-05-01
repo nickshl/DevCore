@@ -158,37 +158,41 @@ void AppTask::TaskFunctionCallback(void* ptr)
     // Increment counter before call Setup()
     ChangeCnt(true);
     // Call virtual Setup() function from AppTask class
-    app_task.Setup();
-    // Decrement counter after call Setup()
-    ChangeCnt(false);
-    // Pause for give other tasks run Setup()
-    RtosTick::DelayTicks(1U);
-    // Pause while other tasks run Setup() before executing any Loop()
-    while(startup_cnt) RtosTick::DelayTicks(1U);
+    result = app_task.Setup();
+    // Prevent other task to start if Setup() unsuccessful
+    if(result.IsGood())
+    {
+      // Decrement counter after call Setup()
+      ChangeCnt(false);
+      // Pause for give other tasks run Setup()
+      RtosTick::DelayTicks(1U);
+      // Pause while other tasks run Setup() before executing any Loop()
+      while(startup_cnt) RtosTick::DelayTicks(1U);
 
-    // If no timer or queue - just call Loop() function
-    if((app_task.timer.GetTimerPeriod() == 0U) && (app_task.task_queue.GetQueueLen() == 0U))
-    {
-      // Call virtual Loop() function from AppTask class
-      while(app_task.Loop() == Result::RESULT_OK);
-    }
-    else
-    {
-      // Start task timer if needed
-      if(app_task.timer.GetTimerPeriod() != 0U)
+      // If no timer or queue - just call Loop() function
+      if((app_task.timer.GetTimerPeriod() == 0U) && (app_task.task_queue.GetQueueLen() == 0U))
       {
-        result = app_task.timer.Start();
+        // Call virtual Loop() function from AppTask class
+        while(app_task.Loop() == Result::RESULT_OK);
       }
-      // Check result
-      if(result.IsGood())
+      else
       {
-        // Call internal AppTask function
-        result = app_task.IntLoop();
-      }
-      // Stop task timer if needed
-      if(app_task.timer.GetTimerPeriod() != 0U)
-      {
-        result |= app_task.timer.Stop();
+        // Start task timer if needed
+        if(app_task.timer.GetTimerPeriod() != 0U)
+        {
+          result = app_task.timer.Start();
+        }
+        // Check result
+        if(result.IsGood())
+        {
+          // Call internal AppTask function
+          result = app_task.IntLoop();
+        }
+        // Stop task timer if needed
+        if(app_task.timer.GetTimerPeriod() != 0U)
+        {
+          result |= app_task.timer.Stop();
+        }
       }
     }
   }

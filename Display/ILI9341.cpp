@@ -112,90 +112,20 @@
 #define MADCTL_MH  0x04 // Horizontal Refresh ORDER
 
 // *****************************************************************************
-// ***   Constructor   *********************************************************
+// ***   Public: Init screen   *************************************************
 // *****************************************************************************
-ILI9341::ILI9341(SPI_HandleTypeDef* in_hspi) : hspi(in_hspi) {};
-
-// *****************************************************************************
-// ***   Write byte to SPI   ***************************************************
-// *****************************************************************************
-inline void ILI9341::SpiWrite(uint8_t c)
+Result ILI9341::Init(void)
 {
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET); // Pull down CS
-  HAL_SPI_Transmit(hspi, &c, sizeof(c), 1U);
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET); // Pull up CS
-}
-
-// *****************************************************************************
-// ***   Write byte stream to SPI   ********************************************
-// *****************************************************************************
-void ILI9341::SpiWriteStream(uint8_t* data, uint32_t n)
-{
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET); // Pull down CS
-  HAL_SPI_Transmit_DMA(hspi, data, n);
-}
-
-// *****************************************************************************
-// ***   Write command to SPI   ************************************************
-// *****************************************************************************
-inline void ILI9341::WriteCommand(uint8_t c)
-{
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET); // Command
-  SpiWrite(c);
-}
-
-// *****************************************************************************
-// ***   Write data to SPI   ***************************************************
-// *****************************************************************************
-inline void ILI9341::WriteData(uint8_t c)
-{
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-  SpiWrite(c);
-} 
-
-// *****************************************************************************
-// ***   Write data steram to SPI   ********************************************
-// *****************************************************************************
-void ILI9341::WriteDataStream(uint8_t* data, uint32_t n)
-{
-  // Data
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
-  // Pull down CS
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
-  // Send data to screen
-  HAL_SPI_Transmit_DMA(hspi, data, n);
-}
-
-// *****************************************************************************
-// ***   Check SPI transfer status   *******************************************
-// *****************************************************************************
-bool ILI9341::IsTransferComplete(void)
-{
-  return (hspi->State != HAL_SPI_STATE_BUSY_TX);
-//  return (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE) == SET);
-}
-
-// *****************************************************************************
-// ***   Pull up CS line for LCD  **********************************************
-// *****************************************************************************
-void ILI9341::StopTransfer(void)
-{
-  // Pull up CS
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
-}
-
-// *****************************************************************************
-// ***   Init screen   *********************************************************
-// *****************************************************************************
-void ILI9341::Init(void)
-{
-//  // Reset sequence. Used only if GPIO pin used as LCD reset.
-//  HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);  
-//  HAL_Delay(5);
-//  HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_RESET);  
-//  HAL_Delay(20);
-//  HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);  
-//  HAL_Delay(150);
+  if(display_rst != nullptr)
+  {
+    // Reset sequence. Used only if GPIO pin used as LCD reset.
+    display_rst->SetHigh();
+    HAL_Delay(5);
+    display_rst->SetLow();
+    HAL_Delay(20);
+    display_rst->SetHigh();
+    HAL_Delay(150);
+  }
 
   // Exit Sleep
   WriteCommand(CMD_SWRESET);
@@ -215,7 +145,7 @@ void ILI9341::Init(void)
   WriteData(0x2B);
   WriteData(0x2B);
 
-  // VCM control 2 
+  // VCM control 2
   WriteCommand(CMD_VMCTR2);
   WriteData(0xC0);
 
@@ -268,13 +198,13 @@ void ILI9341::Init(void)
   WriteCommand(CMD_MADCTL);
   WriteData(0x48);
 
-  // Display Function Control 
+  // Display Function Control
   WriteCommand(CMD_DFUNCTR);
   WriteData(0x08);
   WriteData(0x82);
   WriteData(0x27);
 
-  // Enable 3 gamma control - Disable 3 Gamma Function 
+  // Enable 3 gamma control - Disable 3 Gamma Function
   WriteCommand(CMD_EN3G);
   WriteData(0x00);
 
@@ -330,12 +260,54 @@ void ILI9341::Init(void)
   HAL_Delay(120U);
   // Display on
   WriteCommand(CMD_DISPON);
+
+  // Always Ok
+  return Result::RESULT_OK;
+}
+
+// *****************************************************************************
+// ***   Public: Write data steram to SPI   ************************************
+// *****************************************************************************
+Result ILI9341::WriteDataStream(uint8_t* data, uint32_t n)
+{
+  // Data
+  display_dc.SetHigh();
+  // Pull down CS
+  display_cs.SetLow();
+  // Send data to screen
+  Result result = spi.WriteAsync(data, n);
+  // Return result
+  return result;
+}
+
+// *****************************************************************************
+// ***   Public:  Check SPI transfer status   **********************************
+// *****************************************************************************
+bool ILI9341::IsTransferComplete(void)
+{
+  return spi.IsTransferComplete();
+}
+
+// *****************************************************************************
+// ***   Pull up CS line for LCD  **********************************************
+// *****************************************************************************
+Result ILI9341::StopTransfer(void)
+{
+  // In case if transfer isn't finished - abort it.
+  if(spi.IsTransferComplete() == false)
+  {
+    spi.Abort();
+  }
+  // Pull up CS
+  display_cs.SetHigh();
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Set output window   ***************************************************
 // *****************************************************************************
-void ILI9341::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+Result ILI9341::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
   WriteCommand(CMD_CASET); // Column address set
   WriteData(x0 >> 8);
@@ -352,169 +324,168 @@ void ILI9341::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
   WriteCommand(CMD_RAMWR); // write to RAM
   
   // Prepare for write data
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-}
-
-// *****************************************************************************
-// ***   Pass 8-bit (each) R,G,B, get back 16-bit packed color   ***************
-// *****************************************************************************
-uint16_t ILI9341::GetColor565(uint8_t r, uint8_t g, uint8_t b)
-{
-  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+  display_dc.SetHigh(); // Data
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Set screen orientation   **********************************************
 // *****************************************************************************
-void ILI9341::SetRotation(uint8_t m)
+Result ILI9341::SetRotation(IDisplay::Rotation r)
 {
+  rotation = r;
   WriteCommand(CMD_MADCTL);
-  rotation = m % 4; // can't be higher than 3
   switch (rotation)
   {
-    case 0:
+    case IDisplay::ROTATION_BOTTOM:
       WriteData(MADCTL_BGR);
-      width  = TFT_HEIGHT;
-      height = TFT_WIDTH;
+      width  = init_height;
+      height = init_width;
       break;
 
-    case 1:
+    case IDisplay::ROTATION_RIGHT:
       WriteData(MADCTL_MV | MADCTL_BGR);
-      width  = TFT_WIDTH;
-      height = TFT_HEIGHT;
+      width  = init_width;
+      height = init_height;
       break;
 
-    case 2: // Y: up -> down 
+    case IDisplay::ROTATION_LEFT: // Y: up -> down
       WriteData(MADCTL_MX | MADCTL_MY | MADCTL_BGR);
-      width  = TFT_HEIGHT;
-      height = TFT_WIDTH;
+      width  = init_height;
+      height = init_width;
       break;
 
-    case 3: // X: left -> right 
+    case IDisplay::ROTATION_TOP: // X: left -> right
       WriteData(MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
-      width  = TFT_WIDTH;
-      height = TFT_HEIGHT;
+      width  = init_width;
+      height = init_height;
       break;
 
     default:
       break;
   }
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Write color to screen   ***********************************************
 // *****************************************************************************
-void ILI9341::PushColor(uint16_t color)
+Result ILI9341::PushColor(uint16_t color)
 {
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-
+  display_dc.SetHigh(); // Data
+  // Write color
   SpiWrite(color >> 8);
   SpiWrite(color);
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Draw one pixel on  screen   *******************************************
 // *****************************************************************************
-void ILI9341::DrawPixel(int16_t x, int16_t y, uint16_t color)
+Result ILI9341::DrawPixel(int16_t x, int16_t y, uint16_t color)
 {
-  if((x < 0) ||(x >= width) || (y < 0) || (y >= height)) return;
-
-  SetAddrWindow(x,y,x+1,y+1);
-
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-
-  SpiWrite(color >> 8);
-  SpiWrite(color);
+  if((x >= 0) && (x < width) && (y >= 0) && (y < height))
+  {
+    SetAddrWindow(x,y,x+1,y+1);
+    // Write color
+    SpiWrite(color >> 8);
+    SpiWrite(color);
+  }
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Draw vertical line   **************************************************
 // *****************************************************************************
-void ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 {
   // Rudimentary clipping
-  if((x >= width) || (y >= height)) return;
-
-  if((y+h-1) >= height) h = height-y;
-
-  SetAddrWindow(x, y, x, y+h-1);
-
-  uint8_t hi = color >> 8, lo = color;
-
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-
-  while (h--)
+  if((x < width) && (y < height))
   {
-    SpiWrite(hi);
-    SpiWrite(lo);
+    if((y+h-1) >= height) h = height-y;
+
+    SetAddrWindow(x, y, x, y+h-1);
+
+    // Swap bytes
+    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+
+    display_cs.SetLow(); // Pull down CS
+    while(h--)
+    {
+      spi.Write(&color, sizeof(color));
+    }
+    display_cs.SetHigh(); // Pull up CS
   }
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Draw horizontal line   ************************************************
 // *****************************************************************************
-void ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 {
-  if((x >= width) || (y >= height)) return;
-  if((x+w-1) >= width)  w = width-x;
-
-  SetAddrWindow(x, y, x+w-1, y);
-
-  uint8_t hi = color >> 8, lo = color;
-
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-
-  while (w--)
+  if((x < width) && (y < height))
   {
-    SpiWrite(hi);
-    SpiWrite(lo);
-  }
-}
+    if((x+w-1) >= width)  w = width-x;
 
-// *****************************************************************************
-// ***   Fill full screen   ****************************************************
-// *****************************************************************************
-void ILI9341::FillScreen(uint16_t color)
-{
-  FillRect(0, 0, width, height, color);
+    SetAddrWindow(x, y, x+w-1, y);
+
+    // Swap bytes
+    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+
+    display_cs.SetLow(); // Pull down CS
+    while(w--)
+    {
+      spi.Write(&color, sizeof(color));
+    }
+    display_cs.SetHigh(); // Pull up CS
+  }
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Fill rectangle on screen   ********************************************
 // *****************************************************************************
-void ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
-  if((x >= width) || (y >= height)) return;
-  if((x + w - 1) >= width)  w = width  - x;
-  if((y + h - 1) >= height) h = height - y;
-
-  SetAddrWindow(x, y, x+w-1, y+h-1);
-
-  uint8_t hi = color >> 8, lo = color;
-
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
-
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET); // Pull down CS
-  for(y=h; y>0; y--)
+  if((x < width) && (y < height))
   {
-    for(x=w; x>0; x--)
+    if((x + w - 1) >= width)  w = width  - x;
+    if((y + h - 1) >= height) h = height - y;
+
+    SetAddrWindow(x, y, x+w-1, y+h-1);
+
+    // Swap bytes
+    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+
+    display_cs.SetLow(); // Pull down CS
+    for(y=h; y>0; y--)
     {
-       // Wait until TXE flag is set to send data
-       while(__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE) == RESET);
-       hspi->Instance->DR = hi;
-       while(__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE) == RESET);
-       hspi->Instance->DR = lo;
+      for(x=w; x>0; x--)
+      {
+        spi.Write(&color, sizeof(color));
+      }
     }
+    display_cs.SetHigh(); // Pull up CS
   }
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET); // Pull up CS
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
 // ***   Invert display   ******************************************************
 // *****************************************************************************
-void ILI9341::InvertDisplay(bool invert)
+Result ILI9341::InvertDisplay(bool invert)
 {
   WriteCommand(invert ? CMD_INVON : CMD_INVOFF);
+  // Always Ok
+  return Result::RESULT_OK;
 }
 
 // *****************************************************************************
@@ -525,11 +496,11 @@ inline uint8_t ILI9341::SpiRead(void)
   // Result variable
   uint8_t r = 0;
   // Pull down CS
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
+  display_cs.SetLow();
   // Receive data
-  HAL_SPI_Receive(hspi, &r, sizeof(r), 100U);
+  spi.Read(&r, sizeof(r));
   // Pull up CS
-  HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+  display_cs.SetHigh();
   // Return result
   return r;
 }
@@ -540,7 +511,7 @@ inline uint8_t ILI9341::SpiRead(void)
 inline uint8_t ILI9341::ReadData(void)
 {
   // Data
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
+  display_dc.SetHigh(); // Data
   // Receive data
   uint8_t r = SpiRead();
   // Return result
@@ -553,14 +524,51 @@ inline uint8_t ILI9341::ReadData(void)
 uint8_t ILI9341::ReadCommand(uint8_t c)
 {
   // Set command mode
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET); // Command
+  display_dc.SetLow(); // Command
   SpiWrite(c);
 
   // Set data mode
-  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET); // Data
+  display_dc.SetHigh(); // Data
   // Receive data
   uint8_t r = SpiRead();
 
   // Return result
   return r;
+}
+
+// *****************************************************************************
+// ***   Write byte to SPI   ***************************************************
+// *****************************************************************************
+inline void ILI9341::SpiWrite(uint8_t c)
+{
+  display_cs.SetLow(); // Pull down CS
+  spi.Write(&c, sizeof(c));
+  display_cs.SetHigh(); // Pull up CS
+}
+
+//// *****************************************************************************
+//// ***   Write byte stream to SPI   ********************************************
+//// *****************************************************************************
+//void ILI9341::SpiWriteStream(uint8_t* data, uint32_t n)
+//{
+//    display_cs.SetLow(); // Pull down CS
+//  HAL_SPI_Transmit_DMA(hspi, data, n);
+//}
+
+// *****************************************************************************
+// ***   Write command to SPI   ************************************************
+// *****************************************************************************
+inline void ILI9341::WriteCommand(uint8_t c)
+{
+  display_dc.SetLow(); // Command
+  SpiWrite(c);
+}
+
+// *****************************************************************************
+// ***   Write data to SPI   ***************************************************
+// *****************************************************************************
+inline void ILI9341::WriteData(uint8_t c)
+{
+  display_dc.SetHigh(); // Data
+  SpiWrite(c);
 }

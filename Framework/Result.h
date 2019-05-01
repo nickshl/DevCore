@@ -67,6 +67,7 @@ class Result
       ERR_BAD_PARAMETER,
       ERR_INVALID_ITEM,
       ERR_NOT_IMPLEMENTED,
+      ERR_BAD_CRC,
       ERR_BUSY,
 
       // ***   RTOS errors   ***************************************************

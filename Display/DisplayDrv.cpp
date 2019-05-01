@@ -34,40 +34,37 @@ DisplayDrv& DisplayDrv::GetInstance(void)
 // *****************************************************************************
 Result DisplayDrv::Setup()
 {
-  // Init display driver
-  tft.Init();
-  // Set mode - mode can be set earlier than Display initialization
-  SetUpdateMode(update_mode);
+  // Task can't be initialized without display driver
+  Result result = Result::ERR_NULL_PTR;
 
-  // If deisplay and touchscreen share same SPI
-  if(tft_hspi == touch_hspi)
+  // If pointer to display present
+  if(display != nullptr)
   {
-    // Read original SPI prescaler
-    uint32_t prescaler = READ_REG(tft_hspi->Instance->CR1) & SPI_CR1_BR_Msk;
-    // Set prescaler for SPI
-    MODIFY_REG(tft_hspi->Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, SPI_BAUDRATEPRESCALER_64);
-    // Init touchscreen driver
-    touch.Init();
-    // Restore prescaler for SPI
-    MODIFY_REG(tft_hspi->Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, prescaler);
-  }
-  else
-  {
-    // Init touchscreen driver
-    touch.Init();
-  }
+    // Init display driver
+    display->Init();
+    // Set mode - mode can be set earlier than Display initialization
+    SetUpdateMode(update_mode);
 
-  // Set string parameters
-  fps_str.SetParams(str, width/3, height - 6, COLOR_MAGENTA, String::FONT_4x6);
-  // Show string if flag is set
-  if(DISPLAY_DEBUG_INFO)
-  {
-    // Max Z
-    fps_str.Show(0xFFFFFFFFU);
+    // If pointer to touchscreen present
+    if(touch != nullptr)
+    {
+      // Init touchscreen driver
+      touch->Init();
+    }
+
+    // Set string parameters
+    fps_str.SetParams(str, width/3, height - 6, COLOR_MAGENTA, String::FONT_4x6);
+    // Show string if flag is set
+    if(DISPLAY_DEBUG_INFO)
+    {
+      // Max Z
+      fps_str.Show(0xFFFFFFFFU);
+    }
+    result = Result::RESULT_OK;
   }
 
-  // Always ok
-  return Result::RESULT_OK;
+  // Return result
+  return result;
 }
 
 // *****************************************************************************
@@ -87,7 +84,7 @@ Result DisplayDrv::Loop()
     if(LockDisplay() == Result::RESULT_OK)
     {
       // Set address window for all screen
-      tft.SetAddrWindow(0, 0, width-1, height-1);
+      display->SetAddrWindow(0, 0, width-1, height-1);
       // For each line/row
       for(int32_t i=0; i < height; i++)
       {
@@ -101,25 +98,25 @@ Result DisplayDrv::Loop()
         while(p_obj != nullptr)
         {
           // Draw object to buf
-          if(update_mode) p_obj->DrawInBufH(scr_buf[i%2], width, i);
-          else            p_obj->DrawInBufW(scr_buf[i%2], width, i);
+          if(update_mode == UPDATE_LEFT_RIGHT) p_obj->DrawInBufH(scr_buf[i%2], width, i);
+          else                                 p_obj->DrawInBufW(scr_buf[i%2], width, i);
           // Set pointer to next object in list
           p_obj = p_obj->p_next;
         }
         // Give semaphore after changes
         line_mutex.Release();
         // Wait until previous transfer complete
-        while(tft.IsTransferComplete() == false) taskYIELD();
+        while(display->IsTransferComplete() == false) taskYIELD();
         // Write stream to LCD
-        tft.SpiWriteStream((uint8_t*)scr_buf[i%2], width*tft.GetBytesPerPixel());
+        display->WriteDataStream((uint8_t*)scr_buf[i%2], width * display->GetBytesPerPixel());
         // DO NOT TRY "OPTIMIZE" CODE !!!
         // Two "while" cycles used for generate next line when previous line
         // transfer via SPI to display.
       }
       // Wait until last transfer complete
-      while(tft.IsTransferComplete() == false) taskYIELD();
+      while(display->IsTransferComplete() == false) taskYIELD();
       // Pull up CS
-      tft.StopTransfer();
+      display->StopTransfer();
       // Give semaphore after draw frame
       UnlockDisplay();
       // Calculate FPS if debug info is ON
@@ -137,18 +134,11 @@ Result DisplayDrv::Loop()
   // Try to take mutex. 1 ms should be enough.
   if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
   {
-    // Set prescaler for SPI it display share save SPI with touchscreen
-    if(tft_hspi == touch_hspi)
+    // If pointer to touchscreen present
+    if(touch != nullptr)
     {
-      MODIFY_REG(tft_hspi->Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, SPI_BAUDRATEPRESCALER_64);
-    }
-    // Get touch coordinates
-    tmp_is_touch = touch.GetXY(tmp_tx, tmp_ty);
-    // Reset prescaler for SPI it display share save SPI with touchscreen
-    if(tft_hspi == touch_hspi)
-    {
-      // Restore prescaler for SPI
-      MODIFY_REG(tft_hspi->Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, SPI_BAUDRATEPRESCALER_2);
+      // Get touch coordinates
+      tmp_is_touch = touch->GetXY(tmp_tx, tmp_ty);
     }
     // Give semaphore for drawing frame - we can enter in this "if" statement
     // only if mutex taken
@@ -256,6 +246,33 @@ Result DisplayDrv::Loop()
 
   // Always run
   return Result::RESULT_OK;
+}
+
+// *****************************************************************************
+// ***   Set display driver(or clear if nullptr used as argument)   ************
+// *****************************************************************************
+Result DisplayDrv::SetDisplayDrv(IDisplay* in_display)
+{
+  Result result = Result::ERR_INVALID_ITEM;
+  // Display driver should be set before scheduler started
+  if(Rtos::IsSchedulerNotRunning())
+  {
+    // If pointer to display present
+    if(in_display != nullptr)
+    {
+      // Save display driver pointer
+      display = in_display;
+      // Set result
+      result = Result::RESULT_OK;
+    }
+    else
+    {
+      // Task can't be initialized without display driver
+      Result result = Result::ERR_NULL_PTR;
+    }
+  }
+  // Return result
+  return result;
 }
 
 // *****************************************************************************
@@ -434,28 +451,46 @@ Result DisplayDrv::UpdateDisplay(void)
 // *****************************************************************************
 // ***   Set Update Mode   *****************************************************
 // *****************************************************************************
-void DisplayDrv::SetUpdateMode(bool is_vertical)
+void DisplayDrv::SetUpdateMode(UpdateMode mode)
 {
   // Lock display
   LockDisplay();
   // Wait while transfer complete before change settings
-  while(tft.IsTransferComplete() == false);
+  while(display->IsTransferComplete() == false);
   // Change Update mode
-  if(is_vertical)
+  if(mode == UPDATE_LEFT_RIGHT)
   {
-    tft.SetRotation(2U);
+    display->SetRotation(IDisplay::ROTATION_LEFT);
   }
   else
   {
-    tft.SetRotation(3U);
+    display->SetRotation(IDisplay::ROTATION_TOP);
   }
   // Set width and height variables for selected screen update mode
-  width = tft.GetWidth();
-  height = tft.GetHeight();
+  width = display->GetWidth();
+  height = display->GetHeight();
   // Save Update mode
-  update_mode = is_vertical;
+  update_mode = mode;
   // Unlock display
   UnlockDisplay();  
+}
+
+// *****************************************************************************
+// ***   Set touchscreen driver(or clear if nullptr used as argument)   ********
+// *****************************************************************************
+Result DisplayDrv::SetTouchDrv(ITouchscreen* in_touch)
+{
+  Result result = Result::ERR_INVALID_ITEM;
+  // Touchscreen driver should be set before scheduler started
+  if(Rtos::IsSchedulerNotRunning())
+  {
+    // Store new touch pointer
+    touch = in_touch;
+    // Set good result
+    result = Result::RESULT_OK;
+  }
+  // Return result
+  return result;
 }
 
 // *****************************************************************************
@@ -470,7 +505,7 @@ bool DisplayDrv::GetTouchXY(int32_t& x, int32_t& y)
   if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
   {
     // If display driver gets touch coordinates and touch still present
-    if(is_touch && touch.IsTouch())
+    if((touch != nullptr) && is_touch && touch->IsTouched())
     {
       // Return last values
       x = tx;
@@ -495,9 +530,25 @@ bool DisplayDrv::GetTouchXY(int32_t& x, int32_t& y)
 // *************************************************************************
 // ***   Check touch   *****************************************************
 // *************************************************************************
-bool DisplayDrv::IsTouch()
+bool DisplayDrv::IsTouched()
 {
-	return touch.IsTouch();
+  // Not touched by default
+  bool touched = false;
+  // Try to take mutex. 1 ms should be enough.
+  if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+  {
+    // If pointer to touchscreen present
+    if(touch != nullptr)
+    {
+      // Get status
+      touched = touch->IsTouched();
+    }
+    // Give semaphore for drawing frame - we can enter in this "if" statement
+    // only if mutex taken
+    touchscreen_mutex.Release();
+  }
+  // Return status
+	return touched;
 }
 
 // *****************************************************************************
@@ -505,73 +556,77 @@ bool DisplayDrv::IsTouch()
 // *****************************************************************************
 void DisplayDrv::TouchCalibrate()
 {
-  // Box for calibration
-  Box background(0, 0, width, height, COLOR_BLACK, true);
-  Box box(0, 0, 2, 2, COLOR_WHITE, true);
-  int32_t tx;
-  int32_t ty;
-  int32_t x1, x2;
-  int32_t y1, y2;
-
-  // Reset calibration
-  touch.SetCalibrationConsts(XPT2046::COEF, XPT2046::COEF, 0, 0);
-
-  // Show background box
-  background.Show(0xFFFFFFFFU-1U);
-  // Show box
-  box.Show(0xFFFFFFFFU);
-
-  // Move box to position
-  box.Move(10-1, 10-1);
-  // Wait press for get initial coordinates
-  while(!GetTouchXY(x1, y1))
+  // If pointer to touchscreen present
+  if(touch != nullptr)
   {
-    // Update Display
-    UpdateDisplay();
-    // Delay
-    RtosTick::DelayMs(100U);
-  }
-  // Wait unpress and measure coordinates continuously for averaging
-  while(GetTouchXY(tx, ty))
-  {
-    x1 = (x1 + tx) / 2;
-    y1 = (y1 + ty) / 2;
-    // Update Display - for update touch coordinates
-    UpdateDisplay();
-    // Delay
-    RtosTick::DelayMs(100U);
-  }
+    // Box for calibration
+    Box background(0, 0, width, height, COLOR_BLACK, true);
+    Box box(0, 0, 2, 2, COLOR_WHITE, true);
+    int32_t tx;
+    int32_t ty;
+    int32_t x1, x2;
+    int32_t y1, y2;
 
-  // Move box to position
-  box.Move(width - 10 - 1, height - 10 - 1);
-  // Wait press for get initial coordinates
-  while(!GetTouchXY(x2, y2))
-  {
-    // Update Display
-    UpdateDisplay();
-    // Delay
-    RtosTick::DelayMs(100U);
+    // Reset calibration
+    touch->SetCalibrationConsts(ITouchscreen::COEF, ITouchscreen::COEF, 0, 0);
+
+    // Show background box
+    background.Show(0xFFFFFFFFU-1U);
+    // Show box
+    box.Show(0xFFFFFFFFU);
+
+    // Move box to position
+    box.Move(10-1, 10-1);
+    // Wait press for get initial coordinates
+    while(!GetTouchXY(x1, y1))
+    {
+      // Update Display
+      UpdateDisplay();
+      // Delay
+      RtosTick::DelayMs(100U);
+    }
+    // Wait unpress and measure coordinates continuously for averaging
+    while(GetTouchXY(tx, ty))
+    {
+      x1 = (x1 + tx) / 2;
+      y1 = (y1 + ty) / 2;
+      // Update Display - for update touch coordinates
+      UpdateDisplay();
+      // Delay
+      RtosTick::DelayMs(100U);
+    }
+
+    // Move box to position
+    box.Move(width - 10 - 1, height - 10 - 1);
+    // Wait press for get initial coordinates
+    while(!GetTouchXY(x2, y2))
+    {
+      // Update Display
+      UpdateDisplay();
+      // Delay
+      RtosTick::DelayMs(100U);
+    }
+    // Wait unpress and measure coordinates continuously for averaging
+    while(GetTouchXY(tx, ty))
+    {
+      x2 = (x2 + tx) / 2;
+      y2 = (y2 + ty) / 2;
+      // Update Display
+      UpdateDisplay();
+      // Delay
+      RtosTick::DelayMs(100U);
+    }
+
+    // Calc coefs
+    int32_t kx = ((x2 - x1) * ITouchscreen::COEF) / (width  - 2*10);
+    int32_t ky = ((y2 - y1) * ITouchscreen::COEF) / (height - 2*10);
+    int32_t bx = 10 - (x1 * ITouchscreen::COEF) / kx;
+    int32_t by = 10 - (y1 * ITouchscreen::COEF) / ky;
+
+    // Save calibration
+    touch->SetCalibrationConsts(kx, ky, bx, by);
+
+    // Hide box
+    box.Hide();
   }
-  // Wait unpress and measure coordinates continuously for averaging
-  while(GetTouchXY(tx, ty))
-  {
-    x2 = (x2 + tx) / 2;
-    y2 = (y2 + ty) / 2;
-    // Update Display
-    UpdateDisplay();
-    // Delay
-    RtosTick::DelayMs(100U);
-  }
-
-  // Calc coefs
-  int32_t kx = ((x2 - x1) * XPT2046::COEF) / (width  - 2*10);
-  int32_t ky = ((y2 - y1) * XPT2046::COEF) / (height - 2*10);
-  int32_t bx = 10 - (x1 * XPT2046::COEF) / kx;
-  int32_t by = 10 - (y1 * XPT2046::COEF) / ky;
-
-  // Save calibration
-  touch.SetCalibrationConsts(kx, ky, bx, by);
-
-  // Hide box
-  box.Hide();
 }

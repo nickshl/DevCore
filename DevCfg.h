@@ -95,13 +95,6 @@ typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
 // ***   Configuration   *******************************************************
 // *****************************************************************************
 
-// ***   SPI Handles   *********************************************************
-#ifdef HAL_SPI_MODULE_ENABLED
-  // Display SPI handle
-  static SPI_HandleTypeDef* const TFT_HSPI = &hspi1;
-  // Touchscreen SPI handle
-  static SPI_HandleTypeDef* const TOUCH_HSPI = &hspi1;
-#endif
 // ***   I2C Handles   *********************************************************
 #ifdef HAL_I2C_MODULE_ENABLED
   // BME280 I2C handle

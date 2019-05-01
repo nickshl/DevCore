@@ -50,8 +50,8 @@
 #include "RtosMutex.h"
 #include "RtosSemaphore.h"
 
-#include "ILI9341.h"
-#include "XPT2046.h"
+#include "IDisplay.h"
+#include "ITouchscreen.h"
 #include "VisObject.h"
 #include "Primitives.h"
 #include "Strings.h"
@@ -64,6 +64,15 @@
 class DisplayDrv : public AppTask
 {
   public:
+    // *************************************************************************
+    // ***   Update Mode   *****************************************************
+    // *************************************************************************
+    enum UpdateMode
+    {
+      UPDATE_TOP_BOTTOM,
+      UPDATE_LEFT_RIGHT
+    };
+
     // *************************************************************************
     // ***   Get Instance   ****************************************************
     // *************************************************************************
@@ -78,6 +87,16 @@ class DisplayDrv : public AppTask
     // ***   Display Driver Loop   *********************************************
     // *************************************************************************
     virtual Result Loop();
+
+    // *************************************************************************
+    // ***   Set display driver   **********************************************
+    // *************************************************************************
+    Result SetDisplayDrv(IDisplay* in_display);
+
+    // *************************************************************************
+    // ***   Get display driver   **********************************************
+    // *************************************************************************
+    IDisplay* GetDisplayDrv(void) {return display;}
 
     // *************************************************************************
     // ***   Add Visual Object to object list   ********************************
@@ -117,7 +136,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Set Update Mode   *************************************************
     // *************************************************************************
-    void SetUpdateMode(bool is_vertical = false);
+    void SetUpdateMode(UpdateMode mode);
 
     // *************************************************************************
     // ***   GetScreenW   ******************************************************
@@ -130,6 +149,16 @@ class DisplayDrv : public AppTask
     inline int32_t GetScreenH(void) {return height;}
 
     // *************************************************************************
+    // ***   Set touchscreen driver(or clear if nullptr used as argument)   ****
+    // *************************************************************************
+    Result SetTouchDrv(ITouchscreen* in_touch);
+
+    // *************************************************************************
+    // ***   Get touchscreen driver   ******************************************
+    // *************************************************************************
+    ITouchscreen* GetTouchDrv(void) {return touch;}
+
+    // *************************************************************************
     // ***   Get Touch X and Y coordinate   ************************************
     // *************************************************************************
     bool GetTouchXY(int32_t& x, int32_t& y);
@@ -137,7 +166,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Check touch   *****************************************************
     // *************************************************************************
-    bool IsTouch();
+    bool IsTouched();
 
     // *************************************************************************
     // ***   Calibrate Touchscreen   *******************************************
@@ -149,14 +178,10 @@ class DisplayDrv : public AppTask
     static const bool DISPLAY_DEBUG_INFO = true;
     
     // Display driver object
-    ILI9341 tft = TFT_HSPI;
-    // Display SPI handle
-    SPI_HandleTypeDef* tft_hspi = TFT_HSPI;
+    IDisplay* display = nullptr;
 
     // Touchscreen driver object
-    XPT2046 touch = TOUCH_HSPI;
-    // Touchscreen SPI handle
-    SPI_HandleTypeDef* touch_hspi = TOUCH_HSPI;
+    ITouchscreen* touch = nullptr;
 
     // Pointer to first object in list
     VisObject* object_list = nullptr;
@@ -164,12 +189,12 @@ class DisplayDrv : public AppTask
     VisObject* object_list_last = nullptr;
 
     // Update mode: true - vertical, false = horizontal
-    bool update_mode = false;
+    UpdateMode update_mode = UPDATE_TOP_BOTTOM;
     // Variables for update screen mode
     int32_t width = 0;
     int32_t height = 0;
     // Double Screen Line buffer
-    uint16_t scr_buf[2][ILI9341::GetMaxLine()];
+    uint16_t scr_buf[2][IDisplay::GetMaxLine()];
 
     // Touch coordinates and state
     bool is_touch = false;

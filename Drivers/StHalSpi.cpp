@@ -28,12 +28,12 @@
 // *****************************************************************************
 // ***   Public: Transfer   ****************************************************
 // *****************************************************************************
-Result StHalSpi::Transfer(uint8_t* rx_buf_ptr, uint8_t* tx_buf_ptr, uint32_t size)
+Result StHalSpi::Transfer(uint8_t* tx_buf_ptr, uint8_t* rx_buf_ptr, uint32_t size)
 {
   Result result = Result::ERR_NULL_PTR;
 
   // Check for null pointer
-  if((rx_buf_ptr != nullptr) && (tx_buf_ptr != nullptr))
+  if((tx_buf_ptr != nullptr) && (rx_buf_ptr != nullptr))
   {
     // Read data from SPI port
     HAL_StatusTypeDef hal_result = HAL_SPI_TransmitReceive(&hspi, tx_buf_ptr, rx_buf_ptr, size, spi_tx_timeout_ms);
@@ -85,12 +85,12 @@ Result StHalSpi::Read(uint8_t* rx_buf_ptr, uint32_t size)
 // *****************************************************************************
 // ***   Public: TransferAsync   ***********************************************
 // *****************************************************************************
-Result StHalSpi::TransferAsync(uint8_t* rx_buf_ptr, uint8_t* tx_buf_ptr, uint32_t size)
+Result StHalSpi::TransferAsync(uint8_t* tx_buf_ptr, uint8_t* rx_buf_ptr, uint32_t size)
 {
   Result result = Result::RESULT_OK;
 
   // Check for null pointer
-  if((rx_buf_ptr != nullptr) && (tx_buf_ptr != nullptr))
+  if((tx_buf_ptr != nullptr) && (rx_buf_ptr != nullptr))
   {
     // Read data from SPI port
     HAL_StatusTypeDef hal_result = HAL_SPI_TransmitReceive_DMA(&hspi, tx_buf_ptr, rx_buf_ptr, size);
@@ -180,42 +180,42 @@ Result StHalSpi::SetSpeed(uint32_t clock_rate)
   if(divider <= 2U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_2;
-    clock_rate = pclk2 * 2U;
+    clock_rate = pclk2 / 2U;
   }
   else if(divider <= 4U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_4;
-    clock_rate = pclk2 * 4U;
+    clock_rate = pclk2 / 4U;
   }
   else if(divider <= 8U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_8;
-    clock_rate = pclk2 * 8U;
+    clock_rate = pclk2 / 8U;
   }
   else if(divider <= 16U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_16;
-    clock_rate = pclk2 * 16U;
+    clock_rate = pclk2 / 16U;
   }
   else if(divider <= 32U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_32;
-    clock_rate = pclk2 * 32U;
+    clock_rate = pclk2 / 32U;
   }
   else if(divider <= 64U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_64;
-    clock_rate = pclk2 * 64U;
+    clock_rate = pclk2 / 64U;
   }
   else if(divider <= 128U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_128;
-    clock_rate = pclk2 * 128U;
+    clock_rate = pclk2 / 128U;
   }
   else if(divider <= 256U)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_256;
-    clock_rate = pclk2 * 256U;
+    clock_rate = pclk2 / 256U;
   }
   else
   {
@@ -225,8 +225,12 @@ Result StHalSpi::SetSpeed(uint32_t clock_rate)
 
   if(result.IsGood())
   {
+    // Disable SPI peripheral
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0U);
     // Set prescaler
     MODIFY_REG(hspi.Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, baud_prescaler);
+    // Enable SPI peripheral
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), (uint32_t)(SPI_CR1_SPE));
   }
 
   return result;
@@ -247,35 +251,35 @@ Result StHalSpi::GetSpeed(uint32_t& clock_rate)
   // Set prescaler for SPI
   if(baud_prescaler == SPI_BAUDRATEPRESCALER_2)
   {
-    clock_rate = pclk2 * 2U;
+    clock_rate = pclk2 / 2U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_4)
   {
-    clock_rate = pclk2 * 4U;
+    clock_rate = pclk2 / 4U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_8)
   {
-    clock_rate = pclk2 * 8U;
+    clock_rate = pclk2 / 8U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_16)
   {
-    clock_rate = pclk2 * 16U;
+    clock_rate = pclk2 / 16U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_32)
   {
-    clock_rate = pclk2 * 32U;
+    clock_rate = pclk2 / 32U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_64)
   {
-    clock_rate = pclk2 * 64U;
+    clock_rate = pclk2 / 64U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_128)
   {
-    clock_rate = pclk2 * 128U;
+    clock_rate = pclk2 / 128U;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_256)
   {
-    clock_rate = pclk2 * 256U;
+    clock_rate = pclk2 / 256U;
   }
   else
   {
@@ -285,6 +289,90 @@ Result StHalSpi::GetSpeed(uint32_t& clock_rate)
     result = Result::ERR_SPI_GENERAL;
   }
 
+  return result;
+}
+
+// *************************************************************************
+// ***   Public: SetMode   *************************************************
+// *************************************************************************
+Result StHalSpi::SetMode(ISpi::Mode mode)
+{
+  Result result = Result::RESULT_OK;
+
+  // Variables for store CPHA & CPOL
+  uint32_t setup = 0U;
+
+  // Find CPHA & CPOL by mode
+  if(mode == ISpi::MODE_0)
+  {
+    setup = 0U;
+  }
+  else if(mode == ISpi::MODE_1)
+  {
+    setup = SPI_CR1_CPHA;
+  }
+  else if(mode == ISpi::MODE_2)
+  {
+    setup = SPI_CR1_CPOL;
+  }
+  else if(mode == ISpi::MODE_3)
+  {
+    setup = SPI_CR1_CPHA | SPI_CR1_CPOL;
+  }
+  else
+  {
+    result = Result::ERR_BAD_PARAMETER;
+  }
+
+  if(result.IsGood())
+  {
+    // Disable SPI peripheral
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0U);
+    // Set mode
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_CPHA_Msk | SPI_CR1_CPOL_Msk), setup);
+    // Enable SPI peripheral
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), (uint32_t)(SPI_CR1_SPE));
+  }
+
+  return result;
+}
+
+// *************************************************************************
+// ***   Public: GetMode   *************************************************
+// *************************************************************************
+Result StHalSpi::GetMode(ISpi::Mode& mode)
+{
+  Result result = Result::RESULT_OK;
+
+  // Get current SPI settings
+  uint32_t settings = READ_REG(hspi.Instance->CR1);
+  // Find CPHA & CPOL
+  bool cpha = settings & SPI_CR1_CPHA_Msk;
+  bool cpol = settings & SPI_CR1_CPOL_Msk;
+
+  // Find mode by CPHA & CPOL
+  if((cpha == false) && (cpol == false))
+  {
+    mode = ISpi::MODE_0;
+  }
+  else if((cpha == true) && (cpol == false))
+  {
+    mode = ISpi::MODE_1;
+  }
+  else if((cpha == false) && (cpol == true))
+  {
+    mode = ISpi::MODE_2;
+  }
+  else if((cpha == true) && (cpol == true))
+  {
+    mode = ISpi::MODE_3;
+  }
+  else
+  {
+    result = Result::ERR_BAD_PARAMETER;
+  }
+
+  // Always Ok
   return result;
 }
 
