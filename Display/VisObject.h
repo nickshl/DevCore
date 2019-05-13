@@ -76,12 +76,12 @@ class VisObject
     // *************************************************************************
     // ***   LockVisObject   ***************************************************
     // *************************************************************************
-    void LockVisObject();
+    Result LockVisObject();
 
     // *************************************************************************
     // ***   UnlockVisObject   *************************************************
     // *************************************************************************
-    void UnlockVisObject();
+    Result UnlockVisObject();
 
     // *************************************************************************
     // ***   Show   ************************************************************
@@ -90,14 +90,14 @@ class VisObject
     // * DisplayDrv class. When this function calls first time, user must
     // * provide Z level. In future user can call this function without
     // * parameters - previously set Z will be used.
-    virtual void Show(uint32_t z_pos = 0);
+    virtual Result Show(uint32_t z_pos = 0);
 
     // *************************************************************************
     // ***   Hide   ************************************************************
     // *************************************************************************
     // * Hide VisObject from screen. This function call DelVisObjectFromList()
     // * from DisplayDrv class.
-    virtual void Hide(void);
+    virtual Result Hide(void);
     
     // *************************************************************************
     // ***   IsShow   **********************************************************
@@ -110,7 +110,7 @@ class VisObject
     // *************************************************************************
     // * Move object on screen. Set new x and y coordinates. If flag is set - 
     // * move is relative, not absolute.
-    virtual void Move(int32_t x, int32_t y, bool is_delta = false);
+    virtual Result Move(int32_t x, int32_t y, bool is_delta = false);
 
     // *************************************************************************
     // ***   DrawInBufH   ******************************************************

@@ -24,7 +24,7 @@
 // ***   Public: MsgBox constructor   ******************************************
 // *****************************************************************************
 UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
-                   String::FontType msg_fnt_in, String::FontType hdr_fnt_in,
+                   Font* msg_fnt_in, Font* hdr_fnt_in,
                    uint16_t center_x_in, uint16_t center_y_in,
                    uint16_t width_in, uint16_t color_in)
 {
@@ -51,8 +51,8 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
   if(msg != nullptr)
   {
     // Set fonts by default if isn't provided
-    if(msg_fnt == String::FONTS_MAX) msg_fnt = String::FONT_8x12;
-    if(hdr_fnt == String::FONTS_MAX) hdr_fnt = String::FONT_4x6;
+    if(msg_fnt == nullptr) msg_fnt = &Font_8x12::GetInstance();
+    if(hdr_fnt == nullptr) hdr_fnt = &Font_4x6::GetInstance();
 
     // Copy string to buffer for split
     strcpy(str_buf, msg);
@@ -61,7 +61,7 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
     line[count] = str_buf;
 
     // Find MsgBox width in pixels
-    W = String::GetFontW(msg_fnt) * width;
+    W = msg_fnt->GetCharW() * width;
   
     // Split buffer to strings
     while(count < MAX_MSGBOX_LINES)
@@ -84,11 +84,11 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
       }
 
       // Calculate string width in pixels
-      StrW = String::GetFontW(msg_fnt) * length[count];
+      StrW = msg_fnt->GetCharW() * length[count];
       // If this string width greater than previous - store it
       if(W < StrW) W = StrW;
       // Add sting height
-      H += String::GetFontH(msg_fnt);
+      H += msg_fnt->GetCharH();
 
       // If symbol '\n' isn't found 0 this is last string - exit from the cycle
       if(ptr == nullptr) break;
@@ -102,15 +102,15 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
     if(hdr != nullptr)
     {
       // Calculate header width in pixels
-      StrW = String::GetFontW(hdr_fnt) * strlen(hdr);
+      StrW = hdr_fnt->GetCharW() * strlen(hdr);
       // If header width is greater than string width - store it
       if(W < StrW) W = StrW;
     }
 
     // Add left and right empty space 1 symbol width
-    W += String::GetFontW(msg_fnt) * 2;
+    W += msg_fnt->GetCharW() * 2;
     // Add up and down empty space 0.5 symbol width
-    H += String::GetFontH(msg_fnt);
+    H += msg_fnt->GetCharH();
 
     // Calculate window position
     X = center_x - W / 2;
@@ -120,13 +120,13 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
     if(hdr != nullptr)
     {
       // Move window down
-      Y += String::GetFontH(hdr_fnt) / 2;
+      Y += hdr_fnt->GetCharH() / 2;
       // Header border
-      box[box_cnt++].SetParams(X - 1, Y - String::GetFontH(hdr_fnt) - 2, W + 1, String::GetFontH(hdr_fnt) + 3, COLOR_MAGENTA, false);
+      box[box_cnt++].SetParams(X - 1, Y - hdr_fnt->GetCharH() - 2, W + 1, hdr_fnt->GetCharH() + 3, COLOR_MAGENTA, false);
       // Header place
-      box[box_cnt++].SetParams(X, Y - String::GetFontH(hdr_fnt) - 1, W, String::GetFontH(hdr_fnt) + 1, COLOR_MAGENTA, true);
+      box[box_cnt++].SetParams(X, Y - hdr_fnt->GetCharH() - 1, W, hdr_fnt->GetCharH() + 1, COLOR_MAGENTA, true);
       // Header string
-      string[str_cnt++].SetParams(hdr, X + 1, Y - String::GetFontH(hdr_fnt), COLOR_YELLOW, hdr_fnt);
+      string[str_cnt++].SetParams(hdr, X + 1, Y - hdr_fnt->GetCharH(), COLOR_YELLOW, *hdr_fnt);
     }
 
     // Message place
@@ -138,9 +138,9 @@ UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
     for(uint8_t i = 0; i < count + 1; i++)
     {
       // Calculate sting X position
-      X = center_x - (String::GetFontW(msg_fnt) * length[i]) / 2;
+      X = center_x - (msg_fnt->GetCharW() * length[i]) / 2;
       // Set string params
-      string[str_cnt++].SetParams(line[i], X, Y + String::GetFontH(msg_fnt)/2 + i * String::GetFontH(msg_fnt), COLOR_YELLOW, msg_fnt);
+      string[str_cnt++].SetParams(line[i], X, Y + msg_fnt->GetCharH()/2 + i * msg_fnt->GetCharH(), COLOR_YELLOW, *msg_fnt);
     }
   }
 }

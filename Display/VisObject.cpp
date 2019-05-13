@@ -33,25 +33,25 @@ VisObject::~VisObject()
 // *****************************************************************************
 // ***   Lock Visual Object  ***************************************************
 // *****************************************************************************
-void VisObject::LockVisObject()
+Result VisObject::LockVisObject()
 {
   // Lock line
-  DisplayDrv::GetInstance().LockDisplayLine();
+  return DisplayDrv::GetInstance().LockDisplayLine();
 };
 
 // *****************************************************************************
 // ***   Unlock Visual Object   ************************************************
 // *****************************************************************************
-void VisObject::UnlockVisObject() 
+Result VisObject::UnlockVisObject()
 {
   // Unlock line
-  DisplayDrv::GetInstance().UnlockDisplayLine();
+  return DisplayDrv::GetInstance().UnlockDisplayLine();
 };
 
 // *****************************************************************************
 // ***   Show Visual Object   **************************************************
 // *****************************************************************************
-void VisObject::Show(uint32_t z_pos)
+Result VisObject::Show(uint32_t z_pos)
 {
   // Z position is 0 by default. In this case we can use 0 here as "no pos" flag
   if(z_pos != 0)
@@ -59,16 +59,16 @@ void VisObject::Show(uint32_t z_pos)
     z = z_pos;
   }
   // Add to VisObject List
-  DisplayDrv::GetInstance().AddVisObjectToList(this, z);
+  return DisplayDrv::GetInstance().AddVisObjectToList(this, z);
 }
 
 // *****************************************************************************
 // ***   Hide Visual Object   **************************************************
 // *****************************************************************************
-void VisObject::Hide(void)
+Result VisObject::Hide(void)
 {
   // Delete from VisObject List
-  DisplayDrv::GetInstance().DelVisObjectFromList(this);
+  return DisplayDrv::GetInstance().DelVisObjectFromList(this);
 }
 
 // *****************************************************************************
@@ -90,29 +90,36 @@ bool VisObject::IsShow(void)
 // *****************************************************************************
 // ***   Move Visual Object   **************************************************
 // *****************************************************************************
-void VisObject::Move(int32_t x, int32_t y, bool is_delta)
+Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
 {
+  Result result;
   // Lock object for changes
-  LockVisObject();
-  // Make changes
-  if(is_delta == true)
+  result = LockVisObject();
+  // Check result
+  if(result.IsGood())
   {
-    // Move object in delta coordinates
-    x_start += x;
-    y_start += y;
-    x_end += x;
-    y_end += y;
+    // Make changes
+    if(is_delta == true)
+    {
+      // Move object in delta coordinates
+      x_start += x;
+      y_start += y;
+      x_end += x;
+      y_end += y;
+    }
+    else
+    {
+      // Move object in absolute coordinates
+      x_start = x;
+      y_start = y;
+      x_end = x + width - 1;
+      y_end = y + height - 1;
+    }
+    // Unlock object after changes
+    result = UnlockVisObject();
   }
-  else
-  {
-    // Move object in absolute coordinates
-    x_start = x;
-    y_start = y;
-    x_end = x + width - 1;
-    y_end = y + height - 1;
-  }
-  // Unlock object after changes
-  UnlockVisObject();
+  // Return result
+  return result;
 }
 
 // *****************************************************************************

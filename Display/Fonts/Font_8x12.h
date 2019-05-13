@@ -1,14 +1,14 @@
 //******************************************************************************
-//  @file Fonts.h
+//  @file Font_8x12.h
 //  @author Nicolai Shlapunov
-// 
-//  @details DevCore: Fonts data, header
+//
+//  @details DevCore: Font 8x12, header
 //
 //  @section LICENSE
 //
 //   Software License Agreement (BSD License)
 //
-//   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2019, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
@@ -35,13 +35,39 @@
 //
 //******************************************************************************
 
-#ifndef Fonts_h
-#define Fonts_h
+#ifndef Font_8x12_h
+#define Font_8x12_h
 
-extern const unsigned char font4x6[256][6];
-extern const unsigned char font6x8[256][8];
-extern const unsigned char font8x8[256][8];
-extern const unsigned char font8x12[256][16];
-extern const unsigned char font12x16[256][24];
+// *****************************************************************************
+// ***   Includes   ************************************************************
+// *****************************************************************************
+#include "DevCfg.h"
+#include "Font.h"
+
+// *****************************************************************************
+// ***   Font Class   **********************************************************
+// *****************************************************************************
+class Font_8x12 : public Font
+{
+  public:
+  // *************************************************************************
+  // ***   Get Instance   ****************************************************
+  // *************************************************************************
+  static Font_8x12& GetInstance(void);
+
+  // *************************************************************************
+  // ***   GetCharGataPtr   **************************************************
+  // *************************************************************************
+  virtual const uint8_t* GetCharGataPtr(uint8_t ch) {return font_data[ch];}
+
+  private:
+    // Font data declaration
+    static const uint8_t font_data[256][12];
+
+    // *************************************************************************
+    // ** Private constructor. Only GetInstance() allow to access this class. **
+    // *************************************************************************
+    explicit Font_8x12();
+};
 
 #endif

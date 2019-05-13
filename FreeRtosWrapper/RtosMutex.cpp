@@ -54,7 +54,7 @@ Result RtosMutex::Lock(TickType_t ticks_to_wait)
 {
   Result result;
   // Variable for check result
-  BaseType_t res;
+  BaseType_t res = pdFALSE;
 
   // Check handler mode
   if(Rtos::IsInHandlerMode())
@@ -93,7 +93,7 @@ Result RtosMutex::Release()
 {
   Result result;
   // Variable for check result
-  BaseType_t res = xSemaphoreGive(mutex);
+  BaseType_t res = pdFALSE;
 
   // Check handler mode
   if(Rtos::IsInHandlerMode())

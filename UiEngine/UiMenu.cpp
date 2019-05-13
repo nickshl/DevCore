@@ -24,8 +24,8 @@
 // ***   Public: Menu constructor   ********************************************
 // *****************************************************************************
 UiMenu::UiMenu(const char* header_str_in, MenuItem* items_in, int32_t items_cnt_in,
-               int32_t current_pos_in, String::FontType header_font_in,
-               String::FontType items_font_in, int16_t x, int16_t y, int16_t w, int16_t h)
+               int32_t current_pos_in, Font* header_font_in, Font* items_font_in,
+               int16_t x, int16_t y, int16_t w, int16_t h)
 {
   // Save input params
   header_str = header_str_in;   // Header string
@@ -40,6 +40,12 @@ UiMenu::UiMenu(const char* header_str_in, MenuItem* items_in, int32_t items_cnt_
   width = w ? w : DisplayDrv::GetInstance().GetScreenW();  // Menu width
   // If height is 0 - get width of all screen
   height = h ? h : DisplayDrv::GetInstance().GetScreenH(); // Menu height
+  // Set fonts
+  header_font = header_font_in;
+  items_font = items_font_in;
+  // Set default fonts if needed
+  if(header_font == nullptr) header_font = &Font_12x16::GetInstance();
+  if(items_font == nullptr) items_font = &Font_8x12::GetInstance();
 }
 
 // *****************************************************************************
@@ -62,9 +68,9 @@ bool UiMenu::Run(void)
   if(items_cnt == 0) return false;
 
   // Get header string height
-  if(header_str != nullptr) header_height = String::GetFontH(header_font);
+  if(header_str != nullptr) header_height = header_font->GetCharH();
   // Menu items count fit on the screen
-  menu_count = (height - header_height - 3) / String::GetFontH(items_font);
+  menu_count = (height - header_height - 3) / items_font->GetCharH();
   // If screen fit more items than we have - limit it
   if(menu_count > items_cnt) menu_count = items_cnt;
   if(menu_count > (int16_t)MAX_MENU_ITEMS) menu_count = MAX_MENU_ITEMS;
@@ -72,9 +78,9 @@ bool UiMenu::Run(void)
   // Height of the Scroll bar: heigth of the Screen - height of the Header
   scroll_h = height - (header_height + 2);
   // Width of the Scroll bar: same as Items font width
-  scroll_w = String::GetFontW(items_font) - 2;
+  scroll_w = items_font->GetCharW() - 2;
   // Count of characters in the line plus null-terminator
-  str_len = (width - (scroll_w + 2)) / String::GetFontW(items_font) + 1;
+  str_len = (width - (scroll_w + 2)) / items_font->GetCharW() + 1;
  
   // Menu border
   box.SetParams(x_start - 1, x_start - 1, width + 2, height + 2, COLOR_GREEN, false);
@@ -82,7 +88,7 @@ bool UiMenu::Run(void)
   box.Show(100);
     
   // Create header String object
-  hdr_str.SetParams(header_str, x_start + String::GetFontW(items_font), y_start, COLOR_YELLOW, header_font);
+  hdr_str.SetParams(header_str, x_start + items_font->GetCharW(), y_start, COLOR_YELLOW, *header_font);
   // Create header Line object
   hdr_line.SetParams(x_start, y_start + header_height, width, header_height, COLOR_MAGENTA);
   // If have caption string
@@ -100,10 +106,8 @@ bool UiMenu::Run(void)
   scroll.Show(1001);
 
   // Box for selected item
-  selection_bar.SetParams(x_start + String::GetFontW(items_font),
-                          y_start + String::GetFontH(items_font) + header_height + 2,
-                          width - String::GetFontW(items_font) - 1, String::GetFontH(items_font) - 1,
-                          COLOR_RED, true);
+  selection_bar.SetParams(x_start + items_font->GetCharW(), y_start + items_font->GetCharH() + header_height + 2,
+                          width - items_font->GetCharW() - 1, items_font->GetCharH() - 1, COLOR_RED, true);
   // Show selection bar
   selection_bar.Show(100);
 
@@ -119,9 +123,9 @@ bool UiMenu::Run(void)
     // Clear string - add null-terminator in the first position
     menu_txt[i][0] = '\0';
     // Create string for menu item
-    menu_str[i] = new String(menu_txt[i], x_start + String::GetFontW(items_font),
-                             y_start + String::GetFontH(items_font) * i + header_height + 2,
-                             COLOR_CYAN, items_font);
+    menu_str[i] = new String(menu_txt[i], x_start + items_font->GetCharW(),
+                             y_start + items_font->GetCharH() * i + header_height + 2,
+                             COLOR_CYAN, *items_font);
     // Show string
     menu_str[i]->Show(101);
   }
@@ -162,8 +166,8 @@ bool UiMenu::Run(void)
         menu_txt[i][str_len] = '\0';
       }
       // Move selection bar
-      selection_bar.Move(x_start + String::GetFontW(items_font),
-                         y_start + String::GetFontH(items_font) * (current_pos - start_pos) + header_height + 2);
+      selection_bar.Move(x_start + items_font->GetCharW(),
+                         y_start + items_font->GetCharH() * (current_pos - start_pos) + header_height + 2);
       // Unlock display
       display_drv.UnlockDisplay();
       // Refresh display

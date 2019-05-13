@@ -1,19 +1,18 @@
 //******************************************************************************
-//  @file UiMsgBox.h
+//  @file Font.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: UI Message Box Class, header
+//  @details DevCore: Font interface, header
 //
 //  @section LICENSE
 //
-//   Software License Agreement (Modified BSD License)
+//   Software License Agreement (BSD License)
 //
 //   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions are met:
-//
 //   1. Redistributions of source code must retain the above copyright
 //      notice, this list of conditions and the following disclaimer.
 //   2. Redistributions in binary form must reproduce the above copyright
@@ -22,9 +21,6 @@
 //   3. Neither the name of the Devtronic nor the names of its contributors
 //      may be used to endorse or promote products derived from this software
 //      without specific prior written permission.
-//   4. Redistribution and use of this software other than as permitted under
-//      this license is void and will automatically terminate your rights under
-//      this license.
 //
 //   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
 //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -37,92 +33,68 @@
 //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-//  @section SUPPORT
-//
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
-//
 //******************************************************************************
 
-#ifndef UiBox_h
-#define UiBox_h
+#ifndef Font_h
+#define Font_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "DisplayDrv.h"
-#include "InputDrv.h"
-#include "SoundDrv.h"
-#include "UiEngine.h"
-#include "Font.h"
 
 // *****************************************************************************
-// ***   Menu Class   **********************************************************
+// ***   Font Class   **********************************************************
 // *****************************************************************************
-class UiMsgBox
+class Font
 {
   public:
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    UiMsgBox(const char* msg_in, const char* hdr_in,
-             Font* msg_fnt_in = nullptr, Font* hdr_fnt_in = nullptr,
-             uint16_t center_x_in = DisplayDrv::GetInstance().GetScreenW()/2,
-             uint16_t center_y_in = DisplayDrv::GetInstance().GetScreenH()/2,
-             uint16_t width_in = 0, uint16_t color_in = 0);
+    explicit Font() {};
 
     // *************************************************************************
     // ***   Public: Destructor   **********************************************
     // *************************************************************************
-    ~UiMsgBox();
+    virtual ~Font() {};
 
     // *************************************************************************
-    // ***   Public: Show MsgBox   *********************************************
+    // ***   GetCharW   ********************************************************
     // *************************************************************************
-    void Show(uint32_t z = 0xFFFFFFF0);
+    virtual uint32_t GetCharW() {return char_width;}
 
     // *************************************************************************
-    // ***   Public: Hide MsgBox   *********************************************
+    // ***   GetCharH   ********************************************************
     // *************************************************************************
-    void Hide(void);
+    virtual uint32_t GetCharH() {return char_height;}
 
     // *************************************************************************
-    // ***   Public: Run MsgBox   **********************************************
+    // ***   GetBytesPerChar   *************************************************
     // *************************************************************************
-    void Run(uint32_t delay);
+    virtual uint32_t GetBytesPerChar() {return bytes_per_char;}
+
+    // *************************************************************************
+    // ***   GetCharGataPtr   **************************************************
+    // *************************************************************************
+    virtual const uint8_t* GetCharGataPtr(uint8_t ch) {return &font_data_ptr[ch * GetBytesPerChar()];}
+
+    // *************************************************************************
+    // ***   GetGataPointer   **************************************************
+    // *************************************************************************
+    virtual const uint8_t* GetGataPointer() {return font_data_ptr;}
+
+  protected:
+    // Width and Height of character
+    uint8_t char_width = 0U;
+    uint8_t char_height = 0U;
+    // Bytes Per Char
+    uint8_t bytes_per_char = 0U;
+    // Pointer to font data
+    const uint8_t* font_data_ptr = nullptr;
 
   private:
-    // Max allowed menu items on the screen
-    static const uint32_t MAX_MSGBOX_LINES = 5U;
-
-    // Pointer to message
-    const char* msg;
-    // Message font
-    Font* msg_fnt;
-
-    // Pointer to header
-    const char* hdr;
-    // Header font
-    Font* hdr_fnt;
-
-    // Position of MsgBox
-    uint16_t center_x;
-    uint16_t center_y;
-    // Width of MsgBox
-    uint16_t width;
-    // Color of MsgBox
-    uint16_t color;
-
-    // Data
-    Box box[4];
-    uint16_t box_cnt = 0;
-    String string[MAX_MSGBOX_LINES + 1U];
-    uint16_t str_cnt = 0;
-
-    // Buffer for stings
-    char str_buf[128];
+    // Nothing yet
 };
 
-#endif // UiEngine_h
+#endif

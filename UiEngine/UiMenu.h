@@ -80,8 +80,7 @@ class UiMenu
     // *************************************************************************
     UiMenu(const char* header_str_in, MenuItem* items_in, int32_t items_cnt_in,
            int32_t current_pos_in = 0,
-           String::FontType header_font_in = String::FONT_12x16,
-           String::FontType items_font_in = String::FONT_8x12,
+           Font* header_font_in = nullptr, Font* items_font_in = nullptr,
            int16_t x = 0, int16_t y = 0, int16_t w = 0, int16_t h = 0);
 
     // *************************************************************************
@@ -98,12 +97,12 @@ class UiMenu
     // Max allowed menu items on the screen
     static const uint32_t MAX_MENU_ITEMS = 16U;
 
-    const char* header_str;       // Menu header
-    String::FontType header_font; // Header font
-    MenuItem* items;              // Pointer to Items array
-    int32_t items_cnt;            // Items count
-    int32_t current_pos;          // Current position
-    String::FontType items_font;  // Menu items font
+    const char* header_str; // Menu header
+    Font* header_font;      // Header font
+    MenuItem* items;        // Pointer to Items array
+    int32_t items_cnt;      // Items count
+    int32_t current_pos;    // Current position
+    Font* items_font;       // Menu items font
     int16_t x_start;
     int16_t y_start;
     int16_t width;

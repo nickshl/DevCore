@@ -19,55 +19,41 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "Strings.h"
-#include "Fonts.h"
 
 #include <cstring> // for strlen()
 #include <cstring>
 #include <stdarg.h>
 
 // *****************************************************************************
-// *****************************************************************************
-// ***   Strings   *************************************************************
-// *****************************************************************************
-// *****************************************************************************
-const String::FontProfile String::fonts[FONTS_MAX] =
-//  W   H BPP  Pointer to data
-{ { 4,  6,  6, (const uint8_t*)font4x6},
-  { 6,  8,  8, (const uint8_t*)font6x8},
-  { 8,  8,  8, (const uint8_t*)font8x8},
-  { 8, 12, 12, (const uint8_t*)font8x12},
-  {12, 16, 32, (const uint8_t*)font12x16} };
-
-// *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, uint32_t tc, FontType ft)
+String::String(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font)
 {
-  SetParams(str, x, y, tc, ft);
+  SetParams(str, x, y, tc, font);
 }
 
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, FontType ft)
+String::String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font)
 {
-  SetParams(str, x, y, tc, bgc, ft);
+  SetParams(str, x, y, tc, bgc, font);
 }
 
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, FontType ft)
+void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font)
 {
   string = (const uint8_t*)str;
   x_start = x;
   y_start = y;
   txt_color = tc;
   bg_color = 0;
-  font_type = ft;
+  font_ptr = &font;
   transpatent_bg = true;
-  width = fonts[ft].w * strlen(str);
-  height = fonts[ft].h;
+  width = font.GetCharW() * strlen(str);
+  height = font.GetCharH();
   x_end = x + width - 1;
   y_end = y + height - 1;
   rotation = 0;
@@ -76,17 +62,17 @@ void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, FontT
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, FontType ft)
+void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font)
 {
   string = (const uint8_t*)str;
   x_start = x;
   y_start = y;
   txt_color = tc;
   bg_color = bgc;
-  font_type = ft;
+  font_ptr = &font;
   transpatent_bg = false;
-  width = fonts[ft].w * strlen(str);
-  height = fonts[ft].h;
+  width = font.GetCharW() * strlen(str);
+  height = font.GetCharH();
   x_end = x + width - 1;
   y_end = y + height - 1;
   rotation = 0;
@@ -111,7 +97,7 @@ void String::SetString(const char* str)
   LockVisObject();
   //Set new pointer to string
   string = (const uint8_t*)str;
-  width = fonts[font_type].w * strlen(str);
+  width = GetFontW() * strlen(str);
   x_end = x_start + width - 1;
   // Unlock object after changes
   UnlockVisObject();
@@ -122,14 +108,20 @@ void String::SetString(const char* str)
 // *****************************************************************************
 void String::SetString(char* buf, uint32_t len, const char* format, ...)
 {
+  // Lock object for changes
+  LockVisObject();
   // Argument list
   va_list arglist;
   // Create string
   va_start(arglist, format);
   vsnprintf(buf, len, format, arglist);
   va_end(arglist);
-  // Update string
-  SetString(buf);
+  //Set new pointer to string
+  string = (const uint8_t*)buf;
+  width = GetFontW() * strlen(buf);
+  x_end = x_start + width - 1;
+  // Unlock object after changes
+  UnlockVisObject();
 }
 
 // *****************************************************************************
@@ -138,12 +130,12 @@ void String::SetString(char* buf, uint32_t len, const char* format, ...)
 void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
-  if((line >= y_start) && (line <= y_end) && (string != nullptr))
+  if((line >= y_start) && (line <= y_end) && (string != nullptr) && (font_ptr != nullptr))
   {
     // Current symbol X position
     int32_t x = x_start;
     // Number of bytes need skipped for draw line
-    uint32_t skip_bytes = (line - y_start) * fonts[font_type].bytes_per_char / fonts[font_type].h;
+    uint32_t skip_bytes = (line - y_start) * GetFontBytePerChar() / GetFontH();
     // Pointer to string. Will increment for get characters.
     const uint8_t* str = string;
 
@@ -152,13 +144,15 @@ void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
     {
       uint32_t b = 0;
       uint32_t w = 0;
+      // Get pointer to character data
+      const uint8_t* char_ptr = font_ptr->GetCharGataPtr(*str);
       // Get all symbol line
-      for(uint32_t i = 0; i < fonts[font_type].bytes_per_char; i++)
+      for(uint32_t i = 0; i < GetFontBytePerChar() / GetFontH(); i++)
       {
-        b |= fonts[font_type].font_data[((uint32_t)(*str)) * fonts[font_type].bytes_per_char + skip_bytes + i] << (i*8);
+        b |= char_ptr[skip_bytes + i] << (i*8);
       }
       // Output symbol line
-      while(w < fonts[font_type].w)
+      while(w < GetFontW())
       {
         // Put color in buffer only if visible
         if((x >= start_x) && (x < start_x+n))
@@ -191,7 +185,7 @@ void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
-  if((row >= x_start) && (row <= x_end) && (string != nullptr))
+  if((row >= x_start) && (row <= x_end) && (string != nullptr) && (font_ptr != nullptr))
   {
     // Find line in symbol
     int16_t start = y_start - start_y;
@@ -201,18 +195,18 @@ void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
     if(line >= 0)
     {
       // Get symbol
-      uint8_t c = string[line / fonts[font_type].w];
+      uint8_t c = string[line / GetFontW()];
+      // Get pointer to character data
+      const uint8_t* char_ptr = font_ptr->GetCharGataPtr(c);
       // Find line in symbol
-      line %= fonts[font_type].w;
+      line %= GetFontW();
       // Index to symbol in data array
-      uint16_t s_idx = c * fonts[font_type].bytes_per_char;
-      // Index to symbol in data array
-      uint16_t bytes_per_line = fonts[font_type].bytes_per_char / fonts[font_type].h;
+      uint16_t bytes_per_line = GetFontBytePerChar() / GetFontH();
       // Get symbols lines
-      for(int32_t i = 0; i < fonts[font_type].h; i++)
+      for(int32_t i = 0; i < (int32_t)GetFontH(); i++)
       {
-        uint32_t b = *(uint32_t *)(&fonts[font_type].font_data[s_idx + i*bytes_per_line]);
-        if(b & (1U<<line))
+        uint32_t b = *(uint32_t *)(&(char_ptr[i * bytes_per_line]));
+        if(b & (1U << line))
         {
           if((start+i > 0) && (start+i < n))
           {
@@ -223,37 +217,3 @@ void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
     }
   }
 }
-
-// *****************************************************************************
-// ***   GetFontW   ************************************************************
-// *****************************************************************************
-uint32_t String::GetFontW(FontType ft)
-{
-  // Zero my default
-  uint32_t font_w = 0U;
-  // If provided valid font number
-  if(ft < FONTS_MAX)
-  {
-    // Get font width
-    font_w = fonts[ft].w;
-  }
-  // Return result
-  return font_w;
-};
-
-// *****************************************************************************
-// ***   GetFontH   ************************************************************
-// *****************************************************************************
-uint32_t String::GetFontH(FontType ft)
-{
-  // Zero my default
-  uint32_t font_h = 0U;
-  // If provided valid font number
-  if(ft < FONTS_MAX)
-  {
-    // Get font height
-    font_h = fonts[ft].h;
-  }
-  // Return result
-  return font_h;
-};

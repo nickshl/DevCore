@@ -56,7 +56,7 @@ void UiButton::SetParams(const char* str_in, int32_t x, int32_t y, int32_t w, in
   // Set box params
   box.SetParams(x, y, w, h, COLOR_WHITE);
   // Set string params
-  string.SetParams(str, x, y, COLOR_WHITE, String::FONT_8x12);
+  string.SetParams(str, x, y, COLOR_WHITE, Font_8x12::GetInstance());
   string.Move((w-string.GetWidth())/2, (h-string.GetHeight())/2, true);
 }
 

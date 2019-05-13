@@ -53,7 +53,7 @@ Result DisplayDrv::Setup()
     }
 
     // Set string parameters
-    fps_str.SetParams(str, width/3, height - 6, COLOR_MAGENTA, String::FONT_4x6);
+    fps_str.SetParams(str, width/3, height - 6, COLOR_MAGENTA, Font_4x6::GetInstance());
     // Show string if flag is set
     if(DISPLAY_DEBUG_INFO)
     {
@@ -268,7 +268,7 @@ Result DisplayDrv::SetDisplayDrv(IDisplay* in_display)
     else
     {
       // Task can't be initialized without display driver
-      Result result = Result::ERR_NULL_PTR;
+      result = Result::ERR_NULL_PTR;
     }
   }
   // Return result
