@@ -44,7 +44,7 @@ UiMenu::UiMenu(const char* header_str_in, MenuItem* items_in, int32_t items_cnt_
   header_font = header_font_in;
   items_font = items_font_in;
   // Set default fonts if needed
-  if(header_font == nullptr) header_font = &Font_12x16::GetInstance();
+  if(header_font == nullptr) header_font = &Font_10x18::GetInstance();
   if(items_font == nullptr) items_font = &Font_8x12::GetInstance();
 }
 

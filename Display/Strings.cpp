@@ -205,12 +205,20 @@ void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
       // Get symbols lines
       for(int32_t i = 0; i < (int32_t)GetFontH(); i++)
       {
-        uint32_t b = *(uint32_t *)(&(char_ptr[i * bytes_per_line]));
-        if(b & (1U << line))
+        if((start+i > 0) && (start+i < n))
         {
-          if((start+i > 0) && (start+i < n))
+          uint32_t b = *(uint32_t *)(&(char_ptr[i * bytes_per_line]));
+          if(b & (1U << line))
           {
             buf[start+i] = txt_color;
+          }
+          else if(transpatent_bg == false)
+          {
+            buf[start+i] = bg_color;
+          }
+          else
+          {
+            // Empty statement
           }
         }
       }

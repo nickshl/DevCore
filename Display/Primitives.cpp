@@ -203,7 +203,50 @@ void Line::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 void Line::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
-  // FIX ME: implement for Vertical Update Mode too
+  // Draw only if needed
+  if((row >= x_start) && (row <= x_end))
+  {
+    const int32_t deltaX = abs(y_end - y_start);
+    const int32_t deltaY = abs(x_end - x_start);
+    const int32_t signX = y_start < y_end ? 1 : -1;
+    const int32_t signY = x_start < x_end ? 1 : -1;
+
+    int32_t error = deltaX - deltaY;
+
+    int32_t x = y_start - start_y;
+    int32_t y = x_start;
+
+    int32_t end_x = y_end - start_y;
+    while((x != end_x || y != x_end) && (y != row))
+    {
+      const int32_t error2 = error * 2;
+      if(error2 > -deltaY)
+      {
+        error -= deltaY;
+        x += signX;
+      }
+      if(error2 < deltaX)
+      {
+        error += deltaX;
+        y += signY;
+      }
+    }
+
+    while((x != end_x || y != x_end) && (y == row))
+    {
+      if((x >= 0) && (x < n)) buf[x] = color;
+      const int32_t error2 = error * 2;
+      if(error2 > -deltaY)
+      {
+        error -= deltaY;
+        x += signX;
+      }
+      if(error2 < deltaX)
+      {
+        break;
+      }
+    }
+  }
 }
 
 // *****************************************************************************

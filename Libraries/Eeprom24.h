@@ -53,6 +53,7 @@
 // *****************************************************************************
 #include "DevCfg.h"
 #include "IIic.h"
+#include "IGpio.h"
 
 // *****************************************************************************
 // ***   EEPROM 24C*** Driver Class   ******************************************
@@ -63,7 +64,7 @@ class Eeprom24
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit Eeprom24(IIic& iic_ref) : iic(iic_ref) {};
+    explicit Eeprom24(IIic& iic_ref, IGpio* wp = nullptr) : iic(iic_ref), write_protection(wp) {};
 
     // *************************************************************************
     // ***   Public: Init   ****************************************************
@@ -95,6 +96,8 @@ class Eeprom24
 
     // Reference to the I2C handle
     IIic& iic;
+    // Write protection pin
+    IGpio* write_protection = nullptr;
 
     // *************************************************************************
     // ***   Private: Constructors and assign operator - prevent copying   *****

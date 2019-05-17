@@ -30,6 +30,11 @@ Result Eeprom24::Init()
   Result result = Result::RESULT_OK;
   iic.SetTxTimeout(10U);
   iic.SetRxTimeout(100U);
+  // Enable write protection
+  if(write_protection != nullptr)
+  {
+    write_protection->SetHigh();
+  }
   return result;
 }
 
@@ -64,6 +69,11 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
     result = Result::RESULT_OK;
     // Allocate buffer for address + data
     uint8_t buf[2U + PAGE_SIZE_BYTES];
+    // Disable write protection
+    if(write_protection != nullptr)
+    {
+      write_protection->SetLow();
+    }
     // Cycle for write pages
     while(size && result.IsGood())
     {
@@ -108,6 +118,11 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
           }
         }
       }
+    }
+    // Enable write protection
+    if(write_protection != nullptr)
+    {
+      write_protection->SetHigh();
     }
   }
 
