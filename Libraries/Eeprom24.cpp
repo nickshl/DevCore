@@ -90,7 +90,10 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
       // Decrease number of remaining bytes
       size -= data_size;
       // Store address
-      *((uint16_t*)buf) = addr;
+      buf[0U] = (addr >> 8) & 0xFF; // MSB
+      buf[1U] = addr & 0xFF; // LSB
+      // Increment address for next transaction
+      addr += data_size;
       // Copy data
       memcpy(buf + 2U, tx_buf_ptr, data_size);
       // Transfer
