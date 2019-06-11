@@ -69,6 +69,7 @@ class Result
       ERR_NOT_IMPLEMENTED,
       ERR_BAD_CRC,
       ERR_BUSY,
+      ERR_UNHANDLED_REQUEST,
 
       // ***   RTOS errors   ***************************************************
       ERR_TASK_CREATE,

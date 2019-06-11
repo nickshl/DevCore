@@ -57,7 +57,7 @@
 // *****************************************************************************
 // ***   This driver can be compiled only if UART configured in CubeMX   *******
 // *****************************************************************************
-#ifndef HAL_USART_MODULE_ENABLED
+#if !defined(HAL_USART_MODULE_ENABLED) && !defined(HAL_UART_MODULE_ENABLED)
   typedef uint32_t UART_HandleTypeDef; // Dummy UART handle for  header compilation
 #endif
 
