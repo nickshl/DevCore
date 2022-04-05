@@ -64,7 +64,12 @@ class Eeprom24
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit Eeprom24(IIic& iic_ref, IGpio* wp = nullptr) : iic(iic_ref), write_protection(wp) {};
+    explicit Eeprom24(IIic& iic_ref, IGpio* wp = nullptr, uint32_t size = 0x2000u, uint8_t page_size = 32u) : iic(iic_ref), write_protection(wp), size_bytes(size), page_size_bytes(page_size) {buf = new uint8_t[page_size + 2u];}
+
+    // *************************************************************************
+    // ***   Public: Constructor   *********************************************
+    // *************************************************************************
+    ~Eeprom24() {delete buf;}
 
     // *************************************************************************
     // ***   Public: Init   ****************************************************
@@ -81,18 +86,34 @@ class Eeprom24
     // *************************************************************************
     Result Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size);
 
+    // *************************************************************************
+    // ***   Public: Write   ***************************************************
+    // *************************************************************************
+    uint8_t GetSize() {return size_bytes;}
+
+    // *************************************************************************
+    // ***   Public: Write   ***************************************************
+    // *************************************************************************
+    uint8_t GetPageSize() {return page_size_bytes;}
+
   private:
     // Chip address
     static const uint8_t I2C_ADDR = 0x50U;
 
+    // Size of EEPROM in bytes
+    uint32_t size_bytes = 0x2000u;
+
     // Page size in bytes
-    static const uint8_t PAGE_SIZE_BYTES = 64U;
+    uint8_t page_size_bytes = 32u;
 
     // Writing timeout in ms
     static const uint8_t WRITING_TIMEOUT_MS = 10U;
 
     // Repetition counter for tracking timeout
     uint8_t repetition_cnt = 0U;
+
+    // Buffer pointer to allocate memory for address + data
+    uint8_t* buf = nullptr;
 
     // Reference to the I2C handle
     IIic& iic;

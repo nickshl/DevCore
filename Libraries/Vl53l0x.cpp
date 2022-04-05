@@ -896,7 +896,7 @@ Result Vl53l0x::WriteMulti(uint8_t reg, uint8_t* src, uint8_t count)
     {
       buf[i + 1U] = src[i];
     }
-    result = iic.Write(i2c_addr, buf, sizeof(count) + 1U);
+    result = iic.Write(i2c_addr, buf, count + 1U);
   }
 
   return result;
@@ -908,5 +908,5 @@ Result Vl53l0x::WriteMulti(uint8_t reg, uint8_t* src, uint8_t count)
 Result Vl53l0x::ReadMulti(uint8_t reg, uint8_t* dst, uint8_t count)
 {
   // Transfer & return result
-  return iic.Transfer(i2c_addr, &reg, sizeof(reg), dst, sizeof(count));
+  return iic.Transfer(i2c_addr, &reg, sizeof(reg), dst, count);
 }

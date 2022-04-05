@@ -1,3 +1,4 @@
+
 //******************************************************************************
 //  @file StHalIic.cpp
 //  @author Nicolai Shlapunov
@@ -73,7 +74,7 @@ Result StHalIic::IsDeviceReady(uint16_t addr, uint8_t retries)
   // Shift address one bit left - HAL blow away LSB, not MSB.
   addr <<= 1U;
   // Check device status
-  HAL_StatusTypeDef hal_result = HAL_I2C_IsDeviceReady(&hi2c1, addr, retries, i2c_tx_timeout_ms);
+  HAL_StatusTypeDef hal_result = HAL_I2C_IsDeviceReady(&hi2c, addr, retries, i2c_tx_timeout_ms);
   // Convert operation result to Result
   result = ConvertResult(hal_result);
   // Return result

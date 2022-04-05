@@ -43,10 +43,20 @@ Result Eeprom24::Init()
 // *****************************************************************************
 Result Eeprom24::Read(uint16_t addr, uint8_t* rx_buf_ptr, uint16_t size)
 {
-  Result result = Result::ERR_NULL_PTR;
+  Result result = Result::RESULT_OK;
 
   // Check input parameters
-  if(rx_buf_ptr != nullptr)
+  if(rx_buf_ptr == nullptr)
+  {
+    // Set error
+    result = Result::ERR_NULL_PTR;
+  }
+  else if(addr + size > size_bytes)
+  {
+    // Set error
+    result = Result::ERR_INVALID_SIZE;
+  }
+  else
   {
     // Transfer: write two bytes address then read data
     result = iic.Transfer(I2C_ADDR, (uint8_t*)&addr, sizeof(addr), rx_buf_ptr, size);
@@ -60,15 +70,21 @@ Result Eeprom24::Read(uint16_t addr, uint8_t* rx_buf_ptr, uint16_t size)
 // *****************************************************************************
 Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
 {
-  Result result = Result::ERR_NULL_PTR;
+  Result result = Result::RESULT_OK;
 
   // Check input parameters
-  if(tx_buf_ptr != nullptr)
+  if(tx_buf_ptr == nullptr)
   {
-    // Clear result to enter in to cycle
-    result = Result::RESULT_OK;
-    // Allocate buffer for address + data
-    uint8_t buf[2U + PAGE_SIZE_BYTES];
+    // Set error
+    result = Result::ERR_NULL_PTR;
+  }
+  else if(addr + size > size_bytes)
+  {
+    // Set error
+    result = Result::ERR_INVALID_SIZE;
+  }
+  else
+  {
     // Disable write protection
     if(write_protection != nullptr)
     {
@@ -78,12 +94,12 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
     while(size && result.IsGood())
     {
       // Get data size
-      uint8_t data_size = size < PAGE_SIZE_BYTES ? size : PAGE_SIZE_BYTES;
+      uint8_t data_size = size < page_size_bytes ? size : page_size_bytes;
       // For the first page
-      if((addr % PAGE_SIZE_BYTES) != 0U)
+      if((addr % page_size_bytes) != 0U)
       {
         // Calculate data size from start address to the end of current page
-        data_size = PAGE_SIZE_BYTES - (addr % PAGE_SIZE_BYTES);
+        data_size = page_size_bytes - (addr % page_size_bytes);
         // If size less than remaining page bytes - use size
         data_size = size < data_size ? size : data_size;
       }
