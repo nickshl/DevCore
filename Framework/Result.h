@@ -69,7 +69,12 @@ class Result
       ERR_NOT_IMPLEMENTED,
       ERR_BAD_CRC,
       ERR_BUSY,
+      ERR_OVERFLOW,
       ERR_UNHANDLED_REQUEST,
+      ERR_INVALID_COMMAND,
+      ERR_INVALID_SIZE,
+      ERR_INVALID_DATA,
+      ERR_CANNOT_EXECUTE,
 
       // ***   RTOS errors   ***************************************************
       ERR_TASK_CREATE,
