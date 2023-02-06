@@ -134,11 +134,14 @@ void TiledMap::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y
 // *****************************************************************************
 void TiledMap::ScrollView(int32_t dx, int32_t dy)
 {
+  // Lock object for changes
   LockVisObject();
+  // Do changes
   x_pos += dx;
   if(x_pos < 0) x_pos = 0;
   y_pos += dy;
   if(y_pos < 0) y_pos = 0; 
+  // Unlock object after changes
   UnlockVisObject();
 }
 

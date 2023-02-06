@@ -89,7 +89,7 @@ class Font
     uint8_t char_width = 0U;
     uint8_t char_height = 0U;
     // Bytes Per Char
-    uint8_t bytes_per_char = 0U;
+    uint16_t bytes_per_char = 0U;
     // Pointer to font data
     const uint8_t* font_data_ptr = nullptr;
 

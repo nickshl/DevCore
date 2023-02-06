@@ -2,7 +2,7 @@
 //  @file Font_10x18.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: Font 8x12, header
+//  @details DevCore: Font 10x18, header
 //
 //  @section LICENSE
 //

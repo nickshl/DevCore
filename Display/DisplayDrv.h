@@ -54,7 +54,7 @@
 #include "ITouchscreen.h"
 #include "VisObject.h"
 #include "Primitives.h"
-#include "Strings.h"
+#include "Strng.h"
 #include "Image.h"
 #include "TiledMap.h"
 
@@ -175,7 +175,7 @@ class DisplayDrv : public AppTask
 
   private:
     // Display FPS/touch coordinates
-    static const bool DISPLAY_DEBUG_INFO = true;
+    static const bool DISPLAY_DEBUG_INFO = false;
     
     // Display driver object
     IDisplay* display = nullptr;

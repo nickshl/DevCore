@@ -2,7 +2,7 @@
 //  @file Font_4x6.cpp
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: Font 8x12 implementation, implementation
+//  @details DevCore: Font 4x6 implementation, implementation
 //
 //  @copyright Copyright (c) 2019, Devtronic & Nicolai Shlapunov
 //             All rights reserved.

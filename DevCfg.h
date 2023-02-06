@@ -64,6 +64,12 @@
 #else
 typedef uint32_t ADC_HandleTypeDef; // Dummy ADC handle for compilation
 #endif
+// ***   USART   ***************************************************************
+#if defined(HAL_USART_MODULE_ENABLED) || defined(HAL_UART_MODULE_ENABLED)
+#include "usart.h"
+#else
+typedef uint32_t UART_HandleTypeDef; // Dummy UART handle for compilation
+#endif
 // ***   SPI   *****************************************************************
 #ifdef HAL_SPI_MODULE_ENABLED
 #include "spi.h"

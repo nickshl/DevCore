@@ -411,12 +411,12 @@ Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     SetAddrWindow(x, y, x, y+h-1);
 
     // Swap bytes
-    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+    uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
     while(h--)
     {
-      spi.Write(&color, sizeof(color));
+      spi.Write(&clr, sizeof(clr));
     }
     display_cs.SetHigh(); // Pull up CS
   }
@@ -436,12 +436,12 @@ Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     SetAddrWindow(x, y, x+w-1, y);
 
     // Swap bytes
-    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+    uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
     while(w--)
     {
-      spi.Write(&color, sizeof(color));
+      spi.Write(&clr, sizeof(clr));
     }
     display_cs.SetHigh(); // Pull up CS
   }
@@ -462,14 +462,14 @@ Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
     SetAddrWindow(x, y, x+w-1, y+h-1);
 
     // Swap bytes
-    uint8_t color = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
+    uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
     for(y=h; y>0; y--)
     {
       for(x=w; x>0; x--)
       {
-        spi.Write(&color, sizeof(color));
+        spi.Write(&clr, sizeof(clr));
       }
     }
     display_cs.SetHigh(); // Pull up CS

@@ -52,11 +52,11 @@ Result DisplayDrv::Setup()
       touch->Init();
     }
 
-    // Set string parameters
-    fps_str.SetParams(str, width/3, height - 6, COLOR_MAGENTA, Font_4x6::GetInstance());
     // Show string if flag is set
     if(DISPLAY_DEBUG_INFO)
     {
+      // Set string parameters
+      fps_str.SetParams(str, width/3, height - 12, COLOR_MAGENTA, Font_4x6::GetInstance());
       // Max Z
       fps_str.Show(0xFFFFFFFFU);
     }
@@ -262,6 +262,9 @@ Result DisplayDrv::SetDisplayDrv(IDisplay* in_display)
     {
       // Save display driver pointer
       display = in_display;
+      // Set width and height variables for screen
+      width = display->GetWidth();
+      height = display->GetHeight();
       // Set result
       result = Result::RESULT_OK;
     }

@@ -41,6 +41,9 @@ Box::Box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill)
 // *****************************************************************************
 void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill)
 {
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
   color = c;
   x_start = x;
   y_start = y;
@@ -50,6 +53,8 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool
   height = h;
   rotation = 0;
   fill = is_fill;
+  // Unlock object after changes
+  UnlockVisObject();
 }
 
 // *****************************************************************************
@@ -137,6 +142,9 @@ Line::Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
 // *****************************************************************************
 void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
 {
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
   color = c;
   x_start = x1;
   y_start = y1;
@@ -145,6 +153,8 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
   width  = (x1 < x2) ? (x2 - x1) : (x1 - x2);
   height = (y1 < y2) ? (y2 - y1) : (y1 - y2);
   rotation = 0;
+  // Unlock object after changes
+  UnlockVisObject();
 }
 
 // *****************************************************************************
@@ -153,7 +163,7 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
 void Line::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
-  if((line >= y_start) && (line <= y_end))
+  if(((line >= y_start) && (line <= y_end)) || ((line >= y_end) && (line <= y_start)))
   {
     const int32_t deltaX = abs(x_end - x_start);
     const int32_t deltaY = abs(y_end - y_start);
@@ -181,19 +191,25 @@ void Line::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
       }
     }
 
-    while((x != end_x || y != y_end) && (y == line))
+    // If we found current line
+    if(y == line)
     {
-      if((x >= 0) && (x < n)) buf[x] = color;
-      const int32_t error2 = error * 2;
-      if(error2 > -deltaY) 
+      // Go and draw line
+      do
       {
-        error -= deltaY;
-        x += signX;
+        if((x >= 0) && (x < n)) buf[x] = color;
+        const int32_t error2 = error * 2;
+        if(error2 > -deltaY) 
+        {
+          error -= deltaY;
+          x += signX;
+        }
+        if(error2 < deltaX) 
+        {
+          break;
+        }
       }
-      if(error2 < deltaX) 
-      {
-        break;
-      }
+      while((x != end_x) || (y != y_end));
     }
   }
 }
@@ -232,19 +248,25 @@ void Line::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
       }
     }
 
-    while((x != end_x || y != x_end) && (y == row))
+    // If we found current line
+    if(y == row)
     {
-      if((x >= 0) && (x < n)) buf[x] = color;
-      const int32_t error2 = error * 2;
-      if(error2 > -deltaY)
+      // Go and draw line
+      do
       {
-        error -= deltaY;
-        x += signX;
+        if((x >= 0) && (x < n)) buf[x] = color;
+        const int32_t error2 = error * 2;
+        if(error2 > -deltaY)
+        {
+          error -= deltaY;
+          x += signX;
+        }
+        if(error2 < deltaX)
+        {
+          break;
+        }
       }
-      if(error2 < deltaX)
-      {
-        break;
-      }
+      while((x != end_x) || (y != x_end));
     }
   }
 }
@@ -268,6 +290,9 @@ Circle::Circle(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
 // *****************************************************************************
 void Circle::SetParams(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
 {
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
   color = c;
   radius = r;
   x_start = x - r;
@@ -278,6 +303,8 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
   height = r*2;
   rotation = 0;
   fill = is_fill;
+  // Unlock object after changes
+  UnlockVisObject();
 }
 
 // *****************************************************************************
@@ -366,4 +393,142 @@ void Circle::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
       for(int32_t i = start; i < end; i++) buf[i] = color;
     }
   }
+}
+
+// *****************************************************************************
+// *****************************************************************************
+// ***   Triangle   ****************************************************************
+// *****************************************************************************
+// *****************************************************************************
+
+// *****************************************************************************
+// ***   Constructor   *********************************************************
+// *****************************************************************************
+Triangle::Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill)
+{
+  SetParams(x1, y1, x2, y2, x3, y3, c, is_fill);
+}
+
+// *****************************************************************************
+// ***   SetParams   ***********************************************************
+// *****************************************************************************
+void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
+  color = c;
+  fill = is_fill;
+  x_start = (x1 < x2) ? (x1 < x3 ? x1 : x3) : (x2 < x3 ? x2 : x3);
+  y_start = (y1 < y2) ? (y1 < y3 ? y1 : y3) : (y2 < y3 ? y2 : y3);
+  x_end = (x1 > x2) ? (x1 > x3 ? x1 : x3) : (x2 > x3 ? x2 : x3);
+  y_end = (y1 > y2) ? (y1 > y3 ? y1 : y3) : (y2 > y3 ? y2 : y3);
+  width  = x_end - x_start;
+  height = y_end - y_start;
+  // Lines for draw
+  lines[0].x1 = x1;
+  lines[0].y1 = y1;      
+  lines[0].x2 = x2;
+  lines[0].y2 = y2;      
+  lines[1].x1 = x1;
+  lines[1].y1 = y1;      
+  lines[1].x2 = x3;
+  lines[1].y2 = y3;      
+  lines[2].x1 = x2;
+  lines[2].y1 = y2;      
+  lines[2].x2 = x3;
+  lines[2].y2 = y3;      
+  rotation = 0;
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void Triangle::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+{
+  // Draw only if needed
+  if((line >= y_start) && (line <= y_end))
+  {
+    int32_t x_min = 10000;
+    int32_t x_max = -1;
+    // Find minimum and maximum x for given screen line
+    for(uint8_t i = 0u; i < 3u; i++)
+    {
+      // Draw only if needed
+      if(((line >= lines[i].y1) && (line <= lines[i].y2)) || ((line >= lines[i].y2) && (line <= lines[i].y1)))
+      {
+        const int32_t deltaX = abs(lines[i].x2 - lines[i].x1);
+        const int32_t deltaY = abs(lines[i].y2 - lines[i].y1);
+        const int32_t signX = lines[i].x1 < lines[i].x2 ? 1 : -1;
+        const int32_t signY = lines[i].y1 < lines[i].y2 ? 1 : -1;
+
+        int32_t error = deltaX - deltaY;
+        
+        int32_t x = lines[i].x1 - start_x;
+        int32_t y = lines[i].y1;
+
+        int32_t end_x = lines[i].x2 - start_x;
+        // Go trought cycle until reach end of line or current line
+        while((x != end_x || y != lines[i].y2) && (y != line))
+        {
+          const int32_t error2 = error * 2;
+          if(error2 > -deltaY) 
+          {
+            error -= deltaY;
+            x += signX;
+          }
+          if(error2 < deltaX) 
+          {
+            error += deltaX;
+            y += signY;
+          }
+        }
+        // If we found current line
+        if(y == line)
+        {
+          // Go and draw line
+          do
+          {
+            if((x >= 0) && (x < n))
+            {
+              if(fill == false) buf[x] = color;
+              else
+              {
+                x_min = x_min > x ? x : x_min;
+                x_max = x_max < x ? x : x_max;
+              }
+            }
+            const int32_t error2 = error * 2;
+            if(error2 > -deltaY) 
+            {
+              error -= deltaY;
+              x += signX;
+            }
+            if(error2 < deltaX) 
+            {
+              break;
+            }
+          }
+          while((x != end_x) || (y != lines[i].y2));
+        }
+      }
+    }
+    if(fill)
+    {
+      for(uint16_t i = x_min; i <= x_max; i++)
+      {
+        buf[i] = color;
+      }
+    }
+  }
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void Triangle::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+{
+  // Not implemented
 }

@@ -94,6 +94,40 @@ template <class T, int N> class CircularBuffer
     }
 
     // *************************************************************************
+    // ***   Public: GetValueFromHead   ****************************************
+    // *************************************************************************
+    T GetValueFromHead(uint32_t n)
+    {
+      uint32_t idx = GetHeadIdx();
+      // Check if n less than values
+      if(n < GetItemsCnt())
+      {
+        // Add if necessary
+        if(n > idx) idx += N;
+        idx -= n; 
+      }
+      // Return result
+      return array[idx]; 
+    }
+
+    // *************************************************************************
+    // ***   Public: GetValueFromTail   ****************************************`
+    // *************************************************************************
+    T GetValueFromTail(uint32_t n)
+    {
+      uint32_t idx = GetTailIdx();
+      // Check if n less than values
+      if(n < GetItemsCnt())
+      {
+        idx += n;
+        // Decrease if necessary
+        if(idx >= N) idx -= N;
+      }
+      // Return result
+      return array[idx]; 
+    }
+
+    // *************************************************************************
     // ***   Public: IsFilled   ************************************************
     // *************************************************************************
     bool IsFilled(void)

@@ -2,7 +2,7 @@
 //  @file Font_4x6.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: Font 8x12, header
+//  @details DevCore: Font 4x6, header
 //
 //  @section LICENSE
 //
