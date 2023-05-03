@@ -31,7 +31,7 @@
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-Box::Box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill)
+Box::Box(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool is_fill)
 {
   SetParams(x, y, w, h, c, is_fill);
 }
@@ -39,7 +39,7 @@ Box::Box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill)
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill)
+void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool is_fill)
 {
   // Lock object for changes
   LockVisObject();
@@ -60,7 +60,7 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Box::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Box::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -93,7 +93,7 @@ void Box::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Box::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Box::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end))
@@ -132,7 +132,7 @@ void Box::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-Line::Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
+Line::Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
 {
   SetParams(x1, y1, x2, y2, c);
 }
@@ -140,7 +140,7 @@ Line::Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
+void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
 {
   // Lock object for changes
   LockVisObject();
@@ -160,7 +160,7 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Line::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Line::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if(((line >= y_start) && (line <= y_end)) || ((line >= y_end) && (line <= y_start)))
@@ -217,7 +217,7 @@ void Line::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Line::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Line::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end))
@@ -280,7 +280,7 @@ void Line::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-Circle::Circle(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
+Circle::Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
 {
   SetParams(x, y, r, c, is_fill);
 }
@@ -288,7 +288,7 @@ Circle::Circle(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void Circle::SetParams(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
+void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
 {
   // Lock object for changes
   LockVisObject();
@@ -310,7 +310,7 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Circle::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Circle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -375,7 +375,7 @@ void Circle::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Circle::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Circle::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   if((row >= x_start) && (row <= x_end))
   {
@@ -404,7 +404,7 @@ void Circle::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-Triangle::Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill)
+Triangle::Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, color_t c, bool is_fill)
 {
   SetParams(x1, y1, x2, y2, x3, y3, c, is_fill);
 }
@@ -412,7 +412,7 @@ Triangle::Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, i
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill)
+void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, color_t c, bool is_fill)
 {
   // Lock object for changes
   LockVisObject();
@@ -446,7 +446,7 @@ void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Triangle::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Triangle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -528,7 +528,7 @@ void Triangle::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Triangle::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Triangle::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Not implemented
 }

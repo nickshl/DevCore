@@ -26,7 +26,7 @@
 UiMsgBox::UiMsgBox(const char* msg_in, const char* hdr_in,
                    Font* msg_fnt_in, Font* hdr_fnt_in,
                    uint16_t center_x_in, uint16_t center_y_in,
-                   uint16_t width_in, uint16_t color_in)
+                   uint16_t width_in, color_t color_in)
 {
   // Save input params
   msg = msg_in;            // Message

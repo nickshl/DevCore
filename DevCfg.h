@@ -101,11 +101,6 @@ typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
 // ***   Configuration   *******************************************************
 // *****************************************************************************
 
-// ***   I2C Handles   *********************************************************
-#ifdef HAL_I2C_MODULE_ENABLED
-  // BME280 I2C handle
-  static I2C_HandleTypeDef& BME280_HI2C = hi2c1;
-#endif
 // ***   TIM Handles   *********************************************************
 #ifdef HAL_TIM_MODULE_ENABLED
   // Sound Timer handle
@@ -131,6 +126,123 @@ const static uint8_t DISPLAY_DRV_TASK_PRIORITY = tskIDLE_PRIORITY + 1U;
 const static uint8_t INPUT_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 2U;
 const static uint8_t SOUND_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 3U;
 // *****************************************************************************
+
+// *****************************************************************************
+// ***   Display Configuration   ***********************************************
+// *****************************************************************************
+
+// Max line in pixels for allocate buffer in Display Driver. Usually equal to
+// maximum number of pixels in line. But sometimes can be greater than that.
+// For example ILI9488 uses 18 bit color(3 bytes per pixel) and if 16 bit color 
+// is used(2 bytes per pixel) in order to prepare data display driver need 1.5
+// times more memory
+static const uint32_t DISPLAY_MAX_BUF_LEN = 320;// 480 * 1.5;
+
+// Color depth used by display
+//#define COLOR_24BIT
+#define COLOR_16BIT
+
+#if defined(COLOR_24BIT)
+// ***   Color type define   ***************************************************
+typedef uint32_t color_t;
+// ***   Color definitions   ***************************************************
+enum Color
+{
+  COLOR_BLACK           = 0x00000000, //   0,   0,   0
+  COLOR_VERYDARKGREY    = 0x00202020, //  32,  32,  32
+  COLOR_DARKGREY        = 0x00404040, //  64,  64,  64
+  COLOR_GREY            = 0x00808080, // 128, 128, 128
+  COLOR_LIGHTGREY       = 0x00C0C0C0, // 192, 192, 192
+  COLOR_WHITE           = 0x00FFFFFF, // 255, 255, 255
+
+  COLOR_VERYDARKRED     = 0x00000020, //   0,   0,  32
+  COLOR_DARKRED         = 0x00000040, //   0,   0,  64
+  COLOR_MEDIUMRED       = 0x00000080, //   0,   0, 128
+  COLOR_LIGHTRED        = 0x000000C0, //   0,   0, 192
+  COLOR_RED             = 0x000000FF, //   0,   0, 255
+
+  COLOR_VERYDARKGREEN   = 0x00002000, //   0,  32,   0
+  COLOR_DARKGREEN       = 0x00004000, //   0,  64,   0
+  COLOR_MEDIUMGREEN     = 0x00008000, //   0, 128,   0
+  COLOR_LIGHTGREEN      = 0x0000C000, //   0, 192,   0
+  COLOR_GREEN           = 0x0000FF00, //   0, 255,   0
+  
+  COLOR_VERYDARKBLUE    = 0x00200000, //  32,   0,   0
+  COLOR_DARKBLUE        = 0x00400000, //  64,   0,   0
+  COLOR_MEDIUMBLUE      = 0x00800000, // 128,   0,   0
+  COLOR_LIGHTBLUE       = 0x00C00000, // 192,   0,   0
+  COLOR_BLUE            = 0x00FF0000, // 255,   0,   0
+
+  COLOR_VERYDARKYELLOW  = 0x00002020, //  32,  32,   0
+  COLOR_DARKYELLOW      = 0x00004040, //  64,  64,   0
+  COLOR_MEDIUMYELLOW    = 0x00008080, // 128, 128,   0
+  COLOR_LIGHTYELLOW     = 0x0000C0C0, // 192, 192,   0
+  COLOR_YELLOW          = 0x0000FFFF, // 255, 255,   0
+
+  COLOR_VERYDARKCYAN    = 0x00202000, //   0,  32,  32
+  COLOR_DARKCYAN        = 0x00404000, //   0,  64,  64
+  COLOR_MEDIUMCYAN      = 0x00808000, //   0, 128, 128
+  COLOR_LIGHTCYAN       = 0x00C0C000, //   0, 192, 192
+  COLOR_CYAN            = 0x00FFFF00, //   0, 255, 255
+
+  COLOR_VERYDARKMAGENTA = 0x00200020, //  32,   0,  32
+  COLOR_DARKMAGENTA     = 0x00400040, //  64,   0,  64
+  COLOR_MEDIUMMAGENTA   = 0x00800080, // 128,   0, 128
+  COLOR_LIGHTMAGENTA    = 0x00C000C0, // 192,   0, 192
+  COLOR_MAGENTA         = 0x00FF00FF, // 255,   0, 255
+};
+#elif defined(COLOR_16BIT)
+// ***   Color type define   ***************************************************
+typedef uint16_t color_t;
+// ***   Color definitions   ***************************************************
+enum Color
+{
+  COLOR_BLACK           = 0x0000, //   0,   0,   0
+  COLOR_VERYDARKGREY    = 0xEF7B, //  32,  32,  32
+  COLOR_DARKGREY        = 0xEF7B, //  64,  64,  64
+  COLOR_GREY            = 0xEF7B, // 128, 128, 128
+  COLOR_LIGHTGREY       = 0x18C6, // 192, 192, 192
+  COLOR_WHITE           = 0xFFFF, // 255, 255, 255
+
+  COLOR_VERYDARKRED     = 0x0018, //  32,   0,   0
+  COLOR_DARKRED         = 0x0038, //  64,   0,   0
+  COLOR_MEDIUMRED       = 0x0078, // 128,   0,   0
+  COLOR_LIGHTRED        = 0x00B8, // 192,   0,   0
+  COLOR_RED             = 0x00F8, // 255,   0,   0
+
+  COLOR_VERYDARKGREEN   = 0xE000, //   0,  32,   0
+  COLOR_DARKGREEN       = 0xE001, //   0,  64,   0
+  COLOR_MEDIUMGREEN     = 0xE003, //   0, 128,   0
+  COLOR_LIGHTGREEN      = 0xE005, //   0, 192,   0
+  COLOR_GREEN           = 0xE007, //   0, 255,   0
+
+  COLOR_VERYDARKBLUE    = 0x0300, //   0,   0,  32
+  COLOR_DARKBLUE        = 0x0700, //   0,   0,  64
+  COLOR_MEDIUMBLUE      = 0x0F00, //   0,   0, 128
+  COLOR_LIGHTBLUE       = 0x1700, //   0,   0, 192
+  COLOR_BLUE            = 0x1F00, //   0,   0, 255
+
+  COLOR_VERYDARKYELLOW  = 0xE018, //  32,  32,   0
+  COLOR_DARKYELLOW      = 0xE039, //  64,  64,   0
+  COLOR_MEDIUMYELLOW    = 0xE07B, // 128, 128,   0
+  COLOR_LIGHTYELLOW     = 0xE0BD, // 192, 192,   0
+  COLOR_YELLOW          = 0xE0FF, // 255, 255,   0
+
+  COLOR_VERYDARKCYAN    = 0xE300, //   0,  32,  32
+  COLOR_DARKCYAN        = 0xE701, //   0,  64,  64
+  COLOR_MEDIUMCYAN      = 0xEF03, //   0, 128, 128
+  COLOR_LIGHTCYAN       = 0xF705, //   0, 192, 192
+  COLOR_CYAN            = 0xFF07, //   0, 255, 255
+
+  COLOR_VERYDARKMAGENTA = 0x0318, //  32,   0,  32
+  COLOR_DARKMAGENTA     = 0x0738, //  64,   0,  64
+  COLOR_MEDIUMMAGENTA   = 0x0F78, // 128,   0, 128
+  COLOR_LIGHTMAGENTA    = 0x17B8, // 192,   0, 192
+  COLOR_MAGENTA         = 0x1FF8, // 255,   0, 255
+};
+#else
+  #error NO COLOR DEPTH DEFINED
+#endif
 
 // *****************************************************************************
 // ***   Macroses   ************************************************************

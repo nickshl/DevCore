@@ -56,7 +56,7 @@ class ILI9341 : public IDisplay
     // ***   Constructor   *****************************************************
     // *************************************************************************
     explicit ILI9341(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {};
+      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst)  {byte_per_pixel = 2u;}
 
     // *************************************************************************
     // ***   Init screen   *****************************************************
@@ -91,27 +91,27 @@ class ILI9341 : public IDisplay
     // *************************************************************************
     // ***   Write color to screen   *******************************************
     // *************************************************************************
-    virtual Result PushColor(uint16_t color);
+    virtual Result PushColor(color_t color);
 
     // *************************************************************************
     // ***   Draw one pixel on  screen   ***************************************
     // *************************************************************************
-    virtual Result DrawPixel(int16_t x, int16_t y, uint16_t color);
+    virtual Result DrawPixel(int16_t x, int16_t y, color_t color);
 
     // *************************************************************************
     // ***   Draw vertical line   **********************************************
     // *************************************************************************
-    virtual Result DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+    virtual Result DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color);
 
     // *************************************************************************
     // ***   Draw horizontal line   ********************************************
     // *************************************************************************
-    virtual Result DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+    virtual Result DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color);
 
     // *************************************************************************
     // ***   Fill rectangle on screen   ****************************************
     // *************************************************************************
-    virtual Result FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    virtual Result FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color);
 
     // *************************************************************************
     // ***   Invert display   **************************************************

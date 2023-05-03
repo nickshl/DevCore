@@ -94,12 +94,12 @@ class Image : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
 
     // *************************************************************************
     // ***   Set Horizontal Flip function   ************************************
@@ -138,12 +138,12 @@ class Image8 : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
     
   private:
     // Pointer to the image
@@ -166,12 +166,12 @@ class Image16 : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
     
   private:
     // Pointer to the image

@@ -98,7 +98,7 @@ Result GC9A01::Init(void)
 	WriteData(0x20);
 
 	WriteCommand(0x36);
-	WriteData(0x08);//Set as vertical screen
+	WriteData(0x08); // Set as vertical screen
 
 	WriteCommand(0x3A);			
 	WriteData(0x05); 
@@ -395,7 +395,7 @@ Result GC9A01::SetRotation(IDisplay::Rotation r)
 // *****************************************************************************
 // ***   Write color to screen   ***********************************************
 // *****************************************************************************
-Result GC9A01::PushColor(uint16_t color)
+Result GC9A01::PushColor(color_t color)
 {
   display_dc.SetHigh(); // Data
   // Write color
@@ -408,7 +408,7 @@ Result GC9A01::PushColor(uint16_t color)
 // *****************************************************************************
 // ***   Draw one pixel on  screen   *******************************************
 // *****************************************************************************
-Result GC9A01::DrawPixel(int16_t x, int16_t y, uint16_t color)
+Result GC9A01::DrawPixel(int16_t x, int16_t y, color_t color)
 {
   if((x >= 0) && (x < width) && (y >= 0) && (y < height))
   {
@@ -424,7 +424,7 @@ Result GC9A01::DrawPixel(int16_t x, int16_t y, uint16_t color)
 // *****************************************************************************
 // ***   Draw vertical line   **************************************************
 // *****************************************************************************
-Result GC9A01::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+Result GC9A01::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 {
   // Rudimentary clipping
   if((x < width) && (y < height))
@@ -450,7 +450,7 @@ Result GC9A01::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 // *****************************************************************************
 // ***   Draw horizontal line   ************************************************
 // *****************************************************************************
-Result GC9A01::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+Result GC9A01::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 {
   if((x < width) && (y < height))
   {
@@ -475,7 +475,7 @@ Result GC9A01::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 // *****************************************************************************
 // ***   Fill rectangle on screen   ********************************************
 // *****************************************************************************
-Result GC9A01::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+Result GC9A01::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color)
 {
   if((x < width) && (y < height))
   {
@@ -568,15 +568,6 @@ inline void GC9A01::SpiWrite(uint8_t c)
   spi.Write(&c, sizeof(c));
   display_cs.SetHigh(); // Pull up CS
 }
-
-//// *****************************************************************************
-//// ***   Write byte stream to SPI   ********************************************
-//// *****************************************************************************
-//void GC9A01::SpiWriteStream(uint8_t* data, uint32_t n)
-//{
-//    display_cs.SetLow(); // Pull down CS
-//  HAL_SPI_Transmit_DMA(hspi, data, n);
-//}
 
 // *****************************************************************************
 // ***   Write command to SPI   ************************************************

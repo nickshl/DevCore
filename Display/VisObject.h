@@ -117,14 +117,14 @@ class VisObject
     // *************************************************************************
     // * Draw one horizontal line of object in specified buffer.
     // * Each derived class must implement this function.
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y = 0) = 0;
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y = 0) = 0;
 
     // *************************************************************************
     // ***   DrawInBufW   ******************************************************
     // *************************************************************************
     // * Draw one vertical line of object in specified buffer.
     // * Each derived class must implement this function.
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x = 0) = 0;
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x = 0) = 0;
 
     // *************************************************************************
     // ***   Action   **********************************************************

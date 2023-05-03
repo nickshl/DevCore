@@ -1,8 +1,8 @@
 //******************************************************************************
-//  @file GC9A01.h
+//  @file ILI9488.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: GC9A01 Low Level Driver Class, header
+//  @details DevCore: ILI9488 Low Level Driver Class, header
 //
 //  @section LICENSE
 //
@@ -35,8 +35,8 @@
 //
 //******************************************************************************
 
-#ifndef GC9A01_h
-#define GC9A01_h
+#ifndef ILI9488_h
+#define ILI9488_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -47,21 +47,31 @@
 #include "IGpio.h"
 
 // *****************************************************************************
-// ***   GC9A01   *************************************************************
+// ***   ILI9488   *************************************************************
 // *****************************************************************************
-class GC9A01 : public IDisplay
+class ILI9488 : public IDisplay
 {
   public:
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    explicit GC9A01(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst)  {byte_per_pixel = 2u;}
+    explicit ILI9488(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
+      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {byte_per_pixel = 3u;}
 
     // *************************************************************************
     // ***   Init screen   *****************************************************
     // *************************************************************************
     virtual Result Init(void);
+
+    // *************************************************************************
+    // ***   Public: Prepare data (32 bit -> 24 bit version)   *****************
+    // *************************************************************************
+    virtual Result PrepareData(uint32_t* data, uint32_t n);
+
+    // *************************************************************************
+    // ***   Public: Prepare data (16 bit -> 24 bit version)   *****************
+    // *************************************************************************
+    virtual Result PrepareData(uint16_t* data, uint32_t n);
 
     // *************************************************************************
     // ***   Write data steram to SPI   ****************************************
@@ -86,13 +96,18 @@ class GC9A01 : public IDisplay
     // *************************************************************************
     // ***   Set screen orientation   ******************************************
     // *************************************************************************
-    virtual Result SetRotation(IDisplay::Rotation r);
+    virtual Result SetRotation(IDisplay::Rotation r );
 
     // *************************************************************************
     // ***   Write color to screen   *******************************************
     // *************************************************************************
-    virtual Result PushColor(color_t color);
+    virtual Result PushColor(uint32_t color);
 
+    // *************************************************************************
+    // ***   Write color to screen   *******************************************
+    // *************************************************************************
+    virtual Result PushColor(uint16_t color);
+    
     // *************************************************************************
     // ***   Draw one pixel on  screen   ***************************************
     // *************************************************************************
@@ -117,6 +132,11 @@ class GC9A01 : public IDisplay
     // ***   Invert display   **************************************************
     // *************************************************************************
     virtual Result InvertDisplay(bool invert);
+
+    // *************************************************************************
+    // ***   Return if data have to be prepared before send to display   ******
+    // *************************************************************************
+    virtual bool IsDataNeedPreparation(void) {return true;}
 
   private:
     // Handle to SPI used for display

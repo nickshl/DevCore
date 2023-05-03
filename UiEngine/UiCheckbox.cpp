@@ -38,9 +38,9 @@ UiCheckbox::UiCheckbox(int32_t x, int32_t y, bool is_checked, bool is_active)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiCheckbox::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void UiCheckbox::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
-  uint16_t color;
+  color_t color;
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
   {
@@ -53,7 +53,7 @@ void UiCheckbox::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t star
     // Prevent buffer overflow
     if(end > n) end = n;
     if(checked) color = COLOR_YELLOW;
-    else           color = COLOR_MAGENTA;
+    else        color = COLOR_MAGENTA;
     // Have sense draw only if end pointer in buffer
     if(x_end > 0)
     {
@@ -69,7 +69,7 @@ void UiCheckbox::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t star
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiCheckbox::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void UiCheckbox::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // FIX ME: implement for Vertical Update Mode too 
 }

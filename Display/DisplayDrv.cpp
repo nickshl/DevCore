@@ -44,6 +44,8 @@ Result DisplayDrv::Setup()
     display->Init();
     // Set mode - mode can be set earlier than Display initialization
     SetUpdateMode(update_mode);
+    // Set update adea to full screen
+    SetUpdateArea(0, 0, width, height);
 
     // If pointer to touchscreen present
     if(touch != nullptr)
@@ -60,6 +62,8 @@ Result DisplayDrv::Setup()
       // Max Z
       fps_str.Show(0xFFFFFFFFU);
     }
+
+    // Set result
     result = Result::RESULT_OK;
   }
 
@@ -75,21 +79,27 @@ Result DisplayDrv::Loop()
   // Variable for find FPS
   uint32_t time_ms = HAL_GetTick();
 
-  // If semaphore doesn't exist or taken within 100 ms - draw screen
-  // Time need for update touchscreen state every 100 ms even display not
-  // updated
-  if(screen_update.Take(100U) == Result::RESULT_OK)
+  // If semaphore doesn't exist or taken within 50 ms - skip draw screen
+  // This is need for update touchscreen state every 50 ms(20 times per second)
+  // even if display is not updated
+  if(screen_update.Take(50U) == Result::RESULT_OK)
   {
     // Set window for all screen and pointer to first pixel
     if(LockDisplay() == Result::RESULT_OK)
     {
+      // Set flag if data need preparation - call virtual function once per frame
+      bool is_data_need_preparation = display->IsDataNeedPreparation();
       // Set address window for all screen
-      display->SetAddrWindow(0, 0, width-1, height-1);
+      display->SetAddrWindow(area_start_x, area_start_y, area_end_x-1, area_end_y-1);
+      // Find number of pixels for given area
+      uint16_t pixels_cnt = area_end_x - area_start_x;
       // For each line/row
-      for(int32_t i=0; i < height; i++)
+      for(uint32_t i = area_start_y; i < area_end_y; i++)
       {
+        // Find current line in buffer
+        scr_line_idx = i % 2;
         // Clear half of buffer
-        memset(scr_buf[i%2], 0x00, sizeof(scr_buf[0]));
+        memset(scr_buf[scr_line_idx], 0x00, sizeof(scr_buf[0]));
         // Take semaphore before draw line
         line_mutex.Lock();
         // Set pointer to first element
@@ -97,18 +107,23 @@ Result DisplayDrv::Loop()
         // Do for all objects
         while(p_obj != nullptr)
         {
-          // Draw object to buf
-          if(update_mode == UPDATE_LEFT_RIGHT) p_obj->DrawInBufH(scr_buf[i%2], width, i);
-          else                                 p_obj->DrawInBufW(scr_buf[i%2], width, i);
+          // Draw object to buf                TODO: UPDATE_LEFT_RIGHT is not works correctly if area_x isn't centered on a display
+          if(update_mode == UPDATE_LEFT_RIGHT) p_obj->DrawInBufH(scr_buf[scr_line_idx], pixels_cnt, area_end_y - i, area_start_x);
+          else                                 p_obj->DrawInBufW(scr_buf[scr_line_idx], pixels_cnt, i, area_start_x);
           // Set pointer to next object in list
           p_obj = p_obj->p_next;
         }
         // Give semaphore after changes
         line_mutex.Release();
+        // Check display bits per color
+        if(is_data_need_preparation)
+        {
+          display->PrepareData(scr_buf[scr_line_idx], pixels_cnt);
+        }
         // Wait until previous transfer complete
         while(display->IsTransferComplete() == false) taskYIELD();
         // Write stream to LCD
-        display->WriteDataStream((uint8_t*)scr_buf[i%2], width * display->GetBytesPerPixel());
+        display->WriteDataStream((uint8_t*)scr_buf[scr_line_idx], display->GetPixelDataCnt(pixels_cnt));
         // DO NOT TRY "OPTIMIZE" CODE !!!
         // Two "while" cycles used for generate next line when previous line
         // transfer via SPI to display.
@@ -452,8 +467,46 @@ Result DisplayDrv::UpdateDisplay(void)
 }
 
 // *****************************************************************************
+// ***   Set Rotation   ********************************************************
+// *****************************************************************************
+void DisplayDrv::SetRotation(IDisplay::Rotation rot)
+{
+  // Lock display
+  LockDisplay();
+  // Wait while transfer complete before change settings
+  while(display->IsTransferComplete() == false);
+  // Set rotation
+  display->SetRotation(rot);
+  // Set width and height variables for selected screen update mode
+  width = display->GetWidth();
+  height = display->GetHeight();
+  // Save Update mode
+  rotation = rot;
+  // Unlock display
+  UnlockDisplay();
+  // Set update adea to full screen
+  SetUpdateArea(0, 0, width, height);
+  // If update mode is different than default - we have to prepare display for it
+  if(update_mode != UPDATE_TOP_BOTTOM)
+  {
+      SetUpdateMode(update_mode);
+  }
+  // If pointer to touchscreen present
+  if(touch != nullptr)
+  {
+    // Get touch coordinates
+    touch->SetRotation((ITouchscreen::Rotation)rot);
+  }
+}
+
+// *****************************************************************************
 // ***   Set Update Mode   *****************************************************
 // *****************************************************************************
+/// TODO: this function probably isn't work as intended. Main reason for existance
+/// of Left to Right update mode to draw functions(like oscilloscope buffer on grid)
+/// to to it in Top to Bottom mode for each displayed line we have to run trough all
+/// data array to figure out if we have to draw something. In Left to Right we can
+/// grab data from array by current line index which improve speed significantly.
 void DisplayDrv::SetUpdateMode(UpdateMode mode)
 {
   // Lock display
@@ -463,19 +516,59 @@ void DisplayDrv::SetUpdateMode(UpdateMode mode)
   // Change Update mode
   if(mode == UPDATE_LEFT_RIGHT)
   {
-    display->SetRotation(IDisplay::ROTATION_LEFT);
+    display->SetRotation(((rotation - 1u) < IDisplay::ROTATION_CNT) ? (IDisplay::Rotation)(rotation - 1u) : IDisplay::ROTATION_RIGHT);
   }
   else
   {
-    display->SetRotation(IDisplay::ROTATION_TOP);
+    display->SetRotation(rotation);
   }
-  // Set width and height variables for selected screen update mode
-  width = display->GetWidth();
-  height = display->GetHeight();
   // Save Update mode
   update_mode = mode;
   // Unlock display
   UnlockDisplay();  
+  // Set update adea to full screen
+  SetUpdateArea(0, 0, width, height);
+}
+
+// *****************************************************************************
+// ***   Set Update Area   *****************************************************
+// *****************************************************************************
+Result DisplayDrv::SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
+{
+  Result result = Result::ERR_BAD_PARAMETER;
+  // Lock display
+  LockDisplay();
+  // Area set exactly, we need +1 for end points
+  end_x++;
+  end_y++;
+  // Check end points - it can't be greater than screen size
+  if(end_x > width) end_x = width;
+  if(end_y > height) end_y = height;
+  // Set area only if it is valid
+  if((start_x < end_x) && (start_y < end_y))
+  {
+    if(update_mode == UPDATE_TOP_BOTTOM)
+    {
+      area_start_x = start_x;
+      area_end_x = end_x;
+      area_start_y = start_y;
+      area_end_y = end_y;
+    }
+    else // UPDATE_LEFT_RIGHT
+    {
+      // Swap area X and Y it refreshg mode left ot right
+      area_start_x = start_y;
+      area_end_x = end_y;
+      area_start_y = start_x;
+      area_end_y = end_x;
+    }
+    // All checks passed - result good
+    result = Result::RESULT_OK;
+  }
+  // Unlock display
+  UnlockDisplay();
+  // Return result
+  return result;
 }
 
 // *****************************************************************************

@@ -173,6 +173,35 @@ bool XPT2046::GetXY(int32_t& x, int32_t& y)
     // Calculate Y
     y = ((y * COEF) / ky) + by;
   }
+  // Convert raw coordinates to coorinates including rotation
+  if(ret)
+  {
+    int32_t tmp = 0u;
+
+    switch(rotation)
+    {
+      case ITouchscreen::ROTATION_BOTTOM:
+        x = width - x;
+        y = height - y;
+        break;
+
+      case ITouchscreen::ROTATION_RIGHT:
+        tmp = y;
+        y = width - x;
+        x = tmp;
+        break;
+
+      case ITouchscreen::ROTATION_LEFT:
+        tmp = x;
+        x = height - y;
+        y = tmp;
+        break;
+
+      case ITouchscreen::ROTATION_TOP: // Intational fall trough - for TOP rotation we should't do anythyng
+      default:
+        break;
+    }
+  }
   // Return touch state
   return ret;
 }

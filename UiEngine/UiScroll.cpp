@@ -73,10 +73,10 @@ void UiScroll::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, int32_t n, 
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiScroll::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void UiScroll::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // FIX ME: TEMPORARY COLOR !!!
-  uint16_t color = COLOR_YELLOW;
+  color_t color = COLOR_YELLOW;
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
   {
@@ -147,7 +147,7 @@ void UiScroll::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiScroll::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void UiScroll::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // FIX ME: implement for Vertical Update Mode too 
 }

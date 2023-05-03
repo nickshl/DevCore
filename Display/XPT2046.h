@@ -58,8 +58,15 @@ class XPT2046 : public ITouchscreen
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit XPT2046(ISpi& in_spi, IGpio& in_touch_cs, IGpio& in_touch_irq) :
-      spi(in_spi), touch_cs(in_touch_cs), touch_irq(in_touch_irq) {};
+    explicit XPT2046(ISpi& in_spi, IGpio& in_touch_cs, IGpio& in_touch_irq, ITouchscreen::Rotation orient = ROTATION_TOP, uint16_t w = 320u, uint16_t h = 240u) :
+      spi(in_spi), touch_cs(in_touch_cs), touch_irq(in_touch_irq)
+    {
+        orientation = orient;
+        width = w;
+        height = h;
+        // Update rotation to recalculate
+        SetRotation(orientation);
+    };
 
     // *************************************************************************
     // ***   Public: Init   ****************************************************

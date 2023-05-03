@@ -134,9 +134,19 @@ class DisplayDrv : public AppTask
     Result UpdateDisplay(void);
 
     // *************************************************************************
+    // ***   Set Rotation   ****************************************************
+    // *************************************************************************
+    void SetRotation(IDisplay::Rotation rot);
+
+    // *************************************************************************
     // ***   Set Update Mode   *************************************************
     // *************************************************************************
     void SetUpdateMode(UpdateMode mode);
+
+    // *************************************************************************
+    // ***   Set Update Area   *************************************************
+    // *************************************************************************
+    Result SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
 
     // *************************************************************************
     // ***   GetScreenW   ******************************************************
@@ -175,7 +185,7 @@ class DisplayDrv : public AppTask
 
   private:
     // Display FPS/touch coordinates
-    static const bool DISPLAY_DEBUG_INFO = false;
+    static const bool DISPLAY_DEBUG_INFO = true;
     
     // Display driver object
     IDisplay* display = nullptr;
@@ -188,13 +198,23 @@ class DisplayDrv : public AppTask
     // Pointer to last object in list
     VisObject* object_list_last = nullptr;
 
+    // Rotation
+    IDisplay::Rotation rotation = IDisplay::ROTATION_TOP;
     // Update mode: true - vertical, false = horizontal
     UpdateMode update_mode = UPDATE_TOP_BOTTOM;
     // Variables for update screen mode
     int32_t width = 0;
     int32_t height = 0;
     // Double Screen Line buffer
-    uint16_t scr_buf[2][IDisplay::GetMaxLine()];
+    color_t scr_buf[2][DISPLAY_MAX_BUF_LEN];
+    // Current screen line
+    uint8_t scr_line_idx = 0u;
+
+    // Update area start position
+    uint16_t area_start_x = 0u;
+    uint16_t area_end_x = 0u;
+    uint16_t area_start_y = 0u;
+    uint16_t area_end_y = 0u;
 
     // Touch coordinates and state
     bool is_touch = false;

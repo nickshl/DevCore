@@ -49,8 +49,21 @@
 class ITouchscreen
 {
   public:
+    /// TODO: REMOVE!
     // Coefficient for calibration
     const static int32_t COEF = 100;
+
+    // *************************************************************************
+    // ***   Touch Screen orientation: should be the same as IDisplay !   ******
+    // *************************************************************************
+    enum Rotation
+    {
+      ROTATION_TOP = 0,
+      ROTATION_LEFT,
+      ROTATION_BOTTOM,
+      ROTATION_RIGHT,
+      ROTATION_CNT
+    };
 
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
@@ -88,10 +101,36 @@ class ITouchscreen
     virtual bool GetXY(int32_t& x, int32_t& y) = 0;
 
     // *************************************************************************
+    // ***   Public: SetRotation   *********************************************
+    // *************************************************************************
+    virtual void SetRotation(Rotation rot)
+    {
+      // Recalculate rotation based on touch screen to display orientation
+      if(rot > orientation)
+      {
+          rotation = (Rotation)(rot - orientation);
+      }
+      else
+      {
+          rotation = (Rotation)((rot + ROTATION_CNT) - orientation);
+      }
+    }
+
+    // *************************************************************************
     // ***   Public: SetCalibrationConsts   ************************************
     // *************************************************************************
     // * Set calibration constants. Must be call for calibration touchscreen.
     virtual Result SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby) {return Result::ERR_NOT_IMPLEMENTED;}
+
+  protected:
+    // Touch screen to display orientation
+    Rotation orientation = ROTATION_TOP;
+    // Rotation
+    Rotation rotation = ROTATION_TOP;
+    // Touch width(pixels)
+    uint16_t width = 0u;
+    // Touch height(pixels)
+    uint16_t height = 0u;
 
   private:
     // *************************************************************************

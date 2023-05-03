@@ -132,11 +132,11 @@ Result ILI9341::Init(void)
   // Delay for execute previous command
   HAL_Delay(100U);
 
-  // Power control
+  // Power control 1
   WriteCommand(CMD_PWCTR1);
   WriteData(0x23); // VRH[5:0] // 25
 
-  // Power control
+  // Power control 2
   WriteCommand(CMD_PWCTR2);
   WriteData(0x10); // SAP[2:0]; BT[3:0] // 11
 
@@ -339,19 +339,19 @@ Result ILI9341::SetRotation(IDisplay::Rotation r)
   switch (rotation)
   {
     case IDisplay::ROTATION_BOTTOM:
-      WriteData(MADCTL_BGR);
-      width  = init_height;
-      height = init_width;
-      break;
-
-    case IDisplay::ROTATION_RIGHT:
       WriteData(MADCTL_MV | MADCTL_BGR);
       width  = init_width;
       height = init_height;
       break;
 
+    case IDisplay::ROTATION_RIGHT:
+      WriteData(MADCTL_MX | MADCTL_BGR);
+      width  = init_height;
+      height = init_width;
+      break;
+
     case IDisplay::ROTATION_LEFT: // Y: up -> down
-      WriteData(MADCTL_MX | MADCTL_MY | MADCTL_BGR);
+      WriteData(MADCTL_MY | MADCTL_BGR);
       width  = init_height;
       height = init_width;
       break;
@@ -372,7 +372,7 @@ Result ILI9341::SetRotation(IDisplay::Rotation r)
 // *****************************************************************************
 // ***   Write color to screen   ***********************************************
 // *****************************************************************************
-Result ILI9341::PushColor(uint16_t color)
+Result ILI9341::PushColor(color_t color)
 {
   display_dc.SetHigh(); // Data
   // Write color
@@ -385,7 +385,7 @@ Result ILI9341::PushColor(uint16_t color)
 // *****************************************************************************
 // ***   Draw one pixel on  screen   *******************************************
 // *****************************************************************************
-Result ILI9341::DrawPixel(int16_t x, int16_t y, uint16_t color)
+Result ILI9341::DrawPixel(int16_t x, int16_t y, color_t color)
 {
   if((x >= 0) && (x < width) && (y >= 0) && (y < height))
   {
@@ -401,7 +401,7 @@ Result ILI9341::DrawPixel(int16_t x, int16_t y, uint16_t color)
 // *****************************************************************************
 // ***   Draw vertical line   **************************************************
 // *****************************************************************************
-Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 {
   // Rudimentary clipping
   if((x < width) && (y < height))
@@ -427,7 +427,7 @@ Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 // *****************************************************************************
 // ***   Draw horizontal line   ************************************************
 // *****************************************************************************
-Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 {
   if((x < width) && (y < height))
   {
@@ -452,7 +452,7 @@ Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 // *****************************************************************************
 // ***   Fill rectangle on screen   ********************************************
 // *****************************************************************************
-Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color)
 {
   if((x < width) && (y < height))
   {
@@ -545,15 +545,6 @@ inline void ILI9341::SpiWrite(uint8_t c)
   spi.Write(&c, sizeof(c));
   display_cs.SetHigh(); // Pull up CS
 }
-
-//// *****************************************************************************
-//// ***   Write byte stream to SPI   ********************************************
-//// *****************************************************************************
-//void ILI9341::SpiWriteStream(uint8_t* data, uint32_t n)
-//{
-//    display_cs.SetLow(); // Pull down CS
-//  HAL_SPI_Transmit_DMA(hspi, data, n);
-//}
 
 // *****************************************************************************
 // ***   Write command to SPI   ************************************************

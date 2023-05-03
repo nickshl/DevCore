@@ -71,7 +71,7 @@ class UiMsgBox
              Font* msg_fnt_in = nullptr, Font* hdr_fnt_in = nullptr,
              uint16_t center_x_in = DisplayDrv::GetInstance().GetScreenW()/2,
              uint16_t center_y_in = DisplayDrv::GetInstance().GetScreenH()/2,
-             uint16_t width_in = 0, uint16_t color_in = 0);
+             uint16_t width_in = 0, color_t color_in = 0);
 
     // *************************************************************************
     // ***   Public: Destructor   **********************************************
@@ -113,7 +113,7 @@ class UiMsgBox
     // Width of MsgBox
     uint16_t width;
     // Color of MsgBox
-    uint16_t color;
+    color_t color;
 
     // Data
     Box box[4];

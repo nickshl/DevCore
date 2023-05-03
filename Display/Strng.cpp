@@ -1,5 +1,5 @@
 //******************************************************************************
-//  @file String.cpp
+//  @file Strng.cpp
 //  @author Nicolai Shlapunov
 //
 //  @details DevCore: String Visual Object Class, implementation
@@ -28,7 +28,7 @@
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font)
+String::String(const char* str, int32_t x, int32_t y, color_t tc, Font& font)
 {
   SetParams(str, x, y, tc, font);
 }
@@ -36,7 +36,7 @@ String::String(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font)
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font)
+String::String(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font)
 {
   SetParams(str, x, y, tc, bgc, font);
 }
@@ -44,7 +44,7 @@ String::String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc,
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font)
+void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font)
 {
   // Lock object for changes
   LockVisObject();
@@ -68,7 +68,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, Font&
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font)
+void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font)
 {
   // Lock object for changes
   LockVisObject();
@@ -92,7 +92,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint3
 // *****************************************************************************
 // ***   SetColor   ************************************************************
 // *****************************************************************************
-void String::SetColor(uint32_t tc, uint32_t bgc, bool is_trnsp)
+void String::SetColor(color_t tc, color_t bgc, bool is_trnsp)
 {
   // No Lock/Unlock since it will not break anythyng
   txt_color = tc;
@@ -177,7 +177,7 @@ void String::SetString(char* buf, uint32_t len, const char* format, ...)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end) && (string != nullptr) && (font_ptr != nullptr))
@@ -211,11 +211,11 @@ void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
           {
             if((b&1) == 1)
             {
-              buf[x] = txt_color;
+              buf[x - start_x] = txt_color;
             }
             else if(transpatent_bg == false)
             {
-              buf[x] = bg_color;
+              buf[x - start_x] = bg_color;
             }
             else
             {
@@ -235,7 +235,7 @@ void String::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void String::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end) && (string != nullptr) && (font_ptr != nullptr))
@@ -260,8 +260,10 @@ void String::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
       {
         if((start+i > 0) && (start+i < n))
         {
-          uint32_t b = *(uint32_t *)(&(char_ptr[i * bytes_per_line]));
-          if(b & (1U << line))
+          // Find byte that conteins line data
+          uint8_t b = char_ptr[i * bytes_per_line + line/8u];
+          // Draw a pixel
+          if(b & (1U << (line%8u)))
           {
             buf[start+i] = txt_color;
           }

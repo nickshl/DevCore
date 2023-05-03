@@ -58,26 +58,26 @@ class Box : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill = false);
+    Box(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   SetParams   *******************************************************
     // *************************************************************************
-    void SetParams(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, bool is_fill = false);
+    void SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
     
   private:
     // Box color
-    uint16_t color = 0U;
+    color_t color = 0U;
     // Is box fill ?
     bool fill = false;
 };
@@ -96,26 +96,26 @@ class Line : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c);
+    Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c);
 
     // *************************************************************************
     // ***   SetParams   *******************************************************
     // *************************************************************************
-    void SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t c);
+    void SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
     
   private:
     // Line color
-    uint16_t color = 0U;
+    color_t color = 0U;
 };
 
 // *****************************************************************************
@@ -132,26 +132,26 @@ class Circle : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Circle(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill = false);
+    Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   SetParams   **************************************II***************
     // *************************************************************************
-    void SetParams(int32_t x, int32_t y, int32_t r, int32_t c, bool is_fill = false);
+    void SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
 
   private:
     // Circle color
-    uint16_t color = 0U;
+    color_t color = 0U;
     // Circle radius
     int16_t radius = 0;
     // Is box fill ?
@@ -172,22 +172,22 @@ class Triangle : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill = false);
+    Triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   SetParams   *******************************************************
     // *************************************************************************
-    void SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, int32_t c, bool is_fill = false);
+    void SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x3, int32_t y3, color_t c, bool is_fill = false);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
     
   private:
     // Struct for store lines
@@ -201,7 +201,7 @@ class Triangle : public VisObject
     // Lines points
     Line lines[3] = {0};
     // Triangle color
-    uint16_t color = 0U;
+    color_t color = 0U;
     // Is triangle fill ?
     bool fill = false;
 };

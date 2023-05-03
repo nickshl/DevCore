@@ -42,6 +42,7 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
+#include "IDisplay.h"
 #include "VisObject.h"
 #include "Font.h"
 #include "Font_4x6.h"
@@ -65,22 +66,22 @@ class String : public VisObject
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font);
+    String(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
 
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font);
+    String(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
     // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, Font& font);
+    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
 
     // *************************************************************************
     // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, uint32_t tc, uint32_t bgc, Font& font);
+    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
     // ***   Public: SetString   ***********************************************
@@ -95,7 +96,7 @@ class String : public VisObject
     // *************************************************************************
     // ***   Public: SetColor   ************************************************
     // *************************************************************************
-    void SetColor(uint32_t tc, uint32_t bgc = 0U, bool is_trnsp = true);
+    void SetColor(color_t tc, color_t bgc = 0U, bool is_trnsp = true);
 
     // *************************************************************************
     // ***   Public: SetFont   *************************************************
@@ -110,12 +111,12 @@ class String : public VisObject
     // *************************************************************************
     // ***   Public: Put line in buffer   **************************************
     // *************************************************************************
-    virtual void DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
     
     // *************************************************************************
     // ***   Public: Put line in buffer   **************************************
     // *************************************************************************
-    virtual void DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t x = 0);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
 
     // *************************************************************************
     // ***   Public: GetFontW   ************************************************
@@ -137,9 +138,9 @@ class String : public VisObject
     // FIX ME: must be changed for prevent changing string during drawing
     const uint8_t* string = nullptr;
     // Text color
-    uint16_t txt_color = 0u;
+    color_t txt_color = 0u;
     // Background color
-    uint16_t bg_color = 0u;
+    color_t bg_color = 0u;
     // Scale
     uint8_t scale = 1u;
     // Font type

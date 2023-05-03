@@ -47,7 +47,7 @@ TiledMap::TiledMap(int32_t x, int32_t y, int32_t w, int32_t h,
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void TiledMap::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void TiledMap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {     
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -124,7 +124,7 @@ void TiledMap::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void TiledMap::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void TiledMap::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
    // Not implemented yet
 }

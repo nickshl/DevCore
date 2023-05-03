@@ -75,7 +75,7 @@ void UiButton::SetCallback(void (*clbk)(void* ptr, void* param_ptr, uint32_t par
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiButton::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void UiButton::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   box.DrawInBufW(buf, n, line, start_x);
   string.DrawInBufW(buf, n, line, start_x);
@@ -84,7 +84,7 @@ void UiButton::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void UiButton::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void UiButton::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   box.DrawInBufH(buf, n, row, start_y);
   string.DrawInBufH(buf, n, row, start_y);

@@ -47,7 +47,7 @@ Image::Image(int32_t x, int32_t y, const ImageDesc& img_dsc)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Image::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -113,7 +113,7 @@ void Image::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Image::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end))
@@ -175,7 +175,7 @@ Image8::Image8(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* p_img,
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image8::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Image8::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -203,7 +203,7 @@ void Image8::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image8::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Image8::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end))
@@ -247,7 +247,7 @@ Image16::Image16(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t* p_i
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image16::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x)
+void Image16::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
@@ -275,7 +275,7 @@ void Image16::DrawInBufW(uint16_t* buf, int32_t n, int32_t line, int32_t start_x
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void Image16::DrawInBufH(uint16_t* buf, int32_t n, int32_t row, int32_t start_y)
+void Image16::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
   if((row >= x_start) && (row <= x_end))
