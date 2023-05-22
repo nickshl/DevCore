@@ -53,6 +53,23 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool 
   height = h;
   rotation = 0;
   fill = is_fill;
+  // Invalidate area
+  InvalidateObjArea();
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   SetColor   ************************************************************
+// *****************************************************************************
+void Box::SetColor(color_t c)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
+  color = c;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -153,6 +170,8 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
   width  = (x1 < x2) ? (x2 - x1) : (x1 - x2);
   height = (y1 < y2) ? (y2 - y1) : (y1 - y2);
   rotation = 0;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -303,6 +322,8 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
   height = r*2;
   rotation = 0;
   fill = is_fill;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -439,6 +460,8 @@ void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t
   lines[2].x2 = x3;
   lines[2].y2 = y3;      
   rotation = 0;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }

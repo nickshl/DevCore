@@ -49,6 +49,7 @@
 #include "AppTask.h"
 #include "RtosMutex.h"
 #include "RtosSemaphore.h"
+#include "RtosRecursiveMutex.h"
 
 #include "IDisplay.h"
 #include "ITouchscreen.h"
@@ -134,6 +135,26 @@ class DisplayDrv : public AppTask
     Result UpdateDisplay(void);
 
     // *************************************************************************
+    // ***   Invalidate Area   *************************************************
+    // *************************************************************************
+    Result InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y);
+
+    // *************************************************************************
+    // ***   Set Update Area   *************************************************
+    // *************************************************************************
+    Result SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
+
+    // *************************************************************************
+    // ***   Update area covered by VisObject on display   *********************
+    // *************************************************************************
+    Result UpdateObjArea(VisObject& obj);
+
+    // *************************************************************************
+    // ***   Update specific display area   ************************************
+    // *************************************************************************
+    Result UpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
+
+    // *************************************************************************
     // ***   Set Rotation   ****************************************************
     // *************************************************************************
     void SetRotation(IDisplay::Rotation rot);
@@ -142,11 +163,6 @@ class DisplayDrv : public AppTask
     // ***   Set Update Mode   *************************************************
     // *************************************************************************
     void SetUpdateMode(UpdateMode mode);
-
-    // *************************************************************************
-    // ***   Set Update Area   *************************************************
-    // *************************************************************************
-    Result SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
 
     // *************************************************************************
     // ***   GetScreenW   ******************************************************
@@ -185,8 +201,9 @@ class DisplayDrv : public AppTask
 
   private:
     // Display FPS/touch coordinates
-    static const bool DISPLAY_DEBUG_INFO = true;
-    
+    static const bool DISPLAY_DEBUG_INFO = false;
+    static const bool DISPLAY_DEBUG_AREA = false;
+
     // Display driver object
     IDisplay* display = nullptr;
 
@@ -215,6 +232,7 @@ class DisplayDrv : public AppTask
     uint16_t area_end_x = 0u;
     uint16_t area_start_y = 0u;
     uint16_t area_end_y = 0u;
+    bool is_dirty = false;
 
     // Touch coordinates and state
     bool is_touch = false;
@@ -231,11 +249,21 @@ class DisplayDrv : public AppTask
     // Semaphore for update screen
     RtosSemaphore screen_update;
     // Mutex to synchronize when drawing lines
-    RtosMutex line_mutex;
+    RtosRecursiveMutex line_mutex;
     // Mutex to synchronize when drawing frames
-    RtosMutex frame_mutex;
+    RtosRecursiveMutex frame_mutex;
     // Mutex for synchronize when reads touch coordinates
     RtosMutex touchscreen_mutex;
+
+    // *************************************************************************
+    // ***   Private: SwapData   ***********************************************
+    // *************************************************************************
+    static inline void SwapData(int16_t& a, int16_t& b)
+    {
+      int16_t tmp = a;
+      a = b;
+      b = tmp;
+    }
 
     // *************************************************************************
     // ** Private constructor. Only GetInstance() allow to access this class. **

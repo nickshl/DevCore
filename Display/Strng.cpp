@@ -56,11 +56,13 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& 
   bg_color = 0;
   font_ptr = &font;
   transpatent_bg = true;
-  width = font.GetCharW() * strlen(str);
-  height = font.GetCharH();
+  width = font.GetCharW() * strlen(str) * scale;
+  height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
   rotation = 0;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -80,11 +82,13 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_
   bg_color = bgc;
   font_ptr = &font;
   transpatent_bg = false;
-  width = font.GetCharW() * strlen(str);
-  height = font.GetCharH();
+  width = font.GetCharW() * strlen(str) * scale;
+  height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
   rotation = 0;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -98,6 +102,8 @@ void String::SetColor(color_t tc, color_t bgc, bool is_trnsp)
   txt_color = tc;
   bg_color = bgc;
   transpatent_bg = is_trnsp;
+  // Invalidate area
+  InvalidateObjArea();
 }
 
 // *****************************************************************************
@@ -109,10 +115,12 @@ void String::SetFont(Font& font)
   LockVisObject();
   // Do changes
   font_ptr = &font;
-  width = font.GetCharW() * strlen((const char*)string);
-  height = font.GetCharH();
+  width = font.GetCharW() * strlen((const char*)string) * scale;
+  height = font.GetCharH() * scale;
   x_end = x_start + width - 1;
   y_end = y_start + height - 1;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -133,6 +141,8 @@ void String::SetScale(uint8_t s)
     height = GetFontH() * scale;
     x_end = x_start + width - 1;
     y_end = y_start + height - 1;
+    // Invalidate area
+    InvalidateObjArea();
     // Unlock object after changes
     UnlockVisObject();
   }
@@ -147,8 +157,10 @@ void String::SetString(const char* str)
   LockVisObject();
   // Set new pointer to string
   string = (const uint8_t*)str;
-  width = GetFontW() * strlen(str);
+  width = GetFontW() * strlen(str) * scale;
   x_end = x_start + width - 1;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -168,8 +180,10 @@ void String::SetString(char* buf, uint32_t len, const char* format, ...)
   va_end(arglist);
   //Set new pointer to string
   string = (const uint8_t*)buf;
-  width = GetFontW() * strlen(buf);
+  width = GetFontW() * strlen(buf) * scale;
   x_end = x_start + width - 1;
+  // Invalidate area
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }
@@ -183,7 +197,7 @@ void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
   if((line >= y_start) && (line <= y_end) && (string != nullptr) && (font_ptr != nullptr))
   {
     // Current symbol X position
-    int32_t x = x_start;
+    int32_t x = x_start - start_x;
     // Number of bytes need skipped for draw line
     uint32_t skip_bytes = ((line - y_start) / scale) * GetFontBytePerChar() / GetFontH();
     // Pointer to string. Will increment for get characters.
@@ -207,15 +221,15 @@ void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
         for(uint8_t i = 0u; i < scale; i++)
         {
           // Put color in buffer only if visible
-          if((x >= start_x) && (x < start_x+n))
+          if((x >= 0) && (x < n))
           {
             if((b&1) == 1)
             {
-              buf[x - start_x] = txt_color;
+              buf[x] = txt_color;
             }
             else if(transpatent_bg == false)
             {
-              buf[x - start_x] = bg_color;
+              buf[x] = bg_color;
             }
             else
             {

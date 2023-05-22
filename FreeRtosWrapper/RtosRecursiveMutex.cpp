@@ -21,13 +21,20 @@
 #include "RtosRecursiveMutex.h"
 #include "Rtos.h"
 
+#if (configUSE_RECURSIVE_MUTEXES == 1)
+
 // *****************************************************************************
 // ***   Constructor   **********************************************************
 // *****************************************************************************
 RtosRecursiveMutex::RtosRecursiveMutex()
 {
   // Create semaphore
+#if (configSUPPORT_STATIC_ALLOCATION  == 1)
+  mutex = xSemaphoreCreateRecursiveMutexStatic(&mutex_buf);
+#else
   mutex = xSemaphoreCreateRecursiveMutex();
+#endif
+
   // Check error
   if(mutex == nullptr)
   {
@@ -116,3 +123,5 @@ Result RtosRecursiveMutex::Release()
   // Return result
   return result;
 }
+
+#endif

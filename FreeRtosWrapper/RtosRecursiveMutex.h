@@ -52,6 +52,11 @@ class RtosRecursiveMutex
     Result Release();
 
   private:
+#if (configSUPPORT_STATIC_ALLOCATION  == 1)
+    // Mutex buffer if static allocation is enabled
+    StaticSemaphore_t mutex_buf;
+#endif
+
     // Mutex handle
     SemaphoreHandle_t mutex;
 };

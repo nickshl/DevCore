@@ -56,7 +56,7 @@ class ILI9341 : public IDisplay
     // ***   Constructor   *****************************************************
     // *************************************************************************
     explicit ILI9341(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst)  {byte_per_pixel = 2u;}
+      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {byte_per_pixel = 2u;}
 
     // *************************************************************************
     // ***   Init screen   *****************************************************

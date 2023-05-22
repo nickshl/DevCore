@@ -48,7 +48,7 @@ TiledMap::TiledMap(int32_t x, int32_t y, int32_t w, int32_t h,
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
 void TiledMap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
-{     
+{
   // Draw only if needed
   if((line >= y_start) && (line <= y_end))
   {
@@ -140,7 +140,9 @@ void TiledMap::ScrollView(int32_t dx, int32_t dy)
   x_pos += dx;
   if(x_pos < 0) x_pos = 0;
   y_pos += dy;
-  if(y_pos < 0) y_pos = 0; 
+  if(y_pos < 0) y_pos = 0;
+  // Invalidate area after move to redraw area object move to
+  InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
 }

@@ -22,7 +22,7 @@
 #include "Rtos.h"
 
 // *****************************************************************************
-// ***   Constructor   **********************************************************
+// ***   Constructor   *********************************************************
 // *****************************************************************************
 RtosMutex::RtosMutex()
 {
@@ -118,6 +118,21 @@ Result RtosMutex::Release()
   else
   {
     result = Result::ERR_MUTEX_RELEASE;
+  }
+  // Return result
+  return result;
+}
+
+// *****************************************************************************
+// ***   IsTakenByCurrentTask   ************************************************
+// *****************************************************************************
+bool RtosMutex::IsTakenByCurrentTask(void)
+{
+  bool result = false;
+  // Check status
+  if(xSemaphoreGetMutexHolder(mutex) == xTaskGetCurrentTaskHandle())
+  {
+    result = true;
   }
   // Return result
   return result;

@@ -280,7 +280,7 @@ Result Tcs34725::GetLux(uint16_t& lux)
     float cpl = (((256 - integration_time) * 2.4f) * GetGainValue()) / (1.0f * 310.0f);
 
     // Finally, calculate the lux
-    lux = (0.136f * (float)r + 1.000f * (float)g - 0.444f * (float)b) / cpl;
+    lux = (uint16_t)((0.136f * (float)r + 1.000f * (float)g - 0.444f * (float)b) / cpl);
 
     result = Result::RESULT_OK;
   }

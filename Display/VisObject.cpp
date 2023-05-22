@@ -19,7 +19,7 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "VisObject.h"
-#include "DisplayDrv.h" // for DelVisObjectFromList()
+#include "DisplayDrv.h" // for AddVisObjectToList() and DelVisObjectFromList()
 
 // *****************************************************************************
 // ***   Destructor   **********************************************************
@@ -58,6 +58,8 @@ Result VisObject::Show(uint32_t z_pos)
   {
     z = z_pos;
   }
+  // Invalidate area for update
+  InvalidateObjArea();
   // Add to VisObject List
   return DisplayDrv::GetInstance().AddVisObjectToList(this, z);
 }
@@ -67,6 +69,8 @@ Result VisObject::Show(uint32_t z_pos)
 // *****************************************************************************
 Result VisObject::Hide(void)
 {
+  // Invalidate area for update
+  InvalidateObjArea();
   // Delete from VisObject List
   return DisplayDrv::GetInstance().DelVisObjectFromList(this);
 }
@@ -98,6 +102,8 @@ Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
   // Check result
   if(result.IsGood())
   {
+    // Invalidate area before move to redraw area object move from
+    InvalidateObjArea();
     // Make changes
     if(is_delta == true)
     {
@@ -115,6 +121,8 @@ Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
       x_end = x + width - 1;
       y_end = y + height - 1;
     }
+    // Invalidate area after move to redraw area object move to
+    InvalidateObjArea();
     // Unlock object after changes
     result = UnlockVisObject();
   }
@@ -129,4 +137,17 @@ void VisObject::Action(ActionType action, int32_t tx, int32_t ty)
 {
   // Empty function. We can do active object without custom Action function
   // for cover active object with lower Z.
+}
+
+// *****************************************************************************
+// ***   Invalidate Display Area   *********************************************
+// *****************************************************************************
+void VisObject::InvalidateObjArea()
+{
+  // Only if VisObject is show
+  if(IsShow())
+  {
+    // Invalidate area
+    DisplayDrv::GetInstance().InvalidateArea(this->GetStartX(), this->GetStartY(), this->GetEndX(), this->GetEndY());
+  }
 }
