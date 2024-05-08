@@ -28,6 +28,52 @@ static RtosMutex startup_mutex;
 static uint32_t startup_cnt = 0U;
 
 // *****************************************************************************
+// ***   Callback function   ***************************************************
+// *****************************************************************************
+Result AppTask::Callback(const CallbackPtr func_ptr, void* obj_ptr, void* ptr)
+{
+  Result result = Result::ERR_NULL_PTR;
+
+  // If callback call happens in the same task - no need to send it via queue,
+  // call it right away. If queue doesn't exist we have to call callback anyway.
+  // Use mutex inside callback.
+  if((this == GetCurrent()) || (ctrl_queue.GetQueueLen() == 0u))
+  {
+    // If callback function pointer set
+    if(func_ptr != nullptr)
+    {
+      // Call function by pointer
+      result = func_ptr(obj_ptr, ptr);
+    }
+    else
+    {
+      // Otherwise call virtual function for callback process
+      result = ProcessCallback(ptr);
+    }
+  }
+  // To make a callback either func_ptr or ptr should be set
+  else if((func_ptr != nullptr) || (ptr != nullptr))
+  {
+    // Create control timer message
+    CtrlQueueMsg callback_msg;
+    callback_msg.type = CTRL_CALLBACK_MSG;
+    callback_msg.func_ptr = func_ptr;
+    callback_msg.obj_ptr = obj_ptr;
+    callback_msg.ptr = ptr;
+
+    // Send message to the control queue
+    result = SendControlMessage(callback_msg);
+  }
+  else
+  {
+    ; // Do nothing - MISRA rule
+  }
+
+  // Return result
+  return result;
+}
+
+// *****************************************************************************
 // ***   Create task function   ************************************************
 // *****************************************************************************
 void AppTask::CreateTask()
@@ -70,12 +116,12 @@ void AppTask::CreateTask()
 // *****************************************************************************
 // ***   SendTaskMessage function   ********************************************
 // *****************************************************************************
-Result AppTask::SendTaskMessage(const void* task_msg, bool is_priority)
+Result AppTask::SendTaskMessage(const void* task_msg, bool is_task_priority, bool is_ctrl_priority)
 {
   Result result = Result::RESULT_OK;
 
   // Send task message to front or back of task queue
-  if(is_priority == true)
+  if(is_task_priority == true)
   {
     result = task_queue.SendToFront(task_msg);
   }
@@ -89,9 +135,16 @@ Result AppTask::SendTaskMessage(const void* task_msg, bool is_priority)
   {
     CtrlQueueMsg ctrl_msg;
     ctrl_msg.type = CTRL_TASK_QUEUE_MSG;
-    result = SendControlMessage(ctrl_msg, is_priority);
+    // Only if both task and control priority set make sense to make send control
+    // message as priority. Priority task and non-priority control is very useful
+    // if task message can't be processed right away and have to be resend itself
+    // to the front of task queue. To allow other control messages(timer, callback)
+    // to be processed while task message loops task control message shouldn't be
+    // sent as priority message
+    result = SendControlMessage(ctrl_msg, is_task_priority && is_ctrl_priority);
   }
 
+  // Return result
   return result;
 }
 
@@ -118,6 +171,20 @@ Result AppTask::IntLoop()
           result = TimerExpired();
           break;
 
+        case CTRL_CALLBACK_MSG:
+          // If callback function pointer set
+          if(ctrl_msg.func_ptr != nullptr)
+          {
+            // Call function by pointer
+            result = ctrl_msg.func_ptr(ctrl_msg.obj_ptr, ctrl_msg.ptr);
+          }
+          else
+          {
+            // Otherwise call virtual function for callback process
+            result = ProcessCallback(ctrl_msg.ptr);
+          }
+          break;
+
          case CTRL_TASK_QUEUE_MSG:
          {
            // Non blocking read from the task queue
@@ -128,6 +195,11 @@ Result AppTask::IntLoop()
              // Process it!
              result = ProcessMessage();
            }
+           else
+           {
+             // TODO: implement error handling
+             Break();
+           }
            break;
          }
 
@@ -136,8 +208,14 @@ Result AppTask::IntLoop()
            break;
       }
     }
+    else
+    {
+      // TODO: implement error handling
+      Break();
+    }
   }
 
+  // Return result
   return result;
 }
 
@@ -225,7 +303,7 @@ void AppTask::TimerCallback(void* ptr)
     timer_msg.type = CTRL_TIMER_MSG;
 
     // Send message to the control queue
-    result = task.SendControlMessage(timer_msg);
+    result = task.SendControlMessage(timer_msg, task.timer_priority);
   }
 
   // Check result
@@ -241,7 +319,7 @@ void AppTask::TimerCallback(void* ptr)
 // *****************************************************************************
 Result AppTask::SendControlMessage(const CtrlQueueMsg& ctrl_msg, bool is_priority)
 {
-  Result result;
+  Result result = Result::RESULT_OK;
 
   if(is_priority == true)
   {
@@ -252,6 +330,7 @@ Result AppTask::SendControlMessage(const CtrlQueueMsg& ctrl_msg, bool is_priorit
     result = ctrl_queue.SendToBack(&ctrl_msg);
   }
 
+  // Return result
   return result;
 }
 

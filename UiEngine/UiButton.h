@@ -79,15 +79,54 @@ class UiButton : public VisObject
                    bool is_active = false);
 
     // *************************************************************************
-    // ***   Set callback function   *******************************************
+    // ***   SetString   *******************************************************
     // *************************************************************************
-    void SetCallback(void (*clbk)(void* ptr, void* param_ptr, uint32_t param),
-                     void* clbk_ptr, void* clbk_param_ptr, uint32_t clbk_param);
+    void SetString(const char* str_in);
 
     // *************************************************************************
-    // ***   SetActive   *******************************************************
+    // ***   Public: SetColor   ************************************************
     // *************************************************************************
-    void SetActive(bool is_active) {active = is_active;}
+    void SetColor(color_t c);
+
+    // *************************************************************************
+    // ***   Public: SetFont   *************************************************
+    // *************************************************************************
+    void SetFont(Font& font);
+
+    // *************************************************************************
+    // ***   Public: SetScale   ************************************************
+    // *************************************************************************
+    void SetScale(uint8_t scale);
+
+    // *************************************************************************
+    // ***   Public: SetSpacing   **********************************************
+    // *************************************************************************
+    void SetSpacing(uint8_t s);
+
+    // *************************************************************************
+    // ***   Enable   **********************************************************
+    // *************************************************************************
+    void Enable();
+
+    // *************************************************************************
+    // ***   Disable   *********************************************************
+    // *************************************************************************
+    void Disable();
+
+    // *************************************************************************
+    // ***   SetPressed   ******************************************************
+    // *************************************************************************
+    void SetPressed(bool pressed);
+
+    // *************************************************************************
+    // ***   GetPressed   ******************************************************
+    // *************************************************************************
+    bool GetPressed(void) {return is_pressed;}
+
+    // *************************************************************************
+    // ***   Set callback function   *******************************************
+    // *************************************************************************
+    void SetCallback(AppTask* task, CallbackPtr func = nullptr, void* param = nullptr);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
@@ -102,23 +141,26 @@ class UiButton : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty);
+    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy);
 
   private:
     // Callback function pointer
-    void (*callback)(void* ptr, void* param_ptr, uint32_t param) = nullptr;
-    // Pointer to something(usually object)
-    void* ptr = nullptr;
-    // Callback parameter pointer
-    void* param_ptr = nullptr;
-    // Callback parameter
-    uint32_t param = 0U;
+    AppTask* callback_task = nullptr;
+    CallbackPtr callback_func = nullptr;
+    void* callback_param = nullptr;
+
     // String pointer
     const char* str = nullptr;
-    // Box for button
-    Box box;
+    // String color
+    color_t color = COLOR_WHITE;
+    // Flag to draw button pressed always
+    bool is_pressed = false;
+    // Flag to draw button pressed only when it touched
+    bool draw_pressed = false;
     // String for button
-    String string;
+    MultiLineString string;
+    // String for shadow
+    MultiLineString string_shadow;
 };
 
 #endif // UiButton_h

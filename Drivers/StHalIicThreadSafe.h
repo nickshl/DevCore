@@ -1,18 +1,19 @@
 //******************************************************************************
-//  @file Strng.h
+//  @file StHalIicThreadSafe.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: String Visual Object Class, header
+//  @details DevCore: STM32 HAL I2C thread safe driver, header
 //
 //  @section LICENSE
 //
-//   Software License Agreement (BSD License)
+//   Software License Agreement (Modified BSD License)
 //
-//   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2018, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions are met:
+//
 //   1. Redistributions of source code must retain the above copyright
 //      notice, this list of conditions and the following disclaimer.
 //   2. Redistributions in binary form must reproduce the above copyright
@@ -21,6 +22,9 @@
 //   3. Neither the name of the Devtronic nor the names of its contributors
 //      may be used to endorse or promote products derived from this software
 //      without specific prior written permission.
+//   4. Redistribution and use of this software other than as permitted under
+//      this license is void and will automatically terminate your rights under
+//      this license.
 //
 //   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
 //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -33,129 +37,120 @@
 //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+//  @section SUPPORT
+//
+//   Devtronic invests time and resources providing this open source code,
+//   please support Devtronic and open-source hardware/software by
+//   donations and/or purchasing products from Devtronic.
+//
 //******************************************************************************
 
-#ifndef String_h
-#define String_h
+#ifndef StHalIicThreadSafe_h
+#define StHalIicThreadSafe_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "IDisplay.h"
-#include "VisObject.h"
-#include "Font.h"
-#include "Font_4x6.h"
-#include "Font_6x8.h"
-#include "Font_8x8.h"
-#include "Font_8x12.h"
-#include "Font_10x18.h"
-#include "Font_12x16.h"
+#include "IIic.h"
 
 // *****************************************************************************
-// ***   String Class   ********************************************************
+// ***   This driver can be compiled only if UART configured in CubeMX   *******
 // *****************************************************************************
-class String : public VisObject
+#ifndef HAL_I2C_MODULE_ENABLED
+  typedef uint32_t I2C_HandleTypeDef; // Dummy I2C handle for header compilation
+#endif
+
+// *****************************************************************************
+// ***   STM32 HAL I2C Driver Class   ******************************************
+// *****************************************************************************
+class StHalIicThreadSafe : public IIic
 {
   public:
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    String() {};
- 
-    // *************************************************************************
-    // ***   Public: Constructor   *********************************************
-    // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
+    explicit StHalIicThreadSafe(I2C_HandleTypeDef& hi2c_ref) : hi2c(hi2c_ref) {};
 
     // *************************************************************************
-    // ***   Public: Constructor   *********************************************
+    // ***   Public: Destructor   **********************************************
     // *************************************************************************
-    String(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
+    ~StHalIicThreadSafe() {};
 
     // *************************************************************************
-    // ***   Public: SetParams   ***********************************************
+    // ***   Public: Init   ****************************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
+    virtual Result Init() {return Result::ERR_NOT_IMPLEMENTED;}
 
     // *************************************************************************
-    // ***   Public: SetParams   ***********************************************
+    // ***   Public: Enable   **************************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
+    virtual Result Enable();
 
     // *************************************************************************
-    // ***   Public: SetString   ***********************************************
+    // ***   Public: Disable   *************************************************
     // *************************************************************************
-    void SetString(const char* str, bool force = false);
+    virtual Result Disable();
 
     // *************************************************************************
-    // ***   Public: GetString   ***********************************************
+    // ***   Public: Reset   ***************************************************
     // *************************************************************************
-    const char* GetString() {return string;}
+    virtual Result Reset();
 
     // *************************************************************************
-    // ***   Public: SetString   ***********************************************
+    // ***   Public: IsDeviceReady   *******************************************
     // *************************************************************************
-    void SetString(char* buffer, uint32_t n, const char* format, ...);
+    virtual Result IsDeviceReady(uint16_t addr, uint8_t retries = 1U);
 
     // *************************************************************************
-    // ***   Public: SetColor   ************************************************
+    // ***   Public: Transfer   ************************************************
     // *************************************************************************
-    void SetColor(color_t tc, color_t bgc = 0U, bool is_trnsp = true);
+    virtual Result Transfer(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size,
+                            uint8_t* rx_buf_ptr, uint32_t rx_size);
 
     // *************************************************************************
-    // ***   Public: SetFont   *************************************************
+    // ***   Public: Write   ***************************************************
     // *************************************************************************
-    void SetFont(Font& font);
+    virtual Result Write(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size);
 
     // *************************************************************************
-    // ***   Public: SetScale   ************************************************
+    // ***   Public: Read   ****************************************************
     // *************************************************************************
-    void SetScale(uint8_t s);
+    virtual Result Read(uint16_t addr, uint8_t* rx_buf_ptr, uint32_t rx_size);
 
     // *************************************************************************
-    // ***   Public: GetScale   ************************************************
+    // ***   Public: WriteAsync   **********************************************
     // *************************************************************************
-    uint8_t GetScale(void) {return scale;}
+    virtual Result WriteAsync(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size);
 
     // *************************************************************************
-    // ***   Public: Put line in buffer   **************************************
+    // ***   Public: ReadAsync   ***********************************************
     // *************************************************************************
-    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
+    virtual Result ReadAsync(uint16_t addr, uint8_t* rx_buf_ptr, uint32_t rx_size);
 
     // *************************************************************************
-    // ***   Public: Put line in buffer   **************************************
+    // ***   Public: IsBusy   **************************************************
     // *************************************************************************
-    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
-
-    // *************************************************************************
-    // ***   Public: GetFontW   ************************************************
-    // *************************************************************************
-    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharW());}
-
-    // *************************************************************************
-    // ***   Public: GetFontH   ************************************************
-    // *************************************************************************
-    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharH());}
-
-    // *************************************************************************
-    // ***   Public: GetFontBytePerChar   **************************************
-    // *************************************************************************
-    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetBytesPerChar());}
+    virtual bool IsBusy(void);
 
   private:
-    // Pointer to string
-    const char* string = nullptr;
-    // Text color
-    color_t txt_color = 0u;
-    // Background color
-    color_t bg_color = 0u;
-    // Scale
-    uint8_t scale = 1u;
-    // Font type
-    Font* font_ptr = nullptr;
-    // Is background transparent ?
-    bool transpatent_bg = false;
+    // Reference to the I2C handle
+    I2C_HandleTypeDef& hi2c;
+
+    // Mutex for synchronize when reads touch coordinates
+    RtosMutex mutex;
+
+    // *************************************************************************
+    // ***   Private: ConvertResult   ******************************************
+    // *************************************************************************
+    Result ConvertResult(HAL_StatusTypeDef hal_result);
+
+    // *************************************************************************
+    // ***   Private: Constructors and assign operator - prevent copying   *****
+    // *************************************************************************
+    StHalIicThreadSafe();
+    StHalIicThreadSafe(const StHalIicThreadSafe&);
+    StHalIicThreadSafe& operator=(const StHalIicThreadSafe);
 };
 
 #endif

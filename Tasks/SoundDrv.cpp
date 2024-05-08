@@ -19,6 +19,9 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "SoundDrv.h"
+
+#if defined(SOUNDDRV_ENABLED)
+
 #include "Rtos.h"
 
 // *****************************************************************************
@@ -135,11 +138,11 @@ void SoundDrv::Click()
   if((mute == false) && (sound_table != nullptr))
   {
     // Set Speaker output pin for click
-    HAL_GPIO_WritePin(SPEAKER_GPIO_Port, SPEAKER_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
     // Read when actual state changed
-    while(HAL_GPIO_ReadPin(SPEAKER_GPIO_Port, SPEAKER_Pin) == GPIO_PIN_RESET);
+    while(HAL_GPIO_ReadPin(BUZZER_GPIO_Port, BUZZER_Pin) == GPIO_PIN_RESET);
     // Clear Speaker output pin
-    HAL_GPIO_WritePin(SPEAKER_GPIO_Port, SPEAKER_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
   }
 }
 
@@ -198,7 +201,7 @@ void SoundDrv::PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms
     sound_table = melody;
     // Give mutex after start playing melody
     melody_mutex.Release();
-    
+
     // Give semaphore for start play melody
     sound_update.Give();
   }
@@ -264,16 +267,16 @@ bool SoundDrv::IsSoundPlayed(void)
 void SoundDrv::Tone(uint16_t freq)
 {
   // FIX ME: rewrite comment
-  // Òàéìåð çàïóñêàåòñÿ ñ ïàðàìåòðàìè:
+  // Ã’Ã Ã©Ã¬Ã¥Ã° Ã§Ã Ã¯Ã³Ã±ÃªÃ Ã¥Ã²Ã±Ã¿ Ã± Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã°Ã Ã¬Ã¨:
   // Clock source: System Clock
   // Mode: CTC top = OCR2
   // OC2 output: Toggle on compare match
-  // È ñ ðàçíûìè äåëèòåëÿìè äëÿ ðàçíûõ ÷àñòîò, ïîòîìó êàê:
-  // ïðè äåëèòåëå 64 íåâîçìîæíî ïîëó÷èòü ÷àñòîòó íèæå ~750Ãö
-  // ïðè äåëèòåëå 256 íà ÷àñòîòàõ > ~1500Ãö âûñîêà ïîãðåøíîñòü ãåíåðàöèè
-  // Äåëåíèå íà 4 àðãóìåíòîâ äëÿ òîãî, ÷òî áû AVR_Clock_Freq/x íå ïðåâûñèëî word
-  // Äåëåíèå íà äâà â êîíöå, ïîòîìó êàê íóæåí ïîëóïåðèîä
-  // Åñëè çâóê îòêëþ÷åí - òàéìåð îñòàíàâëèâàåòñÿ è ñíèìàåòñÿ íàïðÿæåíèå ñ ïèùàëêè
+  // Ãˆ Ã± Ã°Ã Ã§Ã­Ã»Ã¬Ã¨ Ã¤Ã¥Ã«Ã¨Ã²Ã¥Ã«Ã¿Ã¬Ã¨ Ã¤Ã«Ã¿ Ã°Ã Ã§Ã­Ã»Ãµ Ã·Ã Ã±Ã²Ã®Ã², Ã¯Ã®Ã²Ã®Ã¬Ã³ ÃªÃ Ãª:
+  // Ã¯Ã°Ã¨ Ã¤Ã¥Ã«Ã¨Ã²Ã¥Ã«Ã¥ 64 Ã­Ã¥Ã¢Ã®Ã§Ã¬Ã®Ã¦Ã­Ã® Ã¯Ã®Ã«Ã³Ã·Ã¨Ã²Ã¼ Ã·Ã Ã±Ã²Ã®Ã²Ã³ Ã­Ã¨Ã¦Ã¥ ~750ÃƒÃ¶
+  // Ã¯Ã°Ã¨ Ã¤Ã¥Ã«Ã¨Ã²Ã¥Ã«Ã¥ 256 Ã­Ã  Ã·Ã Ã±Ã²Ã®Ã²Ã Ãµ > ~1500ÃƒÃ¶ Ã¢Ã»Ã±Ã®ÃªÃ  Ã¯Ã®Ã£Ã°Ã¥Ã¸Ã­Ã®Ã±Ã²Ã¼ Ã£Ã¥Ã­Ã¥Ã°Ã Ã¶Ã¨Ã¨
+  // Ã„Ã¥Ã«Ã¥Ã­Ã¨Ã¥ Ã­Ã  4 Ã Ã°Ã£Ã³Ã¬Ã¥Ã­Ã²Ã®Ã¢ Ã¤Ã«Ã¿ Ã²Ã®Ã£Ã®, Ã·Ã²Ã® Ã¡Ã» AVR_Clock_Freq/x Ã­Ã¥ Ã¯Ã°Ã¥Ã¢Ã»Ã±Ã¨Ã«Ã® word
+  // Ã„Ã¥Ã«Ã¥Ã­Ã¨Ã¥ Ã­Ã  Ã¤Ã¢Ã  Ã¢ ÃªÃ®Ã­Ã¶Ã¥, Ã¯Ã®Ã²Ã®Ã¬Ã³ ÃªÃ Ãª Ã­Ã³Ã¦Ã¥Ã­ Ã¯Ã®Ã«Ã³Ã¯Ã¥Ã°Ã¨Ã®Ã¤
+  // Ã…Ã±Ã«Ã¨ Ã§Ã¢Ã³Ãª Ã®Ã²ÃªÃ«Ã¾Ã·Ã¥Ã­ - Ã²Ã Ã©Ã¬Ã¥Ã° Ã®Ã±Ã²Ã Ã­Ã Ã¢Ã«Ã¨Ã¢Ã Ã¥Ã²Ã±Ã¿ Ã¨ Ã±Ã­Ã¨Ã¬Ã Ã¥Ã²Ã±Ã¿ Ã­Ã Ã¯Ã°Ã¿Ã¦Ã¥Ã­Ã¨Ã¥ Ã± Ã¯Ã¨Ã¹Ã Ã«ÃªÃ¨
   if((freq > 11) && (mute == false))
   {
     // Calculate prescaler
@@ -291,6 +294,8 @@ void SoundDrv::Tone(uint16_t freq)
     // Stop timer
     HAL_TIM_OC_Stop(htim, channel);
     // Clear Speaker output pin for decrease power consumer
-    HAL_GPIO_WritePin(SPEAKER_GPIO_Port, SPEAKER_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
   }
 }
+
+#endif

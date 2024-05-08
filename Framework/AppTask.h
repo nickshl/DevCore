@@ -53,6 +53,8 @@
 // *****************************************************************************
 #include "DevCfg.h"
 
+typedef Result (*CallbackPtr)(void* obj_ptr, void* ptr);
+
 // *****************************************************************************
 // * AppTask class. This class is wrapper for call C++ function from class. ****
 // *****************************************************************************
@@ -64,17 +66,39 @@ class AppTask
     // *************************************************************************
     virtual void InitTask(void) {CreateTask();}
 
+    // *************************************************************************
+    // ***   Callback   ********************************************************
+    // *************************************************************************
+    virtual Result Callback(CallbackPtr func_ptr, void* obj_ptr, void* ptr);
+
+    // *************************************************************************
+    // ***   GetCurrent   ******************************************************
+    // *************************************************************************
+    static inline AppTask* GetCurrent(void) {return reinterpret_cast<AppTask*>(Rtos::GetCurrentTaskParam());}
+
+    // *************************************************************************
+    // ***   StartTimer function   *********************************************
+    // *************************************************************************
+    void StartTimer() {timer.Start();}
+
+    // *************************************************************************
+    // ***   StopTimer function   **********************************************
+    // *************************************************************************
+    void StopTimer() {timer.Stop();}
+
   protected:
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
     AppTask(uint16_t stk_size, uint8_t task_prio, const char name[],
             uint16_t queue_len = 0U, uint16_t queue_msg_size = 0U,
-            void* task_msg_p = nullptr, uint32_t task_interval_ms = 0U) :
+            void* task_msg_p = nullptr, uint32_t task_interval_ms = 0U,
+            bool tmr_priority = false) :
       ctrl_queue((queue_len + 2U), sizeof(CtrlQueueMsg)),
       task_queue(queue_len, queue_msg_size), task_msg_ptr(task_msg_p),
       timer(task_interval_ms, RtosTimer::REPEATING, TimerCallback, (void*)this),
-      stack_size(stk_size), task_priority(task_prio), task_name(name) {};
+      timer_priority(tmr_priority), stack_size(stk_size),
+      task_priority(task_prio), task_name(name) {};
 
     // *************************************************************************
     // ***   Virtual destructor - prevent warning   ****************************
@@ -109,6 +133,12 @@ class AppTask
     virtual Result ProcessMessage() {return Result::RESULT_OK;}
 
     // *************************************************************************
+    // ***   ProcessCallback function   ****************************************
+    // *************************************************************************
+    // * Empty virtual function - some tasks may not have ProcessCallback() actions
+    virtual Result ProcessCallback(const void* ptr) {return Result::RESULT_OK;}
+
+    // *************************************************************************
     // ***   Loop function   ***************************************************
     // *************************************************************************
     // * Empty virtual function - some tasks may not have Loop() actions
@@ -117,19 +147,23 @@ class AppTask
     // *************************************************************************
     // ***   SendTaskMessage function   ****************************************
     // *************************************************************************
-    Result SendTaskMessage(const void* task_msg, bool is_priority = false);
+    Result SendTaskMessage(const void* task_msg, bool is_task_priority = false, bool is_ctrl_priority = false);
 
   private:
     // Task control queue message types
     enum CtrlQueueMsgType
     {
        CTRL_TIMER_MSG,
+       CTRL_CALLBACK_MSG,
        CTRL_TASK_QUEUE_MSG
     };
     // Task control queue message struct
     struct CtrlQueueMsg
     {
       CtrlQueueMsgType type;
+      CallbackPtr func_ptr;
+      void* obj_ptr;
+      void* ptr;
     };
     // Task control queue
     RtosQueue ctrl_queue;
@@ -141,6 +175,8 @@ class AppTask
 
     // Timer object
     RtosTimer timer;
+    // Flag indicates that timer control message have to be priority
+    bool timer_priority = false;
 
     // Task stack size
     uint16_t stack_size;

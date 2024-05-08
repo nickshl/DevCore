@@ -47,9 +47,9 @@
 // *****************************************************************************
 // ***   Palettes external   ***************************************************
 // *****************************************************************************
-extern const uint16_t PALETTE_884[256];
-extern const uint16_t PALETTE_775[256];
-extern const uint16_t PALETTE_676[256];
+extern const color_t PALETTE_884[256];
+extern const color_t PALETTE_775[256];
+extern const color_t PALETTE_676[256];
 
 // *****************************************************************************
 // ***   Image description structure   *****************************************
@@ -65,12 +65,12 @@ typedef struct typeImageDesc
   // Pointer to image data
   union
   {
-    const uint8_t*  img8;
-    const uint16_t* img16;
+    const uint8_t*  imgp;
+    const color_t*  imgb;
     const void*     img;
   };
   // Pointer to palette
-  const uint16_t* palette;
+  const color_t* palette;
   // Transparent color (-1 no transparent colors)
   int32_t transparent_color;
 } ImageDesc;
@@ -117,7 +117,7 @@ class Image : public VisObject
     // Pointer to the image
     const void* img = nullptr;
     // Pointer to the palette
-    const uint16_t* palette = nullptr;
+    const color_t* palette = nullptr;
     // Transparent color (-1 no transparent colors)
     int32_t transparent_color = -1;
     // Horizontal mirror
@@ -125,57 +125,57 @@ class Image : public VisObject
 };
 
 // *****************************************************************************
-// ***   Image 8-bit Class   ***************************************************
+// ***   Palette Image Class   *************************************************
 // *****************************************************************************
-class Image8 : public VisObject
+class ImagePalette : public VisObject
 {
   public:
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Image8(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* p_img, const uint16_t* p_palette);
+    ImagePalette(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* p_img, const color_t* p_palette);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
-    
+
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
-    
+
   private:
     // Pointer to the image
     const uint8_t* img;
     // Pointer to the palette
-    const uint16_t* palette;
+    const color_t* palette;
 };
 
 // *****************************************************************************
-// ***   Image 16-bit Class   ***************************************************
+// ***   Bitmap Image Class   **************************************************
 // *****************************************************************************
-class Image16 : public VisObject
+class ImageBitmap : public VisObject
 {
   public:
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Image16(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t* p_img);
+    ImageBitmap(int32_t x, int32_t y, int32_t w, int32_t h, const color_t* p_img);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
-    
+
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
-    
+
   private:
     // Pointer to the image
-    const uint16_t* img;
+    const color_t* img;
 };
 
 #endif

@@ -28,103 +28,26 @@ Result Rtos::TaskCreate(TaskFunction& function, const char* task_name,
                         uint8_t priority)
 {
   Result result = Result::ERR_TASK_CREATE;
-
+  // We need task handle to set Tag
+  TaskHandle_t task_andle = nullptr;
   // Create task: function - TaskFunWrapper(), parameter - pointer "this"
-  BaseType_t res = xTaskCreate(&function, task_name, stack_depth, param_ptr, priority, nullptr);
+  BaseType_t res = xTaskCreate(&function, task_name, stack_depth, param_ptr, priority, &task_andle);
   // Check result
   if(res == pdPASS)
   {
+    // Set task function to Application Tag to use later
+    vTaskSetApplicationTaskTag(task_andle, (TaskHookFunction_t)param_ptr);
+    // Result ok
     result = Result::RESULT_OK;
   }
 
   return result;
 }
 
-// *************************************************************************
-// ***   TaskDelete   ******************************************************
-// *************************************************************************
-void Rtos::TaskDelete(TaskHandle_t task)
-{
-  // Delete task
-  vTaskDelete(task);
-}
-
 // *****************************************************************************
-// ***   Determine whether we are in thread mode or handler mode   *************
+// ***   IsInHandlerMode   *****************************************************
 // *****************************************************************************
-bool Rtos::IsInHandlerMode(void)
+bool Rtos::IsInHandlerMode()
 {
   return __get_IPSR() != 0;
-}
-
-// *************************************************************************
-// ***   IsSchedulerNotRunning   *******************************************
-// *************************************************************************
-bool Rtos::IsSchedulerNotRunning()
-{
-  return (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED);
-}
-
-// *************************************************************************
-// ***   IsSchedulerRunning   **********************************************
-// *************************************************************************
-bool Rtos::IsSchedulerRunning()
-{
-  return (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);
-}
-
-// *************************************************************************
-// ***   IsSchedulerSuspended   ********************************************
-// *************************************************************************
-bool Rtos::IsSchedulerSuspended()
-{
-  return (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED);
-}
-
-// *****************************************************************************
-// ***   SuspendScheduler   ****************************************************
-// *****************************************************************************
-void Rtos::SuspendScheduler()
-{
-  vTaskSuspendAll();
-}
-
-// *****************************************************************************
-// ***   ResumeScheduler   *****************************************************
-// *****************************************************************************
-void Rtos::ResumeScheduler()
-{
-  (void) xTaskResumeAll();
-}
-
-// *****************************************************************************
-// ***   EnterCriticalSection   ************************************************
-// *****************************************************************************
-void Rtos::EnterCriticalSection()
-{
-  taskENTER_CRITICAL();
-}
-
-// *****************************************************************************
-// ***   ExitCriticalSection   *************************************************
-// *****************************************************************************
-void Rtos::ExitCriticalSection()
-{
-  taskEXIT_CRITICAL();
-}
-
-// *****************************************************************************
-// ***   DisableInterrupts   ***************************************************
-// *****************************************************************************
-void Rtos::DisableInterrupts()
-{
-  taskDISABLE_INTERRUPTS();
-}
-
-// *****************************************************************************
-// ***   EnableInterrupts   ****************************************************
-// *****************************************************************************
-void Rtos::EnableInterrupts()
-{
-  taskENABLE_INTERRUPTS();
 }

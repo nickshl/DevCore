@@ -65,14 +65,14 @@ void TiledMap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x
     int32_t end = x_end - start_x;
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
-    
+
     // Find start tile index and offsets
     int32_t x_tile_idx = (x_pos + start_x + start_offset) / tile_width;
     int32_t y_tile_idx = (y_pos + line - y_start) / tile_height;
     int32_t tile_idx = y_tile_idx * map_width + x_tile_idx;
     int32_t x_tile_offset = (x_pos  + start_x + start_offset) % tile_width;
     int32_t y_tile_offset = ((y_pos + line - y_start) % tile_height) * tile_width;
-    
+
     // If default color is 0 or greater
     if(bg_color >= 0)
     {
@@ -99,18 +99,18 @@ void TiledMap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x
         continue;
       }
       // Get pointer to the current tile image
-      const uint8_t* tile_ptr = &tiles_img[tile_val].img8[y_tile_offset];
+      const uint8_t* tile_ptr = &tiles_img[tile_val].imgp[y_tile_offset];
       // Get pointer to the current tile palette
-      const uint16_t* palette_ptr = tiles_img[tile_val].palette;
+      const color_t* palette_ptr = tiles_img[tile_val].palette;
       // Get transparent color
       const int32_t transparent_color = tiles_img[tile_val].transparent_color;
       // Draw tile
       for(;(tile_pix_idx < (int32_t)tile_width) && (pix_idx <= end); tile_pix_idx++)
       {
         // Get pixel data
-        uint16_t data = palette_ptr[tile_ptr[tile_pix_idx]];
+        color_t data = palette_ptr[tile_ptr[tile_pix_idx]];
         // If not transparent - output to buffer
-        if(data != transparent_color) buf[pix_idx] = data;
+        if((int32_t)data != transparent_color) buf[pix_idx] = data;
         pix_idx++; 
       }
       // Increase tile index

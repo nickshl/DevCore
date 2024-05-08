@@ -383,7 +383,7 @@ template <class T, int N> class CircularBuffer
       // Clear array
       for(uint32_t i = 0U; i < N; i++)
       {
-        array[i] = 0;
+        array[i] = {0};
       }
     }
 

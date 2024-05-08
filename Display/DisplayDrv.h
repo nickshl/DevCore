@@ -51,11 +51,15 @@
 #include "RtosSemaphore.h"
 #include "RtosRecursiveMutex.h"
 
+#include "UpdateAreaProcessor.h"
+
 #include "IDisplay.h"
 #include "ITouchscreen.h"
 #include "VisObject.h"
+#include "VisList.h"
 #include "Primitives.h"
 #include "Strng.h"
+#include "MultiLineString.h"
 #include "Image.h"
 #include "TiledMap.h"
 
@@ -100,14 +104,9 @@ class DisplayDrv : public AppTask
     IDisplay* GetDisplayDrv(void) {return display;}
 
     // *************************************************************************
-    // ***   Add Visual Object to object list   ********************************
+    // ***   Get list   ********************************************************
     // *************************************************************************
-    Result AddVisObjectToList(VisObject* obj, uint32_t z);
-
-    // *************************************************************************
-    // ***   Delete Visual Object from object list   ***************************
-    // *************************************************************************
-    Result DelVisObjectFromList(VisObject* obj);
+    VisList* GetVisList(void) {return &list;}
 
     // *************************************************************************
     // ***   Lock display   ****************************************************
@@ -135,6 +134,11 @@ class DisplayDrv : public AppTask
     Result UpdateDisplay(void);
 
     // *************************************************************************
+    // ***   Invalidate Display   **********************************************
+    // *************************************************************************
+    Result InvalidateDisplay() {return InvalidateArea(0, 0, width, height);}
+
+    // *************************************************************************
     // ***   Invalidate Area   *************************************************
     // *************************************************************************
     Result InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y);
@@ -155,6 +159,11 @@ class DisplayDrv : public AppTask
     Result UpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
 
     // *************************************************************************
+    // ***   Invert Display   **************************************************
+    // *************************************************************************
+    void InvertDisplay(bool invert);
+
+    // *************************************************************************
     // ***   Set Rotation   ****************************************************
     // *************************************************************************
     void SetRotation(IDisplay::Rotation rot);
@@ -163,6 +172,11 @@ class DisplayDrv : public AppTask
     // ***   Set Update Mode   *************************************************
     // *************************************************************************
     void SetUpdateMode(UpdateMode mode);
+
+    // *************************************************************************
+    // ***   Set Background Color   ********************************************
+    // *************************************************************************
+    void SetBackgroundColor(color_t color) {bkg_color = color;}
 
     // *************************************************************************
     // ***   GetScreenW   ******************************************************
@@ -201,8 +215,9 @@ class DisplayDrv : public AppTask
 
   private:
     // Display FPS/touch coordinates
-    static const bool DISPLAY_DEBUG_INFO = false;
-    static const bool DISPLAY_DEBUG_AREA = false;
+    static constexpr bool DISPLAY_DEBUG_INFO = false;
+    static constexpr bool DISPLAY_DEBUG_AREA = false;
+    static constexpr bool DISPLAY_DEBUG_TOUCH = false;
 
     // Display driver object
     IDisplay* display = nullptr;
@@ -210,11 +225,14 @@ class DisplayDrv : public AppTask
     // Touchscreen driver object
     ITouchscreen* touch = nullptr;
 
-    // Pointer to first object in list
-    VisObject* object_list = nullptr;
-    // Pointer to last object in list
-    VisObject* object_list_last = nullptr;
+    // List with visual objects
+    VisList list;
 
+    // Background color
+    color_t bkg_color = COLOR_BLACK;
+
+    //Inversion
+    bool inversion = false;
     // Rotation
     IDisplay::Rotation rotation = IDisplay::ROTATION_TOP;
     // Update mode: true - vertical, false = horizontal
@@ -227,12 +245,15 @@ class DisplayDrv : public AppTask
     // Current screen line
     uint8_t scr_line_idx = 0u;
 
-    // Update area start position
-    uint16_t area_start_x = 0u;
-    uint16_t area_end_x = 0u;
-    uint16_t area_start_y = 0u;
-    uint16_t area_end_y = 0u;
+    // Area to update
+    UpdateArea_t area;
+#if defined(MULTIPLE_UPDATE_AREAS)
+    // For multiple areas
+    UpdateAreaProcessor<MULTIPLE_UPDATE_AREAS> areas;
+#else
+    // Dirty flag
     bool is_dirty = false;
+#endif
 
     // Touch coordinates and state
     bool is_touch = false;
@@ -245,6 +266,9 @@ class DisplayDrv : public AppTask
     char str[32] = {"       "};
     // FPS string
     String fps_str;
+
+    // Touch debug circle
+    Circle touch_cir;
 
     // Semaphore for update screen
     RtosSemaphore screen_update;

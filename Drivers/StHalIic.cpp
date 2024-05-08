@@ -57,9 +57,21 @@ Result StHalIic::Reset()
   // PE must be kept low during at least 3 APB clock cycles in order to
   // perform the software reset. Wait until it actually cleared.
   while(READ_BIT(hi2c.Instance->CR1, I2C_CR1_PE));
-  // TODO: make some clock on the SCL line here
-  // Set PE bit
-  SET_BIT(hi2c.Instance->CR1, I2C_CR1_PE);
+  // Set Software reset bit
+  SET_BIT(hi2c.Instance->CR1, I2C_CR1_SWRST);
+  // Clear Software reset bit
+  CLEAR_BIT(hi2c.Instance->CR1, I2C_CR1_SWRST);
+
+  // TODO: we need to make some clock pulses on the SCL line here. Sometimes
+  // In some cases when slave missed clock pulse by some reason it may stuck in
+  // acknowledge state and pull SDA line low. MCU will see that and consider
+  // line busy. It can be fixed by producing another pulse on SCL line which
+  // should force slave to release SDA line.
+  // However, it not easy(universal) to do since hi2c does not contains GPIO
+  // info for I2C pins.
+
+  // Reinit H2C(PE bit will be set by this function)
+  HAL_I2C_Init(&hi2c);
   // No errors to return
   return Result::RESULT_OK;
 }

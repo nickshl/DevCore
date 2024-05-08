@@ -1,8 +1,8 @@
 //******************************************************************************
-//  @file ILI9488.h
+//  @file MultiLineString.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: ILI9488 Low Level Driver Class, header
+//  @details DevCore: MultiLineString Visual Object Class, header
 //
 //  @section LICENSE
 //
@@ -35,164 +35,181 @@
 //
 //******************************************************************************
 
-#ifndef ILI9488_h
-#define ILI9488_h
+#ifndef MultiLineString_h
+#define MultiLineString_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
-#include <DevCfg.h>
+#include "DevCfg.h"
 #include "IDisplay.h"
-#include "ISpi.h"
-#include "IGpio.h"
+#include "VisObject.h"
+#include "Font.h"
+#include "Font_4x6.h"
+#include "Font_6x8.h"
+#include "Font_8x8.h"
+#include "Font_8x12.h"
+#include "Font_10x18.h"
+#include "Font_12x16.h"
 
 // *****************************************************************************
-// ***   ILI9488   *************************************************************
+// ***   MultiLineString Class   ***********************************************
 // *****************************************************************************
-class ILI9488 : public IDisplay
+class MultiLineString : public VisObject
 {
   public:
     // *************************************************************************
-    // ***   Constructor   *****************************************************
+    // ***   Align Enum   ******************************************************
     // *************************************************************************
-    explicit ILI9488(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height, 3), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {};
+    typedef enum : uint8_t
+    {
+      LEFT = 0,
+      CENTER,
+      RIGHT,
+      ALIGN_CNT
+    } alignment_t;
 
     // *************************************************************************
-    // ***   Init screen   *****************************************************
+    // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    virtual Result Init(void);
-
-#if defined(COLOR_3BIT)
+    MultiLineString() {};
+ 
     // *************************************************************************
-    // ***   Return byte(s) count for given number of pixels   *****************
+    // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    virtual int32_t GetPixelDataCnt(uint16_t pixel_cnt) {return(pixel_cnt / 2u);}
-#endif
+    MultiLineString(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
 
     // *************************************************************************
-    // ***   Public: Prepare data (32 bit -> 24 bit version)   *****************
+    // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    virtual Result PrepareData(uint32_t* data, uint32_t n);
+    MultiLineString(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
-    // ***   Public: Prepare data (16 bit -> 24 bit version)   *****************
+    // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    virtual Result PrepareData(uint16_t* data, uint32_t n);
+    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
 
     // *************************************************************************
-    // ***   Public: Prepare data (8 bit -> 3 bit version)   *******************
+    // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    virtual Result PrepareData(uint8_t* data, uint32_t n);
+    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
-    // ***   Write data steram to SPI   ****************************************
+    // ***   Public: SetString   ***********************************************
     // *************************************************************************
-    virtual Result WriteDataStream(uint8_t* data, uint32_t n);
+    void SetString(const char* str, bool force = false);
 
     // *************************************************************************
-    // ***   Check SPI transfer status  ****************************************
+    // ***   Public: GetString   ***********************************************
     // *************************************************************************
-    virtual bool IsTransferComplete(void);
+    const char* GetString() {return string;}
 
     // *************************************************************************
-    // ***   Pull up CS line for LCD  ******************************************
+    // ***   Public: SetString   ***********************************************
     // *************************************************************************
-    virtual Result StopTransfer(void);
+    void SetString(char* buffer, uint32_t n, const char* format, ...);
 
     // *************************************************************************
-    // ***   Set output window   ***********************************************
+    // ***   Public: SetColor   ************************************************
     // *************************************************************************
-    virtual Result SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+    void SetColor(color_t tc, color_t bgc = 0U, bool is_trnsp = true);
 
     // *************************************************************************
-    // ***   Set screen orientation   ******************************************
+    // ***   Public: SetFont   *************************************************
     // *************************************************************************
-    virtual Result SetRotation(IDisplay::Rotation r );
+    void SetFont(Font& font);
 
     // *************************************************************************
-    // ***   Write color to screen   *******************************************
+    // ***   Public: SetScale   ************************************************
     // *************************************************************************
-    virtual Result PushColor(uint32_t color);
+    void SetScale(uint8_t s);
 
     // *************************************************************************
-    // ***   Write color to screen   *******************************************
+    // ***   Public: GetScale   ************************************************
     // *************************************************************************
-    virtual Result PushColor(uint16_t color);
+    uint8_t GetScale(void) {return scale;}
 
     // *************************************************************************
-    // ***   Write color to screen   *******************************************
+    // ***   Public: SetSpacing   **********************************************
     // *************************************************************************
-    Result PushColor(uint8_t color);
+    void SetSpacing(uint8_t s);
 
     // *************************************************************************
-    // ***   Draw one pixel on  screen   ***************************************
+    // ***   Public: GetSpacinge   *********************************************
     // *************************************************************************
-    virtual Result DrawPixel(int16_t x, int16_t y, color_t color);
+    uint8_t GetSpacinge(void) {return spacing;}
 
     // *************************************************************************
-    // ***   Draw vertical line   **********************************************
+    // ***   Public: SetAlignment   ********************************************
     // *************************************************************************
-    virtual Result DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color);
+    void SetAlignment(alignment_t a);
 
     // *************************************************************************
-    // ***   Draw horizontal line   ********************************************
+    // ***   Public: Put line in buffer   **************************************
     // *************************************************************************
-    virtual Result DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color);
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
 
     // *************************************************************************
-    // ***   Fill rectangle on screen   ****************************************
+    // ***   Public: Put line in buffer   **************************************
     // *************************************************************************
-    virtual Result FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color);
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
 
     // *************************************************************************
-    // ***   Invert display   **************************************************
+    // ***   Public: GetFontW   ************************************************
     // *************************************************************************
-    virtual Result InvertDisplay(bool invert);
+    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharW());}
 
     // *************************************************************************
-    // ***   Return if data have to be prepared before send to display   ******
+    // ***   Public: GetFontH   ************************************************
     // *************************************************************************
-    virtual bool IsDataNeedPreparation(void) {return true;}
+    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharH());}
+
+    // *************************************************************************
+    // ***   Public: GetFontBytePerChar   **************************************
+    // *************************************************************************
+    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetBytesPerChar());}
 
   private:
-    // Handle to SPI used for display
-    ISpi& spi;
-    // Reference to CS and DC - mandatory
-    IGpio& display_cs;
-    IGpio& display_dc;
-    // Pointer to Reset - optional
-    IGpio* display_rst = nullptr;
+    // Pointer to string
+    const char* string = nullptr;
+    // Text color
+    color_t txt_color = 0u;
+    // Background color
+    color_t bg_color = 0u;
+    // Scale
+    uint8_t scale = 1u;
+    // Font type
+    Font* font_ptr = nullptr;
+    // Is background transparent ?
+    bool transpatent_bg = false;
+    // Left alignment
+    alignment_t alignment = LEFT;
+    // Scale
+    uint8_t spacing = 0u;
+
+    // Line height: character height multiplied by scale and added spacing
+    uint8_t line_height = 1u;
+    // String line number
+    int32_t str_line = -1;
+    // String pointer
+    const char* str_ptr;
+    // Line length
+    uint16_t str_len = 0u;
 
     // *************************************************************************
-    // ***   Private: Write data to SPI   **************************************
+    // ***   Private: GetStringCount   *****************************************
     // *************************************************************************
-    inline void WriteData(uint8_t c);
+    uint32_t GetStringCount(const char* str);
 
     // *************************************************************************
-    // ***   Private: Write command to SPI   ***********************************
+    // ***   Private: GetStringLength   ****************************************
     // *************************************************************************
-    inline void WriteCommand(uint8_t c);
+    uint32_t GetStringLength(const char* str);
 
     // *************************************************************************
-    // ***   Private: Write byte to SPI   **************************************
+    // ***   Private: GetLongestLineLength   ***********************************
     // *************************************************************************
-    inline void SpiWrite(uint8_t c);
-
-    // *************************************************************************
-    // ***   Private: Read data from SPI   *************************************
-    // *************************************************************************
-    inline uint8_t SpiRead(void);
-
-    // *************************************************************************
-    // ***   Private: Read data from display   *********************************
-    // *************************************************************************
-    inline uint8_t ReadData(void);
-
-    // *************************************************************************
-    // ***   Private: Send read command ad read result   ***********************
-    // *************************************************************************
-    uint8_t ReadCommand(uint8_t c);
+    uint32_t GetLongestLineLength(const char* str);
 };
 
 #endif

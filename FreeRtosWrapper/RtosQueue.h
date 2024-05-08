@@ -139,10 +139,10 @@ class RtosQueue
     QueueHandle_t queue;
 
     // Number of items in the queue
-    uint16_t queue_len;
-     
+    uint16_t queue_len = 0u;
+
     // Size of item
-    uint16_t item_size;
+    uint16_t item_size = 0u;
 
     // Queue name
     char queue_name[MAX_QUEUE_NAME_LEN];

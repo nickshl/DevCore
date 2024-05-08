@@ -155,7 +155,7 @@ void UiScroll::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Action   **************************************************************
 // *****************************************************************************
-void UiScroll::Action(VisObject::ActionType action, int32_t tx, int32_t ty)
+void UiScroll::Action(VisObject::ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy)
 {
   // Switch for process action
   switch(action)
@@ -213,6 +213,7 @@ void UiScroll::Action(VisObject::ActionType action, int32_t tx, int32_t ty)
     case VisObject::ACT_UNTOUCH:
       break;
 
+    case VisObject::ACT_HOLD: // Intentional fall-trough
     case VisObject::ACT_MAX:
     default:
       break;

@@ -19,6 +19,8 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "VisObject.h"
+#include "VisList.h"
+
 #include "DisplayDrv.h" // for AddVisObjectToList() and DelVisObjectFromList()
 
 // *****************************************************************************
@@ -27,7 +29,7 @@
 VisObject::~VisObject()
 {
   // Remove object from object list before delete
-  DisplayDrv::GetInstance().DelVisObjectFromList(this);
+  Hide();
 }
 
 // *****************************************************************************
@@ -49,19 +51,39 @@ Result VisObject::UnlockVisObject()
 };
 
 // *****************************************************************************
+// ***   SetList   *************************************************************
+// *****************************************************************************
+Result VisObject::SetList(VisList& l)
+{
+  Result result = Result::ERR_CANNOT_EXECUTE;
+
+  // If object doesn't have list or not in the list chain - we can add/change it
+  if((list == nullptr) || (!IsInList()))
+  {
+    list = &l;
+    result = Result::RESULT_OK;
+  }
+
+  return result;
+}
+
+// *****************************************************************************
 // ***   Show Visual Object   **************************************************
 // *****************************************************************************
 Result VisObject::Show(uint32_t z_pos)
 {
+  // By default all VisObjects attached to main display list
+  if(list == nullptr) list = DisplayDrv::GetInstance().GetVisList();
   // Z position is 0 by default. In this case we can use 0 here as "no pos" flag
   if(z_pos != 0)
   {
     z = z_pos;
   }
-  // Invalidate area for update
-  InvalidateObjArea();
+  // Invalidate area for update. We need to force invalidation there since
+  // Visual Object isn't show yet
+  InvalidateObjArea(true);
   // Add to VisObject List
-  return DisplayDrv::GetInstance().AddVisObjectToList(this, z);
+  return list->AddVisObjectToList(this, z);//DisplayDrv::GetInstance().AddVisObjectToList(this, z);
 }
 
 // *****************************************************************************
@@ -72,13 +94,31 @@ Result VisObject::Hide(void)
   // Invalidate area for update
   InvalidateObjArea();
   // Delete from VisObject List
-  return DisplayDrv::GetInstance().DelVisObjectFromList(this);
+  return list->DelVisObjectFromList(this);//DisplayDrv::GetInstance().DelVisObjectFromList(this);
 }
 
 // *****************************************************************************
 // ***   Check status of Show Visual Object   **********************************
 // *****************************************************************************
 bool VisObject::IsShow(void)
+{
+  // Return false by default
+  bool ret = false;
+
+  // Check if VisObject in the list, and if it is check if list is show
+  if(IsInList() && list->IsShow())
+  {
+    ret = true;
+  }
+
+  // Return result
+  return ret;
+}
+
+// *****************************************************************************
+// ***   Check status of Show Visual Object   **********************************
+// *****************************************************************************
+bool VisObject::IsInList(void)
 {
   // Return false by default
   bool ret = false;
@@ -102,27 +142,32 @@ Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
   // Check result
   if(result.IsGood())
   {
-    // Invalidate area before move to redraw area object move from
-    InvalidateObjArea();
-    // Make changes
-    if(is_delta == true)
+    // Check if we need to move object at all - prevent unnecessary call InvalidateObjArea() function
+    if( ((is_delta == false) && ((x != x_start) || (y != y_start))) ||
+        ((is_delta == true)  && ((x != 0)       || (y != 0))) )
     {
-      // Move object in delta coordinates
-      x_start += x;
-      y_start += y;
-      x_end += x;
-      y_end += y;
+      // Invalidate area before move to redraw area object move from
+      InvalidateObjArea();
+      // Make changes
+      if(is_delta == true)
+      {
+        // Move object in delta coordinates
+        x_start += x;
+        y_start += y;
+        x_end += x;
+        y_end += y;
+      }
+      else
+      {
+        // Move object in absolute coordinates
+        x_start = x;
+        y_start = y;
+        x_end = x + width - 1;
+        y_end = y + height - 1;
+      }
+      // Invalidate area after move to redraw area object move to
+      InvalidateObjArea();
     }
-    else
-    {
-      // Move object in absolute coordinates
-      x_start = x;
-      y_start = y;
-      x_end = x + width - 1;
-      y_end = y + height - 1;
-    }
-    // Invalidate area after move to redraw area object move to
-    InvalidateObjArea();
     // Unlock object after changes
     result = UnlockVisObject();
   }
@@ -133,7 +178,7 @@ Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
 // *****************************************************************************
 // ***   Action   **************************************************************
 // *****************************************************************************
-void VisObject::Action(ActionType action, int32_t tx, int32_t ty)
+void VisObject::Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy)
 {
   // Empty function. We can do active object without custom Action function
   // for cover active object with lower Z.
@@ -142,12 +187,12 @@ void VisObject::Action(ActionType action, int32_t tx, int32_t ty)
 // *****************************************************************************
 // ***   Invalidate Display Area   *********************************************
 // *****************************************************************************
-void VisObject::InvalidateObjArea()
+void VisObject::InvalidateObjArea(bool force)
 {
   // Only if VisObject is show
-  if(IsShow())
+  if((IsShow() || force) && (list != nullptr))
   {
     // Invalidate area
-    DisplayDrv::GetInstance().InvalidateArea(this->GetStartX(), this->GetStartY(), this->GetEndX(), this->GetEndY());
+    list->InvalidateArea(x_start, y_start, x_end, y_end);
   }
 }

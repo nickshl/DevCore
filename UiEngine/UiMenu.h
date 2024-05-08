@@ -84,6 +84,16 @@ class UiMenu
            int16_t x = 0, int16_t y = 0, int16_t w = 0, int16_t h = 0);
 
     // *************************************************************************
+    // ***   Public: Show   ****************************************************
+    // *************************************************************************
+    void Show(void);
+
+    // *************************************************************************
+    // ***   Public: Hide   ****************************************************
+    // *************************************************************************
+    void Hide(void);
+
+    // *************************************************************************
     // ***   Public: Run menu   ************************************************
     // *************************************************************************
     bool Run(void);
@@ -91,8 +101,8 @@ class UiMenu
     // *************************************************************************
     // ***   Public: GetCurrentPosition   **************************************
     // *************************************************************************
-    inline int32_t GetCurrentPosition(void) {return current_pos;};
-      
+    inline int32_t GetCurrentPosition(void) {return current_pos;}
+
   private:
     // Max allowed menu items on the screen
     static const uint32_t MAX_MENU_ITEMS = 16U;
@@ -107,7 +117,15 @@ class UiMenu
     int16_t y_start;
     int16_t width;
     int16_t height;
-    
+
+    int16_t header_height = 0;
+    int16_t menu_count = 0;
+    int16_t str_len = 0;
+
+    // Strings for menu items
+    String* menu_str[MAX_MENU_ITEMS];
+    char* menu_txt[MAX_MENU_ITEMS];
+
     // Box across menu
     Box box;
     // Header String object
@@ -118,7 +136,7 @@ class UiMenu
     Box selection_bar;
     // Scroll
     UiScroll scroll;
-    
+
     // Variables for user input
     bool kbd_up = false;
     bool kbd_right = false;
@@ -134,13 +152,18 @@ class UiMenu
     int32_t last_enc_right_val = 0;
     bool enc1_btn_left_val = false;
     bool enc2_btn_left_val = false;
-    
+
     // Display driver instance
     DisplayDrv& display_drv = DisplayDrv::GetInstance();
+
+#if defined(INPUTDRV_ENABLED)
     // Input driver instance
     InputDrv& input_drv = InputDrv::GetInstance();
+#endif
+#if defined(SOUNDDRV_ENABLED)
     // Sound driver instance
     SoundDrv& sound_drv = SoundDrv::GetInstance();
+#endif
 
     // *************************************************************************
     // ***   Private: Init user input   ****************************************

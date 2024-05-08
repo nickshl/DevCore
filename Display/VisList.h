@@ -1,19 +1,18 @@
 //******************************************************************************
-//  @file RtosTimer.h
+//  @file VisList.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: FreeRTOS Timer Wrapper Class, header
+//  @details DevCore: Visual Object Base Class, header
 //
 //  @section LICENSE
 //
-//   Software License Agreement (Modified BSD License)
+//   Software License Agreement (BSD License)
 //
-//   Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2023, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions are met:
-//
 //   1. Redistributions of source code must retain the above copyright
 //      notice, this list of conditions and the following disclaimer.
 //   2. Redistributions in binary form must reproduce the above copyright
@@ -22,9 +21,6 @@
 //   3. Neither the name of the Devtronic nor the names of its contributors
 //      may be used to endorse or promote products derived from this software
 //      without specific prior written permission.
-//   4. Redistribution and use of this software other than as permitted under
-//      this license is void and will automatically terminate your rights under
-//      this license.
 //
 //   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
 //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -37,108 +33,80 @@
 //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-//  @section SUPPORT
-//
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
-//
 //******************************************************************************
 
-#ifndef RtosTimer_h
-#define RtosTimer_h
+#ifndef VisList_h
+#define VisList_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "Rtos.h"
-#include "timers.h"
+#include "VisObject.h"
+#include "AppTask.h"
 
 // *****************************************************************************
-// ***   RtosTimer   ***********************************************************
+// ***   VisList class   *******************************************************
 // *****************************************************************************
-class RtosTimer
+class VisList : public VisObject
 {
   public:
-    // Definition of callback function
-    typedef void (Callback)(void* ptr);
-
-    // Types of timer
-    enum TimerType
-    {
-       REPEATING,
-       ONE_SHOT
-    };
+    // *************************************************************************
+    // ***   VisList   *********************************************************
+    // ************************************************************************* 
+    VisList() {};
 
     // *************************************************************************
-    // ***   RtosTimer   *******************************************************
+    // ***   SetParams   *******************************************************
     // *************************************************************************
-    RtosTimer(uint32_t period_ms, TimerType type, Callback& clbk, void* clbk_param) :
-              timer_period_ms(period_ms), timer_type(type),
-              callback(&clbk), callback_param(clbk_param) {};
+    void SetParams(int32_t x, int32_t y, int32_t w, int32_t h);
 
     // *************************************************************************
-    // ***   ~RtosTimer   ******************************************************
+    // ***   Add Visual Object to object list   ********************************
     // *************************************************************************
-    ~RtosTimer();
+    Result AddVisObjectToList(VisObject* obj, uint32_t z);
 
     // *************************************************************************
-    // ***   Create   **********************************************************
+    // ***   Delete Visual Object from object list   ***************************
     // *************************************************************************
-    Result Create();
+    Result DelVisObjectFromList(VisObject* obj);
 
     // *************************************************************************
-    // ***   IsActive   ********************************************************
+    // ***   DrawInBufH   ******************************************************
     // *************************************************************************
-    bool IsActive() const;
+    // * Draw one horizontal line of object in specified buffer.
+    // * Each derived class must implement this function.
+    virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y =  0);
 
     // *************************************************************************
-    // ***   Start   ***********************************************************
+    // ***   DrawInBufW   ******************************************************
     // *************************************************************************
-    Result Start(uint32_t timeout_ms = 0);
+    // * Draw one vertical line of object in specified buffer.
+    // * Each derived class must implement this function.
+    virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x =  0);
 
     // *************************************************************************
-    // ***   Stop   ************************************************************
+    // ***   Action   **********************************************************
     // *************************************************************************
-    Result Stop(uint32_t timeout_ms = 0);
+    virtual void Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy);
 
     // *************************************************************************
-    // ***   SetNewPeriod   ****************************************************
+    // ***   Invalidate Area   *************************************************
     // *************************************************************************
-    Result UpdatePeriod(uint32_t new_period_ms, uint32_t timeout_ms = 0);
+    virtual void InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y);
 
     // *************************************************************************
-    // ***   StartWithNewPeriod   **********************************************
+    // ***   IsShow   **********************************************************
     // *************************************************************************
-    Result StartWithNewPeriod(uint32_t new_period_ms, uint32_t timeout_ms = 0);
-
-    // *************************************************************************
-    // ***   Reset   ***********************************************************
-    // *************************************************************************
-    Result Reset(uint32_t timeout_ms = 0);
-
-    // *************************************************************************
-    // ***   GetTimerPeriod   **************************************************
-    // *************************************************************************
-    inline uint32_t GetTimerPeriod(void) const {return timer_period_ms;}
+    virtual bool IsShow(void);
 
   private:
-    // Timer handle
-    TimerHandle_t timer = nullptr;
-
-    // Timer period in ms
-    uint32_t timer_period_ms = 0u;
-    // Timer type
-    TimerType timer_type;
-
-    // Pointer to the callback function
-    Callback* callback;
-    // Pointer to the callback data
-    void* callback_param = nullptr;
-
-    // Timer callback wrapper function
-    static void CallbackFunction(TimerHandle_t timer_handle);
+    // *************************************************************************
+    // ***   Object parameters   ***********************************************
+    // *************************************************************************    // Pointer to first object in list
+    VisObject* object_list = nullptr;
+    // Pointer to last object in list
+    VisObject* object_list_last = nullptr;
 };
 
 #endif

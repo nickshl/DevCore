@@ -175,7 +175,11 @@ Result ILI9488::Init(void)
 
   // Interface Pixel Format
   WriteCommand(CMD_PIXFMT);
+#if defined(COLOR_3BIT)
+  WriteData(0x11); // 0x11 - 3 bit
+#else
   WriteData(0x66); // 0x66 - 18 bit, 0x55 - 16 bit(DOESN'T WORK!), 0x11 - 3 bit
+#endif
 
   // Frame Control (In Normal Mode)
   WriteCommand(CMD_FRMCTR1);
@@ -298,29 +302,32 @@ Result ILI9488::PrepareData(uint16_t* data, uint32_t n)
   return Result::RESULT_OK;
 }
 
-//// *****************************************************************************
-//// ***   Public: Prepare data (16 bit -> 3 bit)   ******************************
-//// *****************************************************************************
-//Result ILI9488::PrepareData(uint8_t* data, uint32_t n)
-//{
-//  // Convert data
-//  for(int16_t i = 0u; i < n / 2u; i++)
-//  {
-////    uint16_t color1 = data[i*4u+1u] | (data[i*4u+0u] << 8u);
-////    uint16_t color2 = data[i*4u+3u] | (data[i*4u+2u] << 8u);
-////    // Create two 3-bit RGB values from two 16 bit
-////    data[i] = ((color1 & 0x0010) ? 0x20 : 0x00) | ((color1 & 0x0400) ? 0x10 : 0x00) | ((color1 & 0x8000) ? 0x08 : 0x00) |
-////              ((color2 & 0x0010) ? 0x04 : 0x00) | ((color2 & 0x0400) ? 0x02 : 0x00) | ((color2 & 0x8000) ? 0x01 : 0x00);
-//
-////    data[i] = ((data[i*4u+1u] & 0x10) ? 0x20 : 0x00) | ((data[i*4u+0u] & 0x04) ? 0x10 : 0x00) | ((data[i*4u+0u] & 0x80) ? 0x08 : 0x00) |
-////              ((data[i*4u+3u] & 0x10) ? 0x04 : 0x00) | ((data[i*4u+2u] & 0x04) ? 0x02 : 0x00) | ((data[i*4u+2u] & 0x80) ? 0x01 : 0x00);
-//
+// *****************************************************************************
+// ***   Public: Prepare data (16 bit -> 3 bit)   ******************************
+// *****************************************************************************
+Result ILI9488::PrepareData(uint8_t* data, uint32_t n)
+{
+  // Convert data
+  for(uint32_t i = 0u; i < n / 2u; i++)
+  {
+//    uint16_t color1 = data[i*4u+1u] | (data[i*4u+0u] << 8u);
+//    uint16_t color2 = data[i*4u+3u] | (data[i*4u+2u] << 8u);
+//    // Create two 3-bit RGB values from two 16 bit
+//    data[i] = ((color1 & 0x0010) ? 0x20 : 0x00) | ((color1 & 0x0400) ? 0x10 : 0x00) | ((color1 & 0x8000) ? 0x08 : 0x00) |
+//              ((color2 & 0x0010) ? 0x04 : 0x00) | ((color2 & 0x0400) ? 0x02 : 0x00) | ((color2 & 0x8000) ? 0x01 : 0x00);
+
+//    data[i] = ((data[i*4u+1u] & 0x10) ? 0x20 : 0x00) | ((data[i*4u+0u] & 0x04) ? 0x10 : 0x00) | ((data[i*4u+0u] & 0x80) ? 0x08 : 0x00) |
+//              ((data[i*4u+3u] & 0x10) ? 0x04 : 0x00) | ((data[i*4u+2u] & 0x04) ? 0x02 : 0x00) | ((data[i*4u+2u] & 0x80) ? 0x01 : 0x00);
+
 //    data[i] = ((data[i*4u+1u] & 0x10) << 1u) | ((data[i*4u+0u] & 0x04) << 2u) | ((data[i*4u+0u] & 0x80) >> 4u) |
 //              ((data[i*4u+3u] & 0x10) >> 2u) | ((data[i*4u+2u] & 0x04) >> 1u) | ((data[i*4u+2u] & 0x80) >> 7u);
-//  }
-//  // Always Ok
-//  return Result::RESULT_OK;
-//}
+
+    //
+    data[i] = ((data[i*2u + 0u] & 0x07) << 3u) | (data[i*2u + 1u] & 0x07);
+  }
+  // Always Ok
+  return Result::RESULT_OK;
+}
 
 // *****************************************************************************
 // ***   Public: Write data steram to SPI   ************************************
@@ -460,6 +467,20 @@ Result ILI9488::PushColor(uint16_t color)
   SpiWrite(r);
   SpiWrite(g);
   SpiWrite(b);
+
+  // Always Ok
+  return Result::RESULT_OK;
+}
+
+// *****************************************************************************
+// ***   Write color to screen   ***********************************************
+// *****************************************************************************
+Result ILI9488::PushColor(uint8_t color)
+{
+  display_dc.SetHigh(); // Data
+
+  // Write color
+  SpiWrite(color);
 
   // Always Ok
   return Result::RESULT_OK;

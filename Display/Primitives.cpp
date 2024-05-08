@@ -43,8 +43,11 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool 
 {
   // Lock object for changes
   LockVisObject();
+  // Invalidate area for old position/size
+  InvalidateObjArea();
   // Do changes
   color = c;
+  bg_color = c;
   x_start = x;
   y_start = y;
   x_end = x + w - 1;
@@ -53,6 +56,22 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool 
   height = h;
   rotation = 0;
   fill = is_fill;
+  border_width = is_fill ? 0 : 1; // Set border 1 pixel if border isn't fill
+  // Invalidate area for new position/size
+  InvalidateObjArea();
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   SetBorderWidth   ******************************************************
+// *****************************************************************************
+void Box::SetBorderWidth(int32_t width)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Set new border width
+  border_width = width;
   // Invalidate area
   InvalidateObjArea();
   // Unlock object after changes
@@ -68,6 +87,23 @@ void Box::SetColor(color_t c)
   LockVisObject();
   // Do changes
   color = c;
+  // Set background color the same if border width is zero
+  if(border_width == 0) bg_color = c;
+  // Invalidate area
+  InvalidateObjArea();
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   SetBackgroundColor   **************************************************
+// *****************************************************************************
+void Box::SetBackgroundColor(color_t bgc)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Do changes
+  bg_color = bgc;
   // Invalidate area
   InvalidateObjArea();
   // Unlock object after changes
@@ -84,24 +120,41 @@ void Box::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
   {
     // Find start x position
     int32_t start = x_start - start_x;
-    // Prevent write in memory before buffer
-    if(start < 0) start = 0;
     // Find start x position
     int32_t end = x_end - start_x;
-    // Prevent buffer overflow
-    if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
     if(end > 0)
     {
       // If fill or first/last line - must be solid
-      if(fill || line == y_start || line == y_end)
+      if(fill)
       {
+        // Prevent write in memory before buffer
+        if(start < 0) start = 0;
+        // Prevent buffer overflow
+        if(end >= n) end = n - 1;
+        // Fill the line
+        for(int32_t i = start; i <= end; i++) buf[i] = bg_color;
+      }
+      // Fill top and bottom border lines (if border exist)
+      if((line < y_start + border_width) || (line > y_end - border_width))
+      {
+        // Prevent write in memory before buffer
+        if(start < 0) start = 0;
+        // Prevent buffer overflow
+        if(end >= n) end = n - 1;
+        // Fill the line
         for(int32_t i = start; i <= end; i++) buf[i] = color;
       }
       else
       {
-        if(x_start - start_x >= 0) buf[start] = color;
-        if(x_end   - start_x <  n) buf[end]   = color;
+        // Fill left and right borders
+        for(int32_t i = 0; i < border_width; i++)
+        {
+          int32_t front_idx = start + i;
+          int32_t back_idx = (x_end - start_x) - i;
+          if((front_idx >= 0) && (front_idx < n)) buf[front_idx] = color;
+          if((back_idx  >= 0) && (back_idx  < n)) buf[back_idx]  = color;
+        }
       }
     }
   }
@@ -142,6 +195,112 @@ void Box::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 
 // *****************************************************************************
 // *****************************************************************************
+// ***   Shadow Box   **********************************************************
+// *****************************************************************************
+// *****************************************************************************
+
+#if defined(COLOR_24BIT) // Shadow box available only for 24 bit color
+
+// *****************************************************************************
+// ***   Constructor   *********************************************************
+// *****************************************************************************
+ShadowBox::ShadowBox(int32_t x, int32_t y, int32_t w, int32_t h)
+{
+  SetParams(x, y, w, h);
+}
+
+// *****************************************************************************
+// ***   SetParams   ***********************************************************
+// *****************************************************************************
+void ShadowBox::SetParams(int32_t x, int32_t y, int32_t w, int32_t h)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Invalidate area for old position/size
+  InvalidateObjArea();
+  // Do changes
+  x_start = x;
+  y_start = y;
+  x_end = x + w - 1;
+  y_end = y + h - 1;
+  width = w;
+  height = h;
+  rotation = 0;
+  // Invalidate area for new position/size
+  InvalidateObjArea();
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void ShadowBox::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
+{
+  // Draw only if needed
+  if((line >= y_start) && (line <= y_end))
+  {
+    // Find start x position
+    int32_t start = x_start - start_x;
+    // Find start x position
+    int32_t end = x_end - start_x;
+    // Have sense draw only if end pointer in buffer
+    if(end > 0)
+    {
+      // Prevent write in memory before buffer
+      if(start < 0) start = 0;
+      // Prevent buffer overflow
+      if(end >= n) end = n - 1;
+      // Fill the line
+      for(int32_t i = start; i <= end; i++)
+      {
+        // Convert pointer to uint8_t to process color components individually
+        uint8_t* color = reinterpret_cast<uint8_t*>(&buf[i]);
+        // Process shadow
+        color[0u] /= 2;
+        color[1u] /= 2;
+        color[2u] /= 2;
+      }
+    }
+  }
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void ShadowBox::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
+{
+  // Draw only if needed
+  if((row >= x_start) && (row <= x_end))
+  {
+    // Find start x position
+    int32_t start = y_start - start_y;
+    // Prevent write in memory before buffer
+    if(start < 0) start = 0;
+    // Find start x position
+    int32_t end = y_end - start_y;
+    // Prevent buffer overflow
+    if(end >= n) end = n - 1;
+    // Have sense draw only if end pointer in buffer
+    if(end > 0)
+    {
+      for(int32_t i = start; i <= end; i++)
+      {
+        // Convert pointer to uint8_t to process color components individually
+        uint8_t* color = reinterpret_cast<uint8_t*>(&buf[i]);
+        // Process shadow
+        color[0u] /= 2;
+        color[1u] /= 2;
+        color[2u] /= 2;
+      }
+    }
+  }
+}
+
+#endif
+
+// *****************************************************************************
+// *****************************************************************************
 // ***   Line   ****************************************************************
 // *****************************************************************************
 // *****************************************************************************
@@ -161,16 +320,18 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
 {
   // Lock object for changes
   LockVisObject();
+  // Invalidate area for old position/size
+  InvalidateObjArea();
   // Do changes
   color = c;
   x_start = x1;
   y_start = y1;
   x_end = x2;
   y_end = y2;
-  width  = (x1 < x2) ? (x2 - x1) : (x1 - x2);
-  height = (y1 < y2) ? (y2 - y1) : (y1 - y2);
+  width  = (x1 < x2) ? (x2 - x1) : (x1 - x2) + 1; // Width is one more than coordinates difference
+  height = (y1 < y2) ? (y2 - y1) : (y1 - y2) + 1; // Height is one more than coordinates difference
   rotation = 0;
-  // Invalidate area
+  // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
@@ -190,7 +351,7 @@ void Line::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
     const int32_t signY = y_start < y_end ? 1 : -1;
 
     int32_t error = deltaX - deltaY;
-    
+
     int32_t x = x_start - start_x;
     int32_t y = y_start;
 
@@ -311,6 +472,8 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
 {
   // Lock object for changes
   LockVisObject();
+  // Invalidate area for old position/size
+  InvalidateObjArea();
   // Do changes
   color = c;
   radius = r;
@@ -322,7 +485,7 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
   height = r*2;
   rotation = 0;
   fill = is_fill;
-  // Invalidate area
+  // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
@@ -343,7 +506,7 @@ void Circle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
     int32_t delta = 1 - 2 * radius;
     int32_t error = 0;
     bool line_drawed = false;
-    
+
     while(y >= 0) 
     {
       if( (y0 + y == line) || (y0 - y == line) )
@@ -437,6 +600,8 @@ void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t
 {
   // Lock object for changes
   LockVisObject();
+  // Invalidate area for old position/size
+  InvalidateObjArea();
   // Do changes
   color = c;
   fill = is_fill;
@@ -448,19 +613,19 @@ void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t
   height = y_end - y_start;
   // Lines for draw
   lines[0].x1 = x1;
-  lines[0].y1 = y1;      
+  lines[0].y1 = y1;
   lines[0].x2 = x2;
-  lines[0].y2 = y2;      
+  lines[0].y2 = y2;
   lines[1].x1 = x1;
-  lines[1].y1 = y1;      
+  lines[1].y1 = y1;
   lines[1].x2 = x3;
-  lines[1].y2 = y3;      
+  lines[1].y2 = y3;
   lines[2].x1 = x2;
-  lines[2].y1 = y2;      
+  lines[2].y1 = y2;
   lines[2].x2 = x3;
-  lines[2].y2 = y3;      
+  lines[2].y2 = y3;
   rotation = 0;
-  // Invalidate area
+  // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
@@ -488,7 +653,7 @@ void Triangle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x
         const int32_t signY = lines[i].y1 < lines[i].y2 ? 1 : -1;
 
         int32_t error = deltaX - deltaY;
-        
+
         int32_t x = lines[i].x1 - start_x;
         int32_t y = lines[i].y1;
 

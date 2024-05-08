@@ -67,10 +67,25 @@ class UiCheckbox : public VisObject
     UiCheckbox(int32_t x, int32_t y, bool is_checked = false, bool is_active = false);
 
     // *************************************************************************
+    // ***   Set callback function   *******************************************
+    // *************************************************************************
+    void SetCallback(AppTask& task, CallbackPtr func = nullptr, void* param = nullptr);
+
+    // *************************************************************************
+    // ***   SetChecked   ******************************************************
+    // *************************************************************************
+    void SetChecked(bool is_checked);
+
+    // *************************************************************************
+    // ***   GetChecked   ******************************************************
+    // *************************************************************************
+    bool GetChecked(void) {return checked;}
+
+    // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
-    
+
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
@@ -79,9 +94,14 @@ class UiCheckbox : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty);
+    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy);
 
   private:
+    // Callback function pointer
+    AppTask* callback_task = nullptr;
+    CallbackPtr callback_func = nullptr;
+    void* callback_param = nullptr;
+
     // Is box checked ?
     bool checked = false;
 };

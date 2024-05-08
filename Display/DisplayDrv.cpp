@@ -42,10 +42,13 @@ Result DisplayDrv::Setup()
   {
     // Init display driver
     display->Init();
+    // Set inversion
+    InvertDisplay(inversion);
     // Set mode - mode can be set earlier than Display initialization
     SetUpdateMode(update_mode);
-    // Set update adea to full screen
-    InvalidateArea(0, 0, width, height);
+
+    // Main list always full screen
+    list.SetParams(0, 0, width, height);
 
     // If pointer to touchscreen present
     if(touch != nullptr)
@@ -61,6 +64,15 @@ Result DisplayDrv::Setup()
       fps_str.SetParams(str, width/3, height - 12, COLOR_MAGENTA, Font_4x6::GetInstance());
       // Max Z
       fps_str.Show(0xFFFFFFFFU);
+    }
+
+    // Show string if flag is set
+    if(DISPLAY_DEBUG_TOUCH)
+    {
+      // Set string parameters
+      touch_cir.SetParams(0, 0, 3, COLOR_YELLOW, true);
+      // Max Z
+      touch_cir.Show(0xFFFFFFFFU);
     }
 
     // Set result
@@ -85,75 +97,97 @@ Result DisplayDrv::Loop()
   if(screen_update.Take(50U) == Result::RESULT_OK)
   {
     // Set window for all screen and pointer to first pixel
+    //if(is_dirty && (LockDisplay() == Result::RESULT_OK))
     if(LockDisplay() == Result::RESULT_OK)
     {
-      // Take line semaphore to copy area
-      line_mutex.Lock();
-      // Copy area
-      uint16_t start_x = area_start_x;
-      uint16_t start_y = area_start_y;
-      uint16_t end_x = area_end_x;
-      uint16_t end_y = area_end_y;
-      // Clear flag to allow invalidate smaller area
-      is_dirty = false;
-      // Give semaphore after changes
-      line_mutex.Release();
-
-      // Set flag if data need preparation - call virtual function once per frame
-      bool is_data_need_preparation = display->IsDataNeedPreparation();
-      // Set address window for all screen
-      display->SetAddrWindow(start_x, start_y, end_x-1, end_y-1);
-      // Find number of pixels for given area
-      uint16_t pixels_cnt = end_x - start_x;
-      // For each line/row
-      for(uint32_t i = start_y; i < end_y; i++)
+#if defined(MULTIPLE_UPDATE_AREAS)
+      // Get current number of update areas
+      uint32_t n = areas.GetItemsCnt();
+      // To process touch we should not sit there forever if areas constantly adding
+      for(uint32_t i = 0u; (i < n) && !areas.IsEmpty(); i++)
+#endif
       {
-        // Find current line in buffer
-        scr_line_idx = i % 2;
-        // Clear half of buffer
-        memset(scr_buf[scr_line_idx], 0x00, sizeof(scr_buf[scr_line_idx]));
-        // Take semaphore before draw line
+        // Take line semaphore to copy area
         line_mutex.Lock();
-        // Set pointer to first element
-        VisObject* p_obj = object_list;
-        // Do for all objects
-        while(p_obj != nullptr)
-        {
-          // Draw object to buf                TODO: UPDATE_LEFT_RIGHT is not works correctly if area_x isn't centered on a display
-          if(update_mode == UPDATE_LEFT_RIGHT) p_obj->DrawInBufH(scr_buf[scr_line_idx], pixels_cnt, end_y - i, start_x);
-          else                                 p_obj->DrawInBufW(scr_buf[scr_line_idx], pixels_cnt, i, start_x);
-          // Set pointer to next object in list
-          p_obj = p_obj->p_next;
-        }
+        // Get update ares
+#if defined(MULTIPLE_UPDATE_AREAS)
+        areas.Pop(area);
+#else
+        // Clear flag to allow invalidate smaller area
+        is_dirty = false;
+#endif
+        // Copy area
+        uint16_t start_x = area.start_x;
+        uint16_t start_y = area.start_y;
+        uint16_t end_x = area.end_x;
+        uint16_t end_y = area.end_y;
         // Give semaphore after changes
         line_mutex.Release();
-        // Area test
-        if(DISPLAY_DEBUG_AREA)
+
+        // Set flag if data need preparation - call virtual function once per frame
+        bool is_data_need_preparation = display->IsDataNeedPreparation();
+        // Set address window for all screen
+        display->SetAddrWindow(start_x, start_y, end_x, end_y);
+        // Find number of pixels for given area
+        uint16_t pixels_cnt = end_x - start_x + 1u;
+        // For each line/row
+        for(int32_t i = start_y; i <= end_y; i++)
         {
-          if((i == start_y) || (i == end_y - 1)) memset(scr_buf[scr_line_idx], 0xFF, sizeof(scr_buf[scr_line_idx]));
-          else
+          // Find current line in buffer
+          scr_line_idx = i % 2;
+          // Clear half of buffer
+          for(uint32_t i = 0u; i < DISPLAY_MAX_BUF_LEN; i++) scr_buf[scr_line_idx][i] = bkg_color;
+          // Take semaphore before draw line
+          line_mutex.Lock();
+          // Draw list to buf                TODO: UPDATE_LEFT_RIGHT is not works correctly if area_x isn't centered on a display
+          if(update_mode == UPDATE_LEFT_RIGHT) list.DrawInBufH(scr_buf[scr_line_idx], pixels_cnt, end_y - i, start_x);
+          else                                 list.DrawInBufW(scr_buf[scr_line_idx], pixels_cnt, i, start_x);
+          // Give semaphore after changes
+          line_mutex.Release();
+          // Show display area as needed. Allow to debug unnecessary display updates.
+          if(DISPLAY_DEBUG_AREA)
           {
-            scr_buf[scr_line_idx][0] = COLOR_WHITE;
-            scr_buf[scr_line_idx][pixels_cnt - 1] = COLOR_WHITE;
+            // Sequential colors will help to see updated area.
+            static color_t colors[] = {COLOR_WHITE, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_CYAN, COLOR_MAGENTA};
+            static uint32_t cidx = 0;
+            // Change color only at first line
+            if(i == start_y)
+            {
+              cidx++;
+              if(cidx >= NumberOf(colors)) cidx = 0u;
+            }
+
+            if((i == start_y) || (i == end_y))
+            {
+              for(uint32_t i = 0; i < pixels_cnt; i++)
+              {
+                scr_buf[scr_line_idx][i] = colors[cidx];
+              }
+            }
+            else
+            {
+              scr_buf[scr_line_idx][0] = colors[cidx];
+              scr_buf[scr_line_idx][pixels_cnt - 1] = colors[cidx];
+            }
           }
+          // Check display bits per color
+          if(is_data_need_preparation)
+          {
+            display->PrepareData(scr_buf[scr_line_idx], pixels_cnt);
+          }
+          // Wait until previous transfer complete
+          while(display->IsTransferComplete() == false) taskYIELD();
+          // Write stream to LCD
+          display->WriteDataStream((uint8_t*)scr_buf[scr_line_idx], display->GetPixelDataCnt(pixels_cnt));
+          // DO NOT TRY "OPTIMIZE" CODE !!!
+          // Two "while" cycles used for generate next line when previous line
+          // transfer via SPI to display.
         }
-        // Check display bits per color
-        if(is_data_need_preparation)
-        {
-          display->PrepareData(scr_buf[scr_line_idx], pixels_cnt);
-        }
-        // Wait until previous transfer complete
+        // Wait until last transfer complete
         while(display->IsTransferComplete() == false) taskYIELD();
-        // Write stream to LCD
-        display->WriteDataStream((uint8_t*)scr_buf[scr_line_idx], display->GetPixelDataCnt(pixels_cnt));
-        // DO NOT TRY "OPTIMIZE" CODE !!!
-        // Two "while" cycles used for generate next line when previous line
-        // transfer via SPI to display.
+        // Pull up CS
+        display->StopTransfer();
       }
-      // Wait until last transfer complete
-      while(display->IsTransferComplete() == false) taskYIELD();
-      // Pull up CS
-      display->StopTransfer();
       // Give semaphore after draw frame
       UnlockDisplay();
       // Calculate FPS if debug info is ON
@@ -169,7 +203,7 @@ Result DisplayDrv::Loop()
   int32_t tmp_tx = tx;
   int32_t tmp_ty = ty;
   // Try to take mutex. 1 ms should be enough.
-  if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+  if(touchscreen_mutex.Lock(1u) == Result::RESULT_OK)
   {
     // If pointer to touchscreen present
     if(touch != nullptr)
@@ -182,53 +216,19 @@ Result DisplayDrv::Loop()
     touchscreen_mutex.Release();
   }
   // If touch state changed (move)
-  if(is_touch && tmp_is_touch && ((tx != tmp_tx) || (ty != tmp_ty)) )
+  if(is_touch && tmp_is_touch)
   {
-    // Go thru VisObject list and call Active() function for active object
     // Take semaphore before draw line
     line_mutex.Lock();
-    // Set pointer to first element
-    VisObject* p_obj = object_list_last;
-    // If list not empty
-    if(p_obj != nullptr)
+    if((tx != tmp_tx) || (ty != tmp_ty))
     {
-      // Do for all objects
-      while(p_obj != nullptr)
-      {
-        // If we found active object
-        if(p_obj->active)
-        {
-          // And touch in this object area
-          if(   (tx >= p_obj->GetStartX()) && (tx <= p_obj->GetEndX())
-             && (ty >= p_obj->GetStartY()) && (ty <= p_obj->GetEndY())
-             && (tmp_tx >= p_obj->GetStartX()) && (tmp_tx <= p_obj->GetEndX())
-             && (tmp_ty >= p_obj->GetStartY()) && (tmp_ty <= p_obj->GetEndY()) )
-          {
-            // Call Action() function for Move
-            p_obj->Action(VisObject::ACT_MOVE, tmp_tx, tmp_ty);
-            // No need check all other objects - only one object can be touched
-            break;
-          }
-          if(   (tx >= p_obj->GetStartX()) && (tx <= p_obj->GetEndX())
-             && (ty >= p_obj->GetStartY()) && (ty <= p_obj->GetEndY())
-             && (   ((tmp_tx < p_obj->GetStartX()) || (tmp_tx > p_obj->GetEndX()))
-                 || ((tmp_ty < p_obj->GetStartY()) || (tmp_ty > p_obj->GetEndY())) ) )
-          {
-            // Call Action() function for Move Out
-            p_obj->Action(VisObject::ACT_MOVEOUT, tmp_tx, tmp_ty);
-          }
-          if(   (tmp_tx >= p_obj->GetStartX()) && (tmp_tx <= p_obj->GetEndX())
-             && (tmp_ty >= p_obj->GetStartY()) && (tmp_ty <= p_obj->GetEndY())
-             && (   ((tx < p_obj->GetStartX()) || (tx > p_obj->GetEndX()))
-                 || ((ty < p_obj->GetStartY()) || (ty > p_obj->GetEndY())) ) )
-          {
-            // Call Action() function for Move In
-            p_obj->Action(VisObject::ACT_MOVEIN, tmp_tx, tmp_ty);
-          }
-        }
-        // Get previous object
-        p_obj = p_obj->p_prev;
-      }
+      // Call action for parent list
+      list.Action(VisObject::ACT_MOVE, tmp_tx, tmp_ty, tx, ty);
+    }
+    else
+    {
+      // Call action for parent list
+      list.Action(VisObject::ACT_HOLD, tmp_tx, tmp_ty, tx, ty);
     }
     // Give semaphore after changes
     line_mutex.Release();
@@ -239,41 +239,22 @@ Result DisplayDrv::Loop()
     // Go thru VisObject list and call Active() function for active object
     // Take semaphore before draw line
     line_mutex.Lock();
-    // Set pointer to first element
-    VisObject* p_obj = object_list_last;
-    // If list not empty
-    if(p_obj != nullptr)
-    {
-      // Do for all objects
-      while(p_obj != nullptr)
-      {
-        // If we found active object
-        if(p_obj->active)
-        {
-          // And touch in this object area
-          if(   (tmp_tx >= p_obj->GetStartX()) && (tmp_tx <= p_obj->GetEndX())
-             && (tmp_ty >= p_obj->GetStartY()) && (tmp_ty <= p_obj->GetEndY()) )
-          {
-            // Call Action() function
-            p_obj->Action(tmp_is_touch ? VisObject::ACT_TOUCH : VisObject::ACT_UNTOUCH,
-                          tmp_tx, tmp_ty);
-            // No need check all other objects - only one object can be touched
-            break;
-          }
-        }
-        // Get previous object
-        p_obj = p_obj->p_prev;
-      }
-    }
+    // Call action for parent list
+    list.Action(tmp_is_touch ? VisObject::ACT_TOUCH : VisObject::ACT_UNTOUCH, tmp_tx, tmp_ty, tx, ty);
     // Give semaphore after changes
     line_mutex.Release();
+  }
+  // Debug code. Can be enabled at compilation time. Show touch position.
+  if(DISPLAY_DEBUG_TOUCH)
+  {
+    if((tx != tmp_tx) || (ty != tmp_ty)) touch_cir.Move(tmp_tx, tmp_ty);
   }
   // Save new touch state
   is_touch = tmp_is_touch;
   tx = tmp_tx;
   ty = tmp_ty;
 
-  // FIX ME: debug code. Should be removed.
+  // Debug code. Can be enabled at compilation time.
   if(DISPLAY_DEBUG_INFO)
   {
     if(is_touch) sprintf(str, "X: %4ld, Y: %4ld", tx, ty);
@@ -312,124 +293,6 @@ Result DisplayDrv::SetDisplayDrv(IDisplay* in_display)
     }
   }
   // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Add Visual Object to object list   ************************************
-// *****************************************************************************
-Result DisplayDrv::AddVisObjectToList(VisObject* obj, uint32_t z)
-{
-  Result result = Result::ERR_NULL_PTR;
-
-  if((obj != nullptr) && (obj->p_prev == nullptr) && (obj->p_next == nullptr) && (obj != object_list))
-  {
-    // Take semaphore before add to list
-    line_mutex.Lock();
-    // Set object Z
-    obj->z = z;
-    // Set prev pointer to nullptr
-    obj->p_prev = nullptr;
-    // Set next pointer to nullptr
-    obj->p_next = nullptr;
-    // If object list empty
-    if(object_list == nullptr)
-    {
-      // Add object to list
-      object_list = obj;
-      // Set pointer to last object in the list
-      object_list_last = obj;
-    }
-    else if(object_list->z > z)
-    {
-      // Set next element to current head element
-      obj->p_next = object_list;
-      // Set prev element to next after head element
-      object_list->p_prev = obj;
-      // Set new head for list
-      object_list = obj;
-    }
-    else
-    {
-      // Set temporary pointer
-      VisObject* p_last = object_list;
-      // Find last element 
-      while((p_last->p_next != nullptr) && (p_last->p_next->z < z)) p_last = p_last->p_next;
-      // If it not last element
-      if(p_last->p_next != nullptr)
-      {
-        // Set next pointer in object
-        obj->p_next = p_last->p_next;
-        // Set prev pointer in object
-        obj->p_next->p_prev = obj;
-      }
-      else
-      {
-        // Set pointer to last object in the list
-        object_list_last = obj;
-      }
-      // Set next pointer in prev element
-      p_last->p_next = obj;
-      // Set prev pointer to new object in list
-      obj->p_prev = p_last;
-    }
-    // Give semaphore after changes
-    line_mutex.Release();
-    // Set return status
-    result = Result::RESULT_OK;
-  }
-
-  return result;
-}
-
-// *****************************************************************************
-// ***   Delete Visual Object from object list   *******************************
-// *****************************************************************************
-Result DisplayDrv::DelVisObjectFromList(VisObject* obj)
-{
-  Result result = Result::ERR_NULL_PTR;
-
-  if((obj != nullptr) && ((obj->p_prev != nullptr) || (obj->p_next != nullptr) || (obj == object_list)) )
-  {
-    // Take semaphore before delete from list
-    line_mutex.Lock();
-    // Remove element from head
-    if(obj == object_list)
-    {
-      // Set pointer to next object or clear pointer if no more elements
-      object_list = obj->p_next;
-      // Clear previous element in first object
-      object_list->p_prev = nullptr;
-    }
-    else if(obj == object_list_last)
-    {
-      // Set next pointer in previous object to nullptr
-      obj->p_prev->p_next = nullptr;
-      // Set pointer to previous object
-      object_list_last = obj->p_prev;
-    }
-    else
-    {
-      // Remove element from head
-      if(obj->p_prev == nullptr) object_list = obj->p_next;
-      // Remove element from middle
-      else if(obj->p_next != nullptr)
-      {
-        obj->p_prev->p_next = obj->p_next;
-        obj->p_next->p_prev = obj->p_prev;
-      }
-      // remove element from tail
-      else obj->p_prev->p_next = nullptr;
-    }
-    // Clear pointers in object
-    obj->p_prev = nullptr;
-    obj->p_next = nullptr;
-    // Give semaphore after changes
-    line_mutex.Release();
-    // Set return status
-    result = Result::RESULT_OK;
-  }
-
   return result;
 }
 
@@ -499,39 +362,57 @@ Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_
   // Area set exactly, we need +1 for end points
   end_x++;
   end_y++;
+#if defined(COLOR_3BIT)
+  // In 3 bit mode each byte contains 2 pixels, so we
+  // can't start or end at any odd number of pixels.
+  if(start_x % 2) start_x--;
+  if(start_y % 2) start_y--;
+  if(end_x % 2) end_x++;
+  if(end_y % 2) end_y++;
+#endif
   // Check end points - it can't be greater than screen size
   if(start_x < 0) start_x = 0;
   if(start_y < 0) start_y = 0;
-  if(end_x > width) end_x = width;
-  if(end_y > height) end_y = height;
+  if(end_x >= width) end_x = width - 1;
+  if(end_y >= height) end_y = height - 1;
   // Set area only if it is valid
   if((start_x <= end_x) && (start_y <= end_y))
   {
     if(update_mode == UPDATE_LEFT_RIGHT)
     {
-      // Swap area X and Y it refreshg mode left ot right
+      // Swap area X and Y it refreshing mode left to right
       SwapData(start_x, start_y);
       SwapData(end_x, end_y);
     }
 
+#if defined(MULTIPLE_UPDATE_AREAS)
+    // Add new area to existing one
+    area.start_x = start_x;
+    area.start_y = start_y;
+    area.end_x = end_x;
+    area.end_y = end_y;
+    areas.Push(area);
+#else
     // If display is "dirty"
     if(is_dirty)
     {
       // Add new area to existing one
-      if(start_x < area_start_x) area_start_x = start_x;
-      if(start_y < area_start_y) area_start_y = start_y; 
-      if(end_x > area_end_x) area_end_x = end_x;
-      if(end_y > area_end_y) area_end_y = end_y;
+      if(start_x < area.start_x) area.start_x = start_x;
+      if(start_y < area.start_y) area.start_y = start_y;
+      if(end_x > area.end_x) area.end_x = end_x;
+      if(end_y > area.end_y) area.end_y = end_y;
     }
     else
     {
       // Set area
-      area_start_x = start_x;
-      area_end_x = end_x;
-      area_start_y = start_y;
-      area_end_y = end_y;
+      area.start_x = start_x;
+      area.end_x = end_x;
+      area.start_y = start_y;
+      area.end_y = end_y;
       is_dirty = true;
     }
+#endif
+
     // All checks passed - result good
     result = Result::RESULT_OK;
   }
@@ -553,25 +434,25 @@ Result DisplayDrv::SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t en
   end_x++;
   end_y++;
   // Check end points - it can't be greater than screen size
-  if(end_x > width) end_x = width;
-  if(end_y > height) end_y = height;
+  if(end_x >= width) end_x = width - 1;
+  if(end_y >= height) end_y = height - 1;
   // Set area only if it is valid
   if((start_x < end_x) && (start_y < end_y))
   {
     if(update_mode == UPDATE_TOP_BOTTOM)
     {
-      area_start_x = start_x;
-      area_end_x = end_x;
-      area_start_y = start_y;
-      area_end_y = end_y;
+      area.start_x = start_x;
+      area.end_x = end_x;
+      area.start_y = start_y;
+      area.end_y = end_y;
     }
     else // UPDATE_LEFT_RIGHT
     {
-      // Swap area X and Y it refreshg mode left ot right
-      area_start_x = start_y;
-      area_end_x = end_y;
-      area_start_y = start_x;
-      area_end_y = end_x;
+      // Swap area X and Y it refresh mode left to right
+      area.start_x = start_y;
+      area.end_x = end_y;
+      area.start_y = start_x;
+      area.end_y = end_x;
     }
     // All checks passed - result good
     result = Result::RESULT_OK;
@@ -587,7 +468,7 @@ Result DisplayDrv::SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t en
 // *****************************************************************************
 Result DisplayDrv::UpdateObjArea(VisObject& obj)
 {
-  // Set update adea to full screen
+  // Set update area to full screen
   SetUpdateArea(obj.GetStartX(), obj.GetStartY(), obj.GetEndX(), obj.GetEndY());
   // Give semaphore for update screen
   Result result = screen_update.Give();
@@ -600,12 +481,29 @@ Result DisplayDrv::UpdateObjArea(VisObject& obj)
 // *****************************************************************************
 Result DisplayDrv::UpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
 {
-  // Set update adea to full screen
+  // Set update area to full screen
   SetUpdateArea(start_x, start_y, end_x, end_y);
   // Give semaphore for update screen
   Result result = screen_update.Give();
   // Return result
   return result;
+}
+
+// *****************************************************************************
+// ***   Invert Display   ******************************************************
+// *****************************************************************************
+void DisplayDrv::InvertDisplay(bool invert)
+{
+  // Lock display
+  LockDisplay();
+  // Wait while transfer complete before change settings
+  while(display->IsTransferComplete() == false);
+  // Set rotation
+  display->InvertDisplay(invert);
+  // Save inversion
+  inversion = invert;
+  // Unlock display
+  UnlockDisplay();
 }
 
 // *****************************************************************************
@@ -622,11 +520,13 @@ void DisplayDrv::SetRotation(IDisplay::Rotation rot)
   // Set width and height variables for selected screen update mode
   width = display->GetWidth();
   height = display->GetHeight();
-  // Save Update mode
+  // Save rotation
   rotation = rot;
+  // Update main list to match full screen
+  list.SetParams(0, 0, width, height);
   // Unlock display
   UnlockDisplay();
-  // Set update adea to full screen
+  // Set update area to full screen
   InvalidateArea(0, 0, width, height);
   // If update mode is different than default - we have to prepare display for it
   if(update_mode != UPDATE_TOP_BOTTOM)
@@ -745,7 +645,7 @@ bool DisplayDrv::IsTouched()
     touchscreen_mutex.Release();
   }
   // Return status
-	return touched;
+  return touched;
 }
 
 // *****************************************************************************

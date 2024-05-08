@@ -56,7 +56,7 @@ class GC9A01 : public IDisplay
     // ***   Constructor   *****************************************************
     // *************************************************************************
     explicit GC9A01(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {byte_per_pixel = 2u;}
+      IDisplay(in_width, in_height, 2), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {};
 
     // *************************************************************************
     // ***   Init screen   *****************************************************

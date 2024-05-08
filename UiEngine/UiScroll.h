@@ -102,7 +102,7 @@ class UiScroll : public VisObject
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
-    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty);
+    virtual void Action(VisObject::ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy);
 
   private:
     // Current position

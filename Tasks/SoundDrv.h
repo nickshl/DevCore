@@ -52,6 +52,9 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
+
+#if defined(SOUNDDRV_ENABLED)
+
 #include "AppTask.h"
 #include "RtosMutex.h"
 #include "RtosSemaphore.h"
@@ -72,7 +75,7 @@ class SoundDrv : public AppTask
     // *************************************************************************
     // ***   Init Sound Driver Task   ******************************************
     // *************************************************************************
-    virtual void InitTask(TIM_HandleTypeDef *htm);
+    virtual void InitTask(TIM_HandleTypeDef *htm = SOUND_HTIM);
 
     // *************************************************************************
     // ***   Sound Driver Setup   **********************************************
@@ -119,7 +122,7 @@ class SoundDrv : public AppTask
     TIM_HandleTypeDef* htim = SOUND_HTIM;
     // Timer channel
     uint32_t channel = SOUND_CHANNEL;
-    
+
     // Ticks variable
     uint32_t last_wake_ticks = 0U;
 
@@ -156,5 +159,7 @@ class SoundDrv : public AppTask
     SoundDrv() : AppTask(SOUND_DRV_TASK_STACK_SIZE, SOUND_DRV_TASK_PRIORITY,
                          "SoundDrv") {};
 };
+
+#endif
 
 #endif

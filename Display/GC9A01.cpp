@@ -43,242 +43,242 @@ Result GC9A01::Init(void)
   // Set the resolution and scanning method of the screen
   // Set the read / write scan direction of the frame memory
   WriteCommand(0x36); // MX, MY, RGB mode
-  WriteData(0XC8);	  // 0x08 set RGB
+  WriteData(0XC8);    // 0x08 set RGB
   
   // Set the initialization register
   WriteCommand(0xEF);
-	WriteCommand(0xEB);
-	WriteData(0x14); 
-	
-  WriteCommand(0xFE);			 
-	WriteCommand(0xEF); 
+  WriteCommand(0xEB);
+  WriteData(0x14); 
 
-	WriteCommand(0xEB);	
-	WriteData(0x14); 
+  WriteCommand(0xFE);
+  WriteCommand(0xEF);
 
-	WriteCommand(0x84);			
-	WriteData(0x40); 
+  WriteCommand(0xEB);
+  WriteData(0x14); 
 
-	WriteCommand(0x85);			
-	WriteData(0xFF); 
+  WriteCommand(0x84);
+  WriteData(0x40); 
 
-	WriteCommand(0x86);			
-	WriteData(0xFF); 
+  WriteCommand(0x85);
+  WriteData(0xFF); 
 
-	WriteCommand(0x87);			
-	WriteData(0xFF);
+  WriteCommand(0x86);
+  WriteData(0xFF); 
 
-	WriteCommand(0x88);			
-	WriteData(0x0A);
+  WriteCommand(0x87);
+  WriteData(0xFF);
 
-	WriteCommand(0x89);			
-	WriteData(0x21); 
+  WriteCommand(0x88);
+  WriteData(0x0A);
 
-	WriteCommand(0x8A);			
-	WriteData(0x00); 
+  WriteCommand(0x89);
+  WriteData(0x21); 
 
-	WriteCommand(0x8B);			
-	WriteData(0x80); 
+  WriteCommand(0x8A);
+  WriteData(0x00); 
 
-	WriteCommand(0x8C);			
-	WriteData(0x01); 
+  WriteCommand(0x8B);
+  WriteData(0x80); 
 
-	WriteCommand(0x8D);			
-	WriteData(0x01); 
+  WriteCommand(0x8C);
+  WriteData(0x01); 
 
-	WriteCommand(0x8E);			
-	WriteData(0xFF); 
+  WriteCommand(0x8D);
+  WriteData(0x01); 
 
-	WriteCommand(0x8F);			
-	WriteData(0xFF); 
+  WriteCommand(0x8E);
+  WriteData(0xFF); 
 
-
-	WriteCommand(0xB6);
-	WriteData(0x00);
-	WriteData(0x20);
-
-	WriteCommand(0x36);
-	WriteData(0x08); // Set as vertical screen
-
-	WriteCommand(0x3A);			
-	WriteData(0x05); 
+  WriteCommand(0x8F);
+  WriteData(0xFF); 
 
 
-	WriteCommand(0x90);			
-	WriteData(0x08);
-	WriteData(0x08);
-	WriteData(0x08);
-	WriteData(0x08); 
+  WriteCommand(0xB6);
+  WriteData(0x00);
+  WriteData(0x20);
 
-	WriteCommand(0xBD);			
-	WriteData(0x06);
-	
-	WriteCommand(0xBC);			
-	WriteData(0x00);	
+  WriteCommand(0x36);
+  WriteData(0x08); // Set as vertical screen
 
-	WriteCommand(0xFF);			
-	WriteData(0x60);
-	WriteData(0x01);
-	WriteData(0x04);
-
-	WriteCommand(0xC3);			
-	WriteData(0x13);
-	WriteCommand(0xC4);			
-	WriteData(0x13);
-
-	WriteCommand(0xC9);			
-	WriteData(0x22);
-
-	WriteCommand(0xBE);			
-	WriteData(0x11); 
-
-	WriteCommand(0xE1);			
-	WriteData(0x10);
-	WriteData(0x0E);
-
-	WriteCommand(0xDF);			
-	WriteData(0x21);
-	WriteData(0x0c);
-	WriteData(0x02);
-
-	WriteCommand(0xF0);   
-	WriteData(0x45);
-	WriteData(0x09);
-	WriteData(0x08);
-	WriteData(0x08);
-	WriteData(0x26);
- 	WriteData(0x2A);
-
- 	WriteCommand(0xF1);    
- 	WriteData(0x43);
- 	WriteData(0x70);
- 	WriteData(0x72);
- 	WriteData(0x36);
- 	WriteData(0x37);  
- 	WriteData(0x6F);
+  WriteCommand(0x3A);
+  WriteData(0x05); 
 
 
- 	WriteCommand(0xF2);   
- 	WriteData(0x45);
- 	WriteData(0x09);
- 	WriteData(0x08);
- 	WriteData(0x08);
- 	WriteData(0x26);
- 	WriteData(0x2A);
+  WriteCommand(0x90);
+  WriteData(0x08);
+  WriteData(0x08);
+  WriteData(0x08);
+  WriteData(0x08);
 
- 	WriteCommand(0xF3);   
- 	WriteData(0x43);
- 	WriteData(0x70);
- 	WriteData(0x72);
- 	WriteData(0x36);
- 	WriteData(0x37); 
- 	WriteData(0x6F);
+  WriteCommand(0xBD);
+  WriteData(0x06);
 
-	WriteCommand(0xED);	
-	WriteData(0x1B); 
-	WriteData(0x0B); 
+  WriteCommand(0xBC);
+  WriteData(0x00);
 
-	WriteCommand(0xAE);			
-	WriteData(0x77);
-	
-	WriteCommand(0xCD);			
-	WriteData(0x63);		
+  WriteCommand(0xFF);
+  WriteData(0x60);
+  WriteData(0x01);
+  WriteData(0x04);
+
+  WriteCommand(0xC3);
+  WriteData(0x13);
+  WriteCommand(0xC4);
+  WriteData(0x13);
+
+  WriteCommand(0xC9);
+  WriteData(0x22);
+
+  WriteCommand(0xBE);
+  WriteData(0x11);
+
+  WriteCommand(0xE1);
+  WriteData(0x10);
+  WriteData(0x0E);
+
+  WriteCommand(0xDF);
+  WriteData(0x21);
+  WriteData(0x0c);
+  WriteData(0x02);
+
+  WriteCommand(0xF0);   
+  WriteData(0x45);
+  WriteData(0x09);
+  WriteData(0x08);
+  WriteData(0x08);
+  WriteData(0x26);
+  WriteData(0x2A);
+
+  WriteCommand(0xF1);    
+  WriteData(0x43);
+  WriteData(0x70);
+  WriteData(0x72);
+  WriteData(0x36);
+  WriteData(0x37);  
+  WriteData(0x6F);
 
 
-	WriteCommand(0x70);			
-	WriteData(0x07);
-	WriteData(0x07);
-	WriteData(0x04);
-	WriteData(0x0E); 
-	WriteData(0x0F); 
-	WriteData(0x09);
-	WriteData(0x07);
-	WriteData(0x08);
-	WriteData(0x03);
+  WriteCommand(0xF2);   
+  WriteData(0x45);
+  WriteData(0x09);
+  WriteData(0x08);
+  WriteData(0x08);
+  WriteData(0x26);
+  WriteData(0x2A);
 
-	WriteCommand(0xE8);			
-	WriteData(0x34);
+  WriteCommand(0xF3);   
+  WriteData(0x43);
+  WriteData(0x70);
+  WriteData(0x72);
+  WriteData(0x36);
+  WriteData(0x37); 
+  WriteData(0x6F);
 
-	WriteCommand(0x62);			
-	WriteData(0x18);
-	WriteData(0x0D);
-	WriteData(0x71);
-	WriteData(0xED);
-	WriteData(0x70); 
-	WriteData(0x70);
-	WriteData(0x18);
-	WriteData(0x0F);
-	WriteData(0x71);
-	WriteData(0xEF);
-	WriteData(0x70); 
-	WriteData(0x70);
+  WriteCommand(0xED);    
+  WriteData(0x1B); 
+  WriteData(0x0B); 
 
-	WriteCommand(0x63);			
-	WriteData(0x18);
-	WriteData(0x11);
-	WriteData(0x71);
-	WriteData(0xF1);
-	WriteData(0x70); 
-	WriteData(0x70);
-	WriteData(0x18);
-	WriteData(0x13);
-	WriteData(0x71);
-	WriteData(0xF3);
-	WriteData(0x70); 
-	WriteData(0x70);
+  WriteCommand(0xAE);
+  WriteData(0x77);
 
-	WriteCommand(0x64);			
-	WriteData(0x28);
-	WriteData(0x29);
-	WriteData(0xF1);
-	WriteData(0x01);
-	WriteData(0xF1);
-	WriteData(0x00);
-	WriteData(0x07);
+  WriteCommand(0xCD);
+  WriteData(0x63);
 
-	WriteCommand(0x66);			
-	WriteData(0x3C);
-	WriteData(0x00);
-	WriteData(0xCD);
-	WriteData(0x67);
-	WriteData(0x45);
-	WriteData(0x45);
-	WriteData(0x10);
-	WriteData(0x00);
-	WriteData(0x00);
-	WriteData(0x00);
 
-	WriteCommand(0x67);			
-	WriteData(0x00);
-	WriteData(0x3C);
-	WriteData(0x00);
-	WriteData(0x00);
-	WriteData(0x00);
-	WriteData(0x01);
-	WriteData(0x54);
-	WriteData(0x10);
-	WriteData(0x32);
-	WriteData(0x98);
+  WriteCommand(0x70);
+  WriteData(0x07);
+  WriteData(0x07);
+  WriteData(0x04);
+  WriteData(0x0E); 
+  WriteData(0x0F); 
+  WriteData(0x09);
+  WriteData(0x07);
+  WriteData(0x08);
+  WriteData(0x03);
 
-	WriteCommand(0x74);			
-	WriteData(0x10);	
-	WriteData(0x85);	
-	WriteData(0x80);
-	WriteData(0x00); 
-	WriteData(0x00); 
-	WriteData(0x4E);
-	WriteData(0x00);					
-	
-  WriteCommand(0x98);			
-	WriteData(0x3e);
-	WriteData(0x07);
+  WriteCommand(0xE8);
+  WriteData(0x34);
 
-	WriteCommand(0x35);	
-	WriteCommand(0x21);
+  WriteCommand(0x62);
+  WriteData(0x18);
+  WriteData(0x0D);
+  WriteData(0x71);
+  WriteData(0xED);
+  WriteData(0x70); 
+  WriteData(0x70);
+  WriteData(0x18);
+  WriteData(0x0F);
+  WriteData(0x71);
+  WriteData(0xEF);
+  WriteData(0x70); 
+  WriteData(0x70);
 
-	WriteCommand(0x11);
-	HAL_Delay(120);
-	WriteCommand(0x29);
+  WriteCommand(0x63);
+  WriteData(0x18);
+  WriteData(0x11);
+  WriteData(0x71);
+  WriteData(0xF1);
+  WriteData(0x70); 
+  WriteData(0x70);
+  WriteData(0x18);
+  WriteData(0x13);
+  WriteData(0x71);
+  WriteData(0xF3);
+  WriteData(0x70); 
+  WriteData(0x70);
+
+  WriteCommand(0x64);
+  WriteData(0x28);
+  WriteData(0x29);
+  WriteData(0xF1);
+  WriteData(0x01);
+  WriteData(0xF1);
+  WriteData(0x00);
+  WriteData(0x07);
+
+  WriteCommand(0x66);
+  WriteData(0x3C);
+  WriteData(0x00);
+  WriteData(0xCD);
+  WriteData(0x67);
+  WriteData(0x45);
+  WriteData(0x45);
+  WriteData(0x10);
+  WriteData(0x00);
+  WriteData(0x00);
+  WriteData(0x00);
+
+  WriteCommand(0x67);
+  WriteData(0x00);
+  WriteData(0x3C);
+  WriteData(0x00);
+  WriteData(0x00);
+  WriteData(0x00);
+  WriteData(0x01);
+  WriteData(0x54);
+  WriteData(0x10);
+  WriteData(0x32);
+  WriteData(0x98);
+
+  WriteCommand(0x74);
+  WriteData(0x10);    
+  WriteData(0x85);    
+  WriteData(0x80);
+  WriteData(0x00); 
+  WriteData(0x00); 
+  WriteData(0x4E);
+  WriteData(0x00);        
+
+  WriteCommand(0x98);
+  WriteData(0x3e);
+  WriteData(0x07);
+
+  WriteCommand(0x35);    
+  WriteCommand(0x21);
+
+  WriteCommand(0x11);
+  HAL_Delay(120);
+  WriteCommand(0x29);
   HAL_Delay(20U);
 
   // Always Ok

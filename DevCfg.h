@@ -95,22 +95,27 @@ typedef uint32_t TIM_HandleTypeDef; // Dummy TIM handle for compilation
 typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
 #endif
 
-#include "usb_device.h"
-
 // *****************************************************************************
 // ***   Configuration   *******************************************************
 // *****************************************************************************
 
+//#define DWT_ENABLED
+//#define UITASK_ENABLED
+//#define INPUTDRV_ENABLED
+//#define SOUNDDRV_ENABLED
+
 // ***   TIM Handles   *********************************************************
-#ifdef HAL_TIM_MODULE_ENABLED
-  // Sound Timer handle
-  static TIM_HandleTypeDef* const SOUND_HTIM = &htim4;
-  // Sound Timer channel
-  static const uint32_t SOUND_CHANNEL = TIM_CHANNEL_2;
+#if defined(HAL_TIM_MODULE_ENABLED)
+  #if defined(SOUNDDRV_ENABLED)
+    // Sound Timer handle
+    static TIM_HandleTypeDef* const SOUND_HTIM = &htim4;
+    // Sound Timer channel
+    static const uint32_t SOUND_CHANNEL = TIM_CHANNEL_2;
+  #endif
 #endif
 
 // *** Applications tasks stack sizes   ****************************************
-const static uint16_t APPLICATION_TASK_STACK_SIZE = 1024U;
+const static uint16_t APPLICATION_TASK_STACK_SIZE = 1024u;
 const static uint16_t EXAMPLE_MSG_TASK_STACK_SIZE = configMINIMAL_STACK_SIZE;
 // *** Applications tasks priorities   *****************************************
 const static uint8_t APPLICATION_TASK_PRIORITY = tskIDLE_PRIORITY + 2U;
@@ -118,14 +123,24 @@ const static uint8_t EXAMPLE_MSG_TASK_PRIORITY = tskIDLE_PRIORITY + 2U;
 // *****************************************************************************
 
 // *** System tasks stack sizes   **********************************************
-const static uint16_t DISPLAY_DRV_TASK_STACK_SIZE = 256U;
+const static uint16_t DISPLAY_DRV_TASK_STACK_SIZE = 1024u;
+const static uint16_t UI_TASK_STACK_SIZE          = configMINIMAL_STACK_SIZE;
 const static uint16_t INPUT_DRV_TASK_STACK_SIZE   = configMINIMAL_STACK_SIZE;
 const static uint16_t SOUND_DRV_TASK_STACK_SIZE   = configMINIMAL_STACK_SIZE;
 // *** System tasks priorities   ***********************************************
 const static uint8_t DISPLAY_DRV_TASK_PRIORITY = tskIDLE_PRIORITY + 1U;
 const static uint8_t INPUT_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 2U;
 const static uint8_t SOUND_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 3U;
+const static uint8_t UI_TASK_PRIORITY          = tskIDLE_PRIORITY + 4U;
 // *****************************************************************************
+
+// Timer Task priority should be high. Otherwise if some task with highest
+// priority will take over for long enough period, timer task wont be able to
+// call timer callback for AppTask. If AppTask will not receive timer message
+// within two times of timer period it will error out(queue empty error).
+#if (configTIMER_TASK_PRIORITY != (configMAX_PRIORITIES - 1u))
+  #warning "When Timer Task priority isn't highest"
+#endif
 
 // *****************************************************************************
 // ***   Display Configuration   ***********************************************
@@ -136,11 +151,17 @@ const static uint8_t SOUND_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 3U;
 // For example ILI9488 uses 18 bit color(3 bytes per pixel) and if 16 bit color 
 // is used(2 bytes per pixel) in order to prepare data display driver need 1.5
 // times more memory
-static const uint32_t DISPLAY_MAX_BUF_LEN = 320;// 480 * 1.5;
+static constexpr uint32_t DISPLAY_MAX_BUF_LEN = 320;// 480 * 1.5;
+
+// By default there only one update area, that merges all update requests
+// by making multiple areas, there can be multiple non-intersect areas(intersect
+// areas still will be merged into one).
+#define MULTIPLE_UPDATE_AREAS 32
 
 // Color depth used by display
 //#define COLOR_24BIT
 #define COLOR_16BIT
+//#define COLOR_3BIT
 
 #if defined(COLOR_24BIT)
 // ***   Color type define   ***************************************************
@@ -166,7 +187,7 @@ enum Color
   COLOR_MEDIUMGREEN     = 0x00008000, //   0, 128,   0
   COLOR_LIGHTGREEN      = 0x0000C000, //   0, 192,   0
   COLOR_GREEN           = 0x0000FF00, //   0, 255,   0
-  
+
   COLOR_VERYDARKBLUE    = 0x00200000, //  32,   0,   0
   COLOR_DARKBLUE        = 0x00400000, //  64,   0,   0
   COLOR_MEDIUMBLUE      = 0x00800000, // 128,   0,   0
@@ -240,6 +261,25 @@ enum Color
   COLOR_LIGHTMAGENTA    = 0x17B8, // 192,   0, 192
   COLOR_MAGENTA         = 0x1FF8, // 255,   0, 255
 };
+#elif defined(COLOR_3BIT)
+// ***   Color type define   ***************************************************
+typedef uint8_t color_t;
+// ***   Color definitions   ***************************************************
+enum Color
+{
+  COLOR_BLACK           = 0x00, // 0, 0, 0
+  COLOR_RED             = 0x04, // 1, 0, 0
+  COLOR_YELLOW          = 0x05, // 1, 0, 1
+  COLOR_GREEN           = 0x02, // 0, 1, 0
+  COLOR_CYAN            = 0x06, // 0, 0, 0
+  COLOR_BLUE            = 0x01, // 0, 0, 1
+  COLOR_MAGENTA         = 0x03, // 0, 1, 0
+  COLOR_WHITE           = 0x07, // 1, 1, 1
+
+  // Color mapped to basic colors
+  COLOR_DARKGREY = COLOR_BLACK,
+  COLOR_GREY = COLOR_WHITE
+};
 #else
   #error NO COLOR DEPTH DEFINED
 #endif
@@ -250,6 +290,10 @@ enum Color
 
 // Number of array elements
 #define NumberOf(x) (sizeof(x)/sizeof((x)[0]))
+
+// MIN and MAX
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 // Break macro - useful for debugging
 #define Break() asm volatile("bkpt #0")

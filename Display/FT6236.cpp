@@ -27,8 +27,11 @@ Result FT6236::Init(void)
 {
   Result result = Result::RESULT_OK;
 
-  iic.SetTxTimeout(1);
-  iic.SetRxTimeout(1);
+  // Timeout shouln't be less than 2. One mean that timeout can be anywhere between
+  // 0 and 1 ms, in some cases it cause to fail by timeout. 2 mean that timeout
+  // will be between 1 and 2 ms which should be enough for byte transfer.
+  iic.SetTxTimeout(2u);
+  iic.SetRxTimeout(2u);
 
   result = iic.Enable();
 
@@ -81,6 +84,13 @@ bool FT6236::IsTouched(void)
   uint8_t n = 0u;
   // Read number of touches
   Result result = ReadReg8(REG_TD_STATUS, n);
+  // In case something goes wrong - reset I2C
+  if(result.IsBad())
+  {
+    // TODO: figure out why sometimes I2C fails. It start happens when timer
+    // task priority risen.
+    iic.Reset();
+  }
   // Only 1-2 is valid
   if((n > 2) || (result != Result::RESULT_OK))
   {
@@ -105,32 +115,39 @@ bool FT6236::GetRawXY(int32_t& x, int32_t& y)
     // Register to read
     uint8_t reg = 0x00u;
     // Read 16 bytes
-    iic.Transfer(TOUCH_I2C_ADDR, &reg, sizeof(reg), i2cdat, sizeof(i2cdat));
-
-    // Save number of touches
-    touch_cnt = i2cdat[REG_TD_STATUS];
-    // Can't be more than 2
-    if(touch_cnt > 2u)
+    if(iic.Transfer(TOUCH_I2C_ADDR, &reg, sizeof(reg), i2cdat, sizeof(i2cdat)).IsGood())
     {
-      touch_cnt = 0u;
-    }
+      // Save number of touches
+      touch_cnt = i2cdat[REG_TD_STATUS];
+      // Can't be more than 2
+      if(touch_cnt > 2u)
+      {
+        touch_cnt = 0u;
+      }
 
-    // Save touches
-    for(uint8_t i = 0u; i < 2u; i++)
+      // Save touches
+      for(uint8_t i = 0u; i < 2u; i++)
+      {
+        touch_x[i] = (i2cdat[0x03u + i * 6u] & 0x0Fu) << 8u;
+        touch_x[i] |= i2cdat[0x04u + i * 6u];
+        touch_y[i] = (i2cdat[0x05u + i * 6u] & 0x0Fu) << 8u;
+        touch_y[i] |= i2cdat[0x06u + i * 6u];
+        touch_id[i] = i2cdat[0x05u + i * 6u] >> 4u;
+      }
+
+      // Return first touch
+      x = touch_x[0u];
+      y = touch_y[0u];
+
+      // Touch present
+      ret = true;
+    }
+    else // In case something goes wrong - reset I2C
     {
-      touch_x[i] = (i2cdat[0x03u + i * 6u] & 0x0Fu) << 8u;
-      touch_x[i] |= i2cdat[0x04u + i * 6u];
-      touch_y[i] = (i2cdat[0x05u + i * 6u] & 0x0Fu) << 8u;
-      touch_y[i] |= i2cdat[0x06u + i * 6u];
-      touch_id[i] = i2cdat[0x05u + i * 6u] >> 4u;
+      // TODO: figure out why sometimes I2C fails. It start happens when timer
+      // task priority risen.
+      iic.Reset();
     }
-
-    // Return first touch
-    x = touch_x[0u];
-    y = touch_y[0u];
-
-    // Touch present
-    ret = true;
   }
   // Return result
   return ret;

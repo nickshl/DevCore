@@ -1,10 +1,10 @@
 //******************************************************************************
-//  @file RtosRecursiveMutex.cpp
+//  @file DwtCycleCounter.cpp
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: FreeRTOS Mutex Wrapper Class, implementation
+//  @details DevCore: Cortex DWT Cycle counter driver, header
 //
-//  @copyright Copyright (c) 2022, Devtronic & Nicolai Shlapunov
+//  @copyright Copyright (c) 2023, Devtronic & Nicolai Shlapunov
 //             All rights reserved.
 //
 //  @section SUPPORT
@@ -15,52 +15,42 @@
 //
 //******************************************************************************
 
-#ifndef RtosRecursiveMutex_h
-#define RtosRecursiveMutex_h
+#ifndef DwtCycleCounter_h
+#define DwtCycleCounter_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "Rtos.h"
-#include "semphr.h"
 
-#if (configUSE_RECURSIVE_MUTEXES == 1)
+#if defined(DWT_ENABLED)
 
 // *****************************************************************************
-// ***   RtosRecursiveMutex   **************************************************
+// ***   DwtCycleCounter Class   ***********************************************
 // *****************************************************************************
-class RtosRecursiveMutex
+class DwtCycleCounter
 {
   public:
     // *************************************************************************
-    // ***   Constructor   *****************************************************
+    // ***   Init   ************************************************************
     // *************************************************************************
-    RtosRecursiveMutex();
+    static Result Init();
 
     // *************************************************************************
-    // ***   Destructor   ******************************************************
+    // ***   GetClockCounter   *************************************************
     // *************************************************************************
-    ~RtosRecursiveMutex();
+    static inline uint32_t GetClockCounter() {return(DWT->CYCCNT);}
 
     // *************************************************************************
-    // ***   Lock   ************************************************************
+    // ***   DelayUs   *********************************************************
     // *************************************************************************
-    Result Lock(TickType_t ticks_to_wait = portMAX_DELAY);
-
-    // *************************************************************************
-    // ***   Release   *********************************************************
-    // *************************************************************************
-    Result Release();
-
-  private:
-#if (configSUPPORT_STATIC_ALLOCATION  == 1)
-    // Mutex buffer if static allocation is enabled
-    StaticSemaphore_t mutex_buf;
-#endif
-
-    // Mutex handle
-    SemaphoreHandle_t mutex;
+    static inline void DelayUs(volatile uint32_t delay_us)
+    {
+      uint32_t initial_ticks = DWT->CYCCNT;
+      uint32_t ticks = (HAL_RCC_GetHCLKFreq() / 1000000u);
+      delay_us *= ticks;
+      while ((DWT->CYCCNT - initial_ticks) < delay_us - ticks);
+    }
 };
 
 #endif

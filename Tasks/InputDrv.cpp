@@ -19,6 +19,9 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "InputDrv.h"
+
+#if defined(INPUTDRV_ENABLED)
+
 #include "Rtos.h"
 
 // *****************************************************************************
@@ -726,3 +729,5 @@ void InputDrv::ConfigInputIO(bool is_digital, PortType port)
   GPIO_InitStruct.Pin = joysticks[port].joy.y_pin;
   HAL_GPIO_Init(joysticks[port].joy.y_port, &GPIO_InitStruct);
 }
+
+#endif

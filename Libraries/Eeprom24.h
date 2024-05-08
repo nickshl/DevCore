@@ -64,7 +64,7 @@ class Eeprom24
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit Eeprom24(IIic& iic_ref, IGpio* wp = nullptr, uint32_t size = 0x2000u, uint8_t page_size = 32u) : iic(iic_ref), write_protection(wp), size_bytes(size), page_size_bytes(page_size) {buf = new uint8_t[page_size + 2u];}
+    explicit Eeprom24(IIic& iic_ref, IGpio* wp = nullptr, uint32_t size = 0x2000u, uint32_t page_size = 32u) : size_bytes(size), page_size_bytes(page_size), iic(iic_ref), write_protection(wp) {buf = new uint8_t[page_size + 2u];}
 
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
@@ -98,13 +98,13 @@ class Eeprom24
 
   private:
     // Chip address
-    static const uint8_t I2C_ADDR = 0x50U;
+    static const uint8_t I2C_ADDR = 0x50U; // 0xA0 shifted by 1
 
     // Size of EEPROM in bytes
     uint32_t size_bytes = 0x2000u;
 
     // Page size in bytes
-    uint8_t page_size_bytes = 32u;
+    uint32_t page_size_bytes = 32u;
 
     // Writing timeout in ms
     static const uint8_t WRITING_TIMEOUT_MS = 10U;

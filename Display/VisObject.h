@@ -44,7 +44,13 @@
 #include "DevCfg.h"
 
 // *****************************************************************************
-// * VisObject class. This class implements base Visual Objects properties.
+// ***   Forward declaration   *************************************************
+// *****************************************************************************
+class VisList;
+
+// *****************************************************************************
+// * VisObject class. This class implements base Visual Objects properties. ****
+// *****************************************************************************
 class VisObject
 {
   public:
@@ -54,8 +60,9 @@ class VisObject
     typedef enum
     {
       ACT_TOUCH,   // When object touched
-      ACT_UNTOUCH, // When object detouched
-      ACT_MOVE,    // When object moved on object
+      ACT_UNTOUCH, // When object untouched
+      ACT_MOVE,    // When touch position moved inside object
+      ACT_HOLD,    // When touch position isn't moved inside object
       ACT_MOVEIN,  // When object moved in to object
       ACT_MOVEOUT, // When object moved out of object
       ACT_MAX      // Total possible actions
@@ -84,6 +91,11 @@ class VisObject
     Result UnlockVisObject();
 
     // *************************************************************************
+    // ***   SetList   *********************************************************
+    // *************************************************************************
+    Result SetList(VisList& l);
+
+    // *************************************************************************
     // ***   Show   ************************************************************
     // *************************************************************************
     // * Show VisObject on screen. This function call AddVisObjectToList() from
@@ -98,12 +110,16 @@ class VisObject
     // * Hide VisObject from screen. This function call DelVisObjectFromList()
     // * from DisplayDrv class.
     virtual Result Hide(void);
-    
+
     // *************************************************************************
     // ***   IsShow   **********************************************************
     // *************************************************************************
-    // * Check status of Show Visual Object. Return true if object in DisplayDrv list.
     virtual bool IsShow(void);
+
+    // *************************************************************************
+    // ***   IsInList   ********************************************************
+    // *************************************************************************
+    virtual bool IsInList(void);
 
     // *************************************************************************
     // ***   Move   ************************************************************
@@ -129,47 +145,65 @@ class VisObject
     // *************************************************************************
     // ***   Action   **********************************************************
     // *************************************************************************
-    virtual void Action(ActionType action, int32_t tx, int32_t ty);
+    virtual void Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy);
 
     // *************************************************************************
     // ***   Return Start X coordinate   ***************************************
     // *************************************************************************
-    virtual int32_t GetStartX(void) {return x_start;};
+    virtual int32_t GetStartX(void) {return x_start;}
 
     // *************************************************************************
     // ***   Return Start Y coordinate   ***************************************
     // *************************************************************************
-    virtual int32_t GetStartY(void) {return y_start;};
+    virtual int32_t GetStartY(void) {return y_start;}
 
     // *************************************************************************
     // ***   Return End X coordinate   *****************************************
     // *************************************************************************
-    virtual int32_t GetEndX(void) {return x_end;};
+    virtual int32_t GetEndX(void) {return x_end;}
 
     // *************************************************************************
     // ***   Return End Y coordinate   *****************************************
     // *************************************************************************
-    virtual int32_t GetEndY(void) {return y_end;};
+    virtual int32_t GetEndY(void) {return y_end;}
 
     // *************************************************************************
     // ***   Return Width of object   ******************************************
     // *************************************************************************
-    virtual int32_t GetWidth(void) {return width;};
+    virtual int32_t GetWidth(void) {return width;}
 
     // *************************************************************************
     // ***   Return Height of object   *****************************************
     // *************************************************************************
-    virtual int32_t GetHeight(void) {return height;};
+    virtual int32_t GetHeight(void) {return height;}
 
     // *************************************************************************
-    // ***   Invalidate Display Area   *****************************************
+    // ***   Return Z of object   **********************************************
     // *************************************************************************
-    void InvalidateObjArea();
+    uint16_t GetZ(void) {return z;}
+
+    // *************************************************************************
+    // ***   IsActive   ********************************************************
+    // *************************************************************************
+    virtual bool IsActive() {return active;}
+
+    // *************************************************************************
+    // ***   SetActive   *******************************************************
+    // *************************************************************************
+    virtual void SetActive(bool is_active) {active = is_active;}
+
+    // *************************************************************************
+    // ***   Invalidate Object Area   ******************************************
+    // *************************************************************************
+    virtual void InvalidateObjArea(bool force = false);
 
   protected:
     // *************************************************************************
     // ***   Object parameters   ***********************************************
     // *************************************************************************
+
+    // Current list for object
+    VisList* list = nullptr;
 
     // X and Y start coordinates of object
     int16_t x_start = 0, y_start = 0;
@@ -197,8 +231,8 @@ class VisObject
     // can be added only to one list.
     VisObject* p_prev = nullptr;
 
-    // DisplayDrv is friend for access to pointers and Z
-    friend class DisplayDrv;
+    // VisList is friend for access to pointers and Z
+    friend class VisList;
 };
 
 #endif

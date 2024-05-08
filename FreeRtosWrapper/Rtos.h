@@ -80,7 +80,12 @@ class Rtos
     // *************************************************************************
     // ***   TaskDelete   ******************************************************
     // *************************************************************************
-    static void TaskDelete(TaskHandle_t task = nullptr);
+    static inline void TaskDelete(TaskHandle_t task = nullptr) {vTaskDelete(task);}
+
+    // *************************************************************************
+    // ***   GetCurrentTaskParam   *********************************************
+    // *************************************************************************
+    static inline void* GetCurrentTaskParam() {return (void*)xTaskGetApplicationTaskTag(xTaskGetCurrentTaskHandle());}
 
     // *************************************************************************
     // ***   IsInHandlerMode   *************************************************
@@ -90,47 +95,47 @@ class Rtos
     // *************************************************************************
     // ***   IsSchedulerNotRunning   *******************************************
     // *************************************************************************
-    static bool IsSchedulerNotRunning();
+    static inline bool IsSchedulerNotRunning() {return (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED);}
 
     // *************************************************************************
     // ***   IsSchedulerRunning   **********************************************
     // *************************************************************************
-    static bool IsSchedulerRunning();
+    static inline bool IsSchedulerRunning() {return (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);}
 
     // *************************************************************************
     // ***   IsSchedulerSuspended   ********************************************
     // *************************************************************************
-    static bool IsSchedulerSuspended();
+    static inline bool IsSchedulerSuspended() {return (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED);}
 
     // *************************************************************************
     // ***   SuspendScheduler   ************************************************
     // *************************************************************************
-    static void SuspendScheduler();
+    static inline void SuspendScheduler() {vTaskSuspendAll();}
 
     // *************************************************************************
     // ***   ResumeScheduler   *************************************************
     // *************************************************************************
-    static void ResumeScheduler();
+    static inline void ResumeScheduler() {(void)xTaskResumeAll();}
 
     // *************************************************************************
     // ***   EnterCriticalSection   ********************************************
     // *************************************************************************
-    static void EnterCriticalSection();
+    static inline void EnterCriticalSection() {taskENTER_CRITICAL();}
 
     // *************************************************************************
     // ***   ExitCriticalSection   *********************************************
     // *************************************************************************
-    static void ExitCriticalSection();
+    static inline void ExitCriticalSection() {taskEXIT_CRITICAL();}
 
     // *************************************************************************
     // ***   DisableInterrupts   ***********************************************
     // *************************************************************************
-    static void DisableInterrupts();
+    static inline void DisableInterrupts() {taskDISABLE_INTERRUPTS();}
 
     // *************************************************************************
     // ***   EnableInterrupts   ************************************************
     // *************************************************************************
-    static void EnableInterrupts();
+    static inline void EnableInterrupts() {taskENABLE_INTERRUPTS();}
 
  private:
     // None

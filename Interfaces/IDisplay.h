@@ -64,8 +64,8 @@ class IDisplay
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit IDisplay(int32_t in_width, int32_t in_height) :
-      init_width(in_width), init_height(in_height), width(in_width), height(in_height) {};
+    explicit IDisplay(int32_t in_width, int32_t in_height, int32_t in_byte_per_pixel) :
+    byte_per_pixel(in_byte_per_pixel), init_width(in_width), init_height(in_height), width(in_width), height(in_height) {};
 
     // *************************************************************************
     // ***   Public: Destructor   **********************************************
@@ -143,7 +143,7 @@ class IDisplay
     virtual Result InvertDisplay(bool invert) {return Result::ERR_NOT_IMPLEMENTED;}
 
     // *************************************************************************
-    // ***   Return if data have to be prepared before send to display   ******
+    // ***   Return if data have to be prepared before send to display   *******
     // *************************************************************************
     virtual bool IsDataNeedPreparation(void) {return false;}
 
@@ -178,14 +178,14 @@ class IDisplay
   protected:
 
     // Byte(s) per pixel
-    int32_t byte_per_pixel = 0u;
-    // Width
-    int32_t init_width = 0U;
-    // Height
-    int32_t init_height = 0U;
-    // Width
+    const int32_t byte_per_pixel = 0u;
+    // Width during initialization(need because of rotation)
+    const int32_t init_width = 0U;
+    // Height during initialization(need because of rotation)
+    const int32_t init_height = 0U;
+    // Current width
     int32_t width = 0U;
-    // Height
+    // Current height
     int32_t height = 0U;
     // Rotation
     Rotation rotation = ROTATION_TOP;

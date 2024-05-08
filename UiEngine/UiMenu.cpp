@@ -49,23 +49,13 @@ UiMenu::UiMenu(const char* header_str_in, MenuItem* items_in, int32_t items_cnt_
 }
 
 // *****************************************************************************
-// ***   Public: Main Menu cycle   *********************************************
+// ***   Public: Show   ********************************************************
 // *****************************************************************************
-bool UiMenu::Run(void)
+void UiMenu::Show(void)
 {
-  bool ret = false;
-  int16_t header_height = 0;
-  int16_t start_pos = 0;
-  int16_t menu_count = 0;
-  int16_t scroll_h = 0;
-  int16_t scroll_w = 0;
-  int16_t str_len = 0;
-
-  char tmp_str[64];
-
   // Checks
-  if(items == nullptr) return false;
-  if(items_cnt == 0) return false;
+  if(items == nullptr) return;
+  if(items_cnt == 0) return;
 
   // Get header string height
   if(header_str != nullptr) header_height = header_font->GetCharH();
@@ -74,11 +64,11 @@ bool UiMenu::Run(void)
   // If screen fit more items than we have - limit it
   if(menu_count > items_cnt) menu_count = items_cnt;
   if(menu_count > (int16_t)MAX_MENU_ITEMS) menu_count = MAX_MENU_ITEMS;
-    
+
   // Height of the Scroll bar: heigth of the Screen - height of the Header
-  scroll_h = height - (header_height + 2);
+  int16_t scroll_h = height - (header_height + 2);
   // Width of the Scroll bar: same as Items font width
-  scroll_w = items_font->GetCharW() - 2;
+  int16_t scroll_w = items_font->GetCharW() - 2;
   // Count of characters in the line plus null-terminator
   str_len = (width - (scroll_w + 2)) / items_font->GetCharW() + 1;
  
@@ -86,7 +76,7 @@ bool UiMenu::Run(void)
   box.SetParams(x_start - 1, x_start - 1, width + 2, height + 2, COLOR_GREEN, false);
   // Show menu border
   box.Show(100);
-    
+
   // Create header String object
   hdr_str.SetParams(header_str, x_start + items_font->GetCharW(), y_start, COLOR_YELLOW, *header_font);
   // Create header Line object
@@ -111,10 +101,6 @@ bool UiMenu::Run(void)
   // Show selection bar
   selection_bar.Show(100);
 
-  // Strings for menu items
-  String* menu_str[MAX_MENU_ITEMS];
-  char* menu_txt[MAX_MENU_ITEMS];
-
   // Allocate memory for menu items
   for(uint32_t i = 0; i < MAX_MENU_ITEMS; i++)
   {
@@ -129,10 +115,45 @@ bool UiMenu::Run(void)
     // Show string
     menu_str[i]->Show(101);
   }
+}
+
+// *****************************************************************************
+// ***   Public: Hide   ********************************************************
+// *****************************************************************************
+void UiMenu::Hide(void)
+{
+  // Clear memory
+  for(uint32_t i = 0; i < MAX_MENU_ITEMS; i++)
+  {
+    delete(menu_str[i]);
+    delete(menu_txt[i]);
+  }
+
+  // Hide all objects
+  box.Hide();
+  hdr_str.Hide();
+  hdr_line.Hide();
+  selection_bar.Hide();
+  scroll.Hide();
+}
+
+// *****************************************************************************
+// ***   Public: Main Menu cycle   *********************************************
+// *****************************************************************************
+bool UiMenu::Run(void)
+{
+  bool ret = false;
+
+  int16_t start_pos = 0;
+
+  char tmp_str[64];
+
+  // Show menu
+  Show();
 
   // Init user input before run Menu cycle
   InitUserInput();
-  
+
   do
   {
     do
@@ -177,7 +198,7 @@ bool UiMenu::Run(void)
 
       // Process user input
       ProcessUserInput();
-      
+
       // If value the same - scroll wasn't touched
       if(scroll.GetScrollPos() == current_pos)
       {
@@ -221,19 +242,8 @@ bool UiMenu::Run(void)
   }
   while(!(kbd_left));
 
-  // Clear memory
-  for(uint32_t i = 0; i < MAX_MENU_ITEMS; i++)
-  {
-    delete(menu_str[i]);
-    delete(menu_txt[i]);
-  }
-
-  // Hide all objects
-  box.Hide();
-  hdr_str.Hide();
-  hdr_line.Hide();
-  selection_bar.Hide();
-  scroll.Hide();
+  // Hide menu
+  Hide();
 
   // Return result
   return ret;
@@ -244,6 +254,7 @@ bool UiMenu::Run(void)
 // *****************************************************************************
 void UiMenu::InitUserInput(void)
 {
+#if defined(INPUTDRV_ENABLED)
   // Init last buttons values
   (void) input_drv.GetButtonState(InputDrv::EXT_LEFT, InputDrv::BTN_UP, up_btn_val);
   (void) input_drv.GetButtonState(InputDrv::EXT_LEFT, InputDrv::BTN_RIGHT, right_btn_val);
@@ -255,6 +266,7 @@ void UiMenu::InitUserInput(void)
   (void) input_drv.GetEncoderState(InputDrv::EXT_RIGHT, last_enc_right_val);
   (void) input_drv.GetEncoderButtonState(InputDrv::EXT_LEFT,  InputDrv::ENC_BTN_ENT, enc1_btn_left_val);
   (void) input_drv.GetEncoderButtonState(InputDrv::EXT_RIGHT, InputDrv::ENC_BTN_ENT, enc2_btn_left_val);
+#endif
 }
 
 // *****************************************************************************
@@ -262,6 +274,7 @@ void UiMenu::InitUserInput(void)
 // *****************************************************************************
 void UiMenu::ProcessUserInput(void)
 {
+#if defined(INPUTDRV_ENABLED)
   // Variable will be set to true if key status changed and new status
   // empty - only when key will be released
   if(   (input_drv.GetDeviceType(InputDrv::EXT_LEFT) == InputDrv::EXT_DEV_BTN)
@@ -281,4 +294,5 @@ void UiMenu::ProcessUserInput(void)
     kbd_up = (enc_val < 0);
     kbd_down = (enc_val > 0);
   }
+#endif
 }

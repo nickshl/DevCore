@@ -134,6 +134,20 @@ private:
     // Default threshold
     static constexpr uint8_t DEFAULT_THRESHOLD = 40u;
 
+//    #define FT6236_ADDR 0x38           // I2C address
+//#define FT6236_G_FT5201ID 0xA8     // FocalTech's panel ID
+//#define FT6236_REG_NUMTOUCHES 0x02 // Number of touch points
+//
+//#define FT6236_NUM_X 0x33 // Touch X position
+//#define FT6236_NUM_Y 0x34 // Touch Y position
+//
+//#define FT6236_VENDID 0x11  // FocalTech's panel ID
+//#define FT6206_CHIPID 0x06  // FT6206 ID
+//#define FT6236_CHIPID 0x36  // FT6236 ID
+//#define FT6236U_CHIPID 0x64 // FT6236U ID
+//
+//#define FT6236_DEFAULT_THRESHOLD 128 // Default threshold for touch detection
+
     // Handle to SPI used for touchscreen
     IIic& iic;
 

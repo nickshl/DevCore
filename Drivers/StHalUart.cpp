@@ -20,33 +20,19 @@
 // *****************************************************************************
 #include "StHalUart.h"
 
+#include <cstring> // for memset()
+
 // *****************************************************************************
 // ***   This driver can be compiled only if UART configured in CubeMX   *******
 // *****************************************************************************
-#ifdef HAL_USART_MODULE_ENABLED
+#if defined(HAL_USART_MODULE_ENABLED) || defined(HAL_UART_MODULE_ENABLED)
 
 // *****************************************************************************
 // ***   Public: Init   ********************************************************
 // *****************************************************************************
 Result StHalUart::Init()
 {
-  Result result = Result::RESULT_OK;
-
-  // Clear array
-  memset(rx_buf, 0xFFU, sizeof(rx_buf));
-
-  // Start the RX DMA - this is circular, so it will never stop
-  if(HAL_UART_Receive_DMA(&huart, rx_buf, RX_BUF_SIZE) == HAL_OK)
-  {
-    // This is the first access to this object and ndtr must be initialized
-    ndtr = huart.RxXferSize;
-  }
-  else
-  {
-    result = Result::ERR_UART_RECEIVE;
-  }
-
-  return result;
+  return StartRx();
 }
 
 // *****************************************************************************
@@ -67,6 +53,46 @@ Result StHalUart::DeInit()
 // *****************************************************************************
 // ***   Public: Read   ********************************************************
 // *****************************************************************************
+Result StHalUart::Read(uint8_t& value)
+{
+  Result result = Result::RESULT_OK;
+
+  // Calculate index in circular buffer
+  uint16_t index = RX_BUF_SIZE - ndtr;
+
+  // TODO: is it good enough?
+  // If an error happened
+  if(__HAL_UART_GET_FLAG(&huart, UART_FLAG_ORE) || __HAL_UART_GET_FLAG(&huart, UART_FLAG_FE))
+  {
+    // Restart RX
+    StartRx();
+  }
+
+  // Check data
+  if(ndtr != __HAL_DMA_GET_COUNTER(huart.hdmarx))
+  {
+    // Store value
+    value = rx_buf[index];
+    // Decrease counter
+    ndtr--;
+    // Check reset
+    if(ndtr == 0U)
+    {
+      ndtr = RX_BUF_SIZE;
+    }
+  }
+  else
+  {
+    // No data
+    result = Result::ERR_UART_EMPTY;
+  }
+
+  return result;
+}
+
+// *****************************************************************************
+// ***   Public: Read   ********************************************************
+// *****************************************************************************
 Result StHalUart::Read(uint8_t* rx_buf_ptr, uint32_t& size)
 {
   Result result = Result::RESULT_OK;
@@ -79,7 +105,7 @@ Result StHalUart::Read(uint8_t* rx_buf_ptr, uint32_t& size)
     uint8_t rx_byte;
     // Read byte - this function overwrite byte in case of overrun. So,
     // we use additional variable here. May be it isn't so necessary.
-    result = Pop(rx_byte);
+    result = Read(rx_byte);
     // If read successful
     if(result.IsGood())
     {
@@ -168,35 +194,27 @@ Result StHalUart::GetRxSize(uint16_t& rx_cnt)
 }
 
 // *****************************************************************************
-// ***   Private: Pop   ********************************************************
+// ***   Private: StartRx   ****************************************************
 // *****************************************************************************
-Result StHalUart::Pop(uint8_t& value)
+Result StHalUart::StartRx()
 {
   Result result = Result::RESULT_OK;
 
-  // Calculate index in circular buffer
-  uint16_t index = RX_BUF_SIZE - ndtr;
+  // Clear array
+  memset(rx_buf, 0xFFU, sizeof(rx_buf));
 
-  // Check data
-  if(ndtr != __HAL_DMA_GET_COUNTER(huart.hdmarx))
+  // Start the RX DMA - this is circular, so it will never stop
+  if(HAL_UART_Receive_DMA(&huart, rx_buf, RX_BUF_SIZE) == HAL_OK)
   {
-    // Store value
-    value = rx_buf[index];
-    // Decrease counter
-    ndtr--;
-    // Check reset
-    if(ndtr == 0U)
-    {
-      ndtr = RX_BUF_SIZE;
-    }
+    // This is the first access to this object and ndtr must be initialized
+    ndtr = huart.RxXferSize;
   }
   else
   {
-    // No data
-    result = Result::ERR_UART_EMPTY;
+    result = Result::ERR_UART_RECEIVE;
   }
 
-  return result;
+  return Result::RESULT_OK;
 }
 
 #endif

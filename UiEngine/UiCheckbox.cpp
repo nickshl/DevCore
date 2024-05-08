@@ -36,6 +36,27 @@ UiCheckbox::UiCheckbox(int32_t x, int32_t y, bool is_checked, bool is_active)
 }
 
 // *****************************************************************************
+// ***   Set callback function   ***********************************************
+// *****************************************************************************
+void UiCheckbox::SetCallback(AppTask& task, CallbackPtr func, void* param)
+{
+  callback_task = &task;
+  callback_func = func;
+  callback_param = param;
+}
+
+// *****************************************************************************
+// ***   SetChecked   **********************************************************
+// *****************************************************************************
+void UiCheckbox::SetChecked(bool is_checked)
+{
+  // Set flag to draw pressed button
+  checked = is_checked;
+  // Invalidate area
+  InvalidateObjArea();
+}
+
+// *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
 void UiCheckbox::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
@@ -77,7 +98,7 @@ void UiCheckbox::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_
 // *****************************************************************************
 // ***   Action   **************************************************************
 // *****************************************************************************
-void UiCheckbox::Action(VisObject::ActionType action, int32_t tx, int32_t ty)
+void UiCheckbox::Action(VisObject::ActionType action, int32_t tx, int32_t ty, int32_t tpx, int32_t tpy)
 {
   // Switch for process action
   switch(action)
@@ -86,12 +107,20 @@ void UiCheckbox::Action(VisObject::ActionType action, int32_t tx, int32_t ty)
     case VisObject::ACT_TOUCH:
       // Change checked state
       checked = !checked;
+      // Call callback after reset flag since another task can set it again
+      if(callback_task != nullptr)
+      {
+        callback_task->Callback(callback_func, callback_param, this);
+      }
+      // Invalidate area
+      InvalidateObjArea();
       break;
-  
+
     // Untouch action 
     case VisObject::ACT_UNTOUCH:
       break;
 
+    case VisObject::ACT_HOLD: // Intentional fall-trough
     case VisObject::ACT_MAX:
     default:
       break;
