@@ -144,21 +144,6 @@ class DisplayDrv : public AppTask
     Result InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y);
 
     // *************************************************************************
-    // ***   Set Update Area   *************************************************
-    // *************************************************************************
-    Result SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
-
-    // *************************************************************************
-    // ***   Update area covered by VisObject on display   *********************
-    // *************************************************************************
-    Result UpdateObjArea(VisObject& obj);
-
-    // *************************************************************************
-    // ***   Update specific display area   ************************************
-    // *************************************************************************
-    Result UpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
-
-    // *************************************************************************
     // ***   Invert Display   **************************************************
     // *************************************************************************
     void InvertDisplay(bool invert);
@@ -214,11 +199,6 @@ class DisplayDrv : public AppTask
     void TouchCalibrate();
 
   private:
-    // Display FPS/touch coordinates
-    static constexpr bool DISPLAY_DEBUG_INFO = false;
-    static constexpr bool DISPLAY_DEBUG_AREA = false;
-    static constexpr bool DISPLAY_DEBUG_TOUCH = false;
-
     // Display driver object
     IDisplay* display = nullptr;
 
@@ -245,14 +225,16 @@ class DisplayDrv : public AppTask
     // Current screen line
     uint8_t scr_line_idx = 0u;
 
+#if defined(UPDATE_AREA_ENABLED)
     // Area to update
     UpdateArea_t area;
-#if defined(MULTIPLE_UPDATE_AREAS)
+  #if defined(MULTIPLE_UPDATE_AREAS)
     // For multiple areas
     UpdateAreaProcessor<MULTIPLE_UPDATE_AREAS> areas;
-#else
+  #else
     // Dirty flag
     bool is_dirty = false;
+  #endif
 #endif
 
     // Touch coordinates and state
@@ -260,15 +242,19 @@ class DisplayDrv : public AppTask
     int32_t tx = 0;
     int32_t ty = 0;
 
+#if defined(DISPLAY_DEBUG_INFO)
     // FPS multiplied to 10
     volatile uint32_t fps_x10 = 0U;
     // Buffer for print FPS string
     char str[32] = {"       "};
     // FPS string
     String fps_str;
+#endif
 
+#if defined(DISPLAY_DEBUG_TOUCH)
     // Touch debug circle
     Circle touch_cir;
+#endif
 
     // Semaphore for update screen
     RtosSemaphore screen_update;

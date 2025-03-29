@@ -53,10 +53,16 @@
 // *****************************************************************************
 #include "Result.h"
 #include "Rtos.h"
-
-// Include for all hardware stuff
 #include "main.h"
-#include "stm32f4xx.h"
+
+// *****************************************************************************
+// ***   User configuration include   ******************************************
+// *****************************************************************************
+#include "DefCfgUsr.h"
+
+// *****************************************************************************
+// ***   HAL Hardware includes or dummies   ************************************
+// *****************************************************************************
 
 // ***   ADC   *****************************************************************
 #ifdef HAL_ADC_MODULE_ENABLED
@@ -96,43 +102,36 @@ typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
 #endif
 
 // *****************************************************************************
-// ***   Configuration   *******************************************************
+// ***   System tasks stack sizes   ********************************************
 // *****************************************************************************
-
-//#define DWT_ENABLED
-//#define UITASK_ENABLED
-//#define INPUTDRV_ENABLED
-//#define SOUNDDRV_ENABLED
-
-// ***   TIM Handles   *********************************************************
-#if defined(HAL_TIM_MODULE_ENABLED)
-  #if defined(SOUNDDRV_ENABLED)
-    // Sound Timer handle
-    static TIM_HandleTypeDef* const SOUND_HTIM = &htim4;
-    // Sound Timer channel
-    static const uint32_t SOUND_CHANNEL = TIM_CHANNEL_2;
-  #endif
+#if !defined(DISPLAY_DRV_TASK_STACK_SIZE)
+  #define DISPLAY_DRV_TASK_STACK_SIZE 1024u
+#endif
+#if !defined(UI_TASK_STACK_SIZE)
+  #define UI_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#endif
+#if !defined(INPUT_DRV_TASK_STACK_SIZE)
+  #define INPUT_DRV_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#endif
+#if !defined(SOUND_DRV_TASK_STACK_SIZE)
+  #define SOUND_DRV_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #endif
 
-// *** Applications tasks stack sizes   ****************************************
-const static uint16_t APPLICATION_TASK_STACK_SIZE = 1024u;
-const static uint16_t EXAMPLE_MSG_TASK_STACK_SIZE = configMINIMAL_STACK_SIZE;
-// *** Applications tasks priorities   *****************************************
-const static uint8_t APPLICATION_TASK_PRIORITY = tskIDLE_PRIORITY + 2U;
-const static uint8_t EXAMPLE_MSG_TASK_PRIORITY = tskIDLE_PRIORITY + 2U;
 // *****************************************************************************
-
-// *** System tasks stack sizes   **********************************************
-const static uint16_t DISPLAY_DRV_TASK_STACK_SIZE = 1024u;
-const static uint16_t UI_TASK_STACK_SIZE          = configMINIMAL_STACK_SIZE;
-const static uint16_t INPUT_DRV_TASK_STACK_SIZE   = configMINIMAL_STACK_SIZE;
-const static uint16_t SOUND_DRV_TASK_STACK_SIZE   = configMINIMAL_STACK_SIZE;
-// *** System tasks priorities   ***********************************************
-const static uint8_t DISPLAY_DRV_TASK_PRIORITY = tskIDLE_PRIORITY + 1U;
-const static uint8_t INPUT_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 2U;
-const static uint8_t SOUND_DRV_TASK_PRIORITY   = tskIDLE_PRIORITY + 3U;
-const static uint8_t UI_TASK_PRIORITY          = tskIDLE_PRIORITY + 4U;
+// ***   System tasks priorities   *********************************************
 // *****************************************************************************
+#if !defined(DISPLAY_DRV_TASK_PRIORITY)
+  #define DISPLAY_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 1U)
+#endif
+#if !defined(INPUT_DRV_TASK_PRIORITY)
+  #define INPUT_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 2U)
+#endif
+#if !defined(SOUND_DRV_TASK_PRIORITY)
+  #define SOUND_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 3U)
+#endif
+#if !defined(UI_TASK_PRIORITY)
+  #define UI_TASK_PRIORITY (tskIDLE_PRIORITY + 4U)
+#endif
 
 // Timer Task priority should be high. Otherwise if some task with highest
 // priority will take over for long enough period, timer task wont be able to
@@ -151,17 +150,24 @@ const static uint8_t UI_TASK_PRIORITY          = tskIDLE_PRIORITY + 4U;
 // For example ILI9488 uses 18 bit color(3 bytes per pixel) and if 16 bit color 
 // is used(2 bytes per pixel) in order to prepare data display driver need 1.5
 // times more memory
-static constexpr uint32_t DISPLAY_MAX_BUF_LEN = 320;// 480 * 1.5;
+#if !defined(DISPLAY_MAX_BUF_LEN)
+#define DISPLAY_MAX_BUF_LEN 320
+#endif
 
 // By default there only one update area, that merges all update requests
 // by making multiple areas, there can be multiple non-intersect areas(intersect
 // areas still will be merged into one).
-#define MULTIPLE_UPDATE_AREAS 32
+//#define MULTIPLE_UPDATE_AREAS 32
+
+// If MULTIPLE_UPDATE_AREAS defined, UPDATE_AREA_ENABLED have to be defined too
+#if defined(MULTIPLE_UPDATE_AREAS) && !defined(UPDATE_AREA_ENABLED)
+#define UPDATE_AREA_ENABLED
+#endif
 
 // Color depth used by display
-//#define COLOR_24BIT
+#if !defined(COLOR_24BIT) && !defined(COLOR_16BIT) && !defined(COLOR_3BIT)
 #define COLOR_16BIT
-//#define COLOR_3BIT
+#endif
 
 #if defined(COLOR_24BIT)
 // ***   Color type define   ***************************************************

@@ -38,10 +38,12 @@ SoundDrv& SoundDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Init Display Driver Task   ********************************************
 // *****************************************************************************
-void SoundDrv::InitTask(TIM_HandleTypeDef* htm)
+void SoundDrv::InitTask(TIM_HandleTypeDef* htm, uint32_t ch)
 {
   // Save timer handle
   htim = htm;
+  // Save channel
+  channel = ch;
   // Create task
   CreateTask();
 }

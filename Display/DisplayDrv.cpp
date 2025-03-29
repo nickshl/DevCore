@@ -57,23 +57,19 @@ Result DisplayDrv::Setup()
       touch->Init();
     }
 
-    // Show string if flag is set
-    if(DISPLAY_DEBUG_INFO)
-    {
-      // Set string parameters
-      fps_str.SetParams(str, width/3, height - 12, COLOR_MAGENTA, Font_4x6::GetInstance());
-      // Max Z
-      fps_str.Show(0xFFFFFFFFU);
-    }
+#if defined(DISPLAY_DEBUG_INFO)
+    // Set string parameters
+    fps_str.SetParams(str, width/3, height - 12, COLOR_MAGENTA, Font_4x6::GetInstance());
+    // Max Z
+    fps_str.Show(0xFFFFFFFFU);
+#endif
 
-    // Show string if flag is set
-    if(DISPLAY_DEBUG_TOUCH)
-    {
-      // Set string parameters
-      touch_cir.SetParams(0, 0, 3, COLOR_YELLOW, true);
-      // Max Z
-      touch_cir.Show(0xFFFFFFFFU);
-    }
+#if defined(DISPLAY_DEBUG_TOUCH)
+    // Set circle parameters
+    touch_cir.SetParams(0, 0, 3, COLOR_YELLOW, true);
+    // Max Z
+    touch_cir.Show(0xFFFFFFFFU);
+#endif
 
     // Set result
     result = Result::RESULT_OK;
@@ -88,8 +84,10 @@ Result DisplayDrv::Setup()
 // *****************************************************************************
 Result DisplayDrv::Loop()
 {
+#if defined(DISPLAY_DEBUG_INFO)
   // Variable for find FPS
   uint32_t time_ms = RtosTick::GetTimeMs();
+#endif
 
   // If semaphore doesn't exist or taken within 50 ms - skip draw screen
   // This is need for update touchscreen state every 50 ms(20 times per second)
@@ -100,7 +98,7 @@ Result DisplayDrv::Loop()
     //if(is_dirty && (LockDisplay() == Result::RESULT_OK))
     if(LockDisplay() == Result::RESULT_OK)
     {
-#if defined(MULTIPLE_UPDATE_AREAS)
+#if defined(UPDATE_AREA_ENABLED) && defined(MULTIPLE_UPDATE_AREAS)
       // Get current number of update areas
       uint32_t n = areas.GetItemsCnt();
       // To process touch we should not sit there forever if areas constantly adding
@@ -109,18 +107,27 @@ Result DisplayDrv::Loop()
       {
         // Take line semaphore to copy area
         line_mutex.Lock();
+#if defined(UPDATE_AREA_ENABLED)
         // Get update ares
-#if defined(MULTIPLE_UPDATE_AREAS)
+  #if defined(MULTIPLE_UPDATE_AREAS)
         areas.Pop(area);
-#else
+  #else
         // Clear flag to allow invalidate smaller area
         is_dirty = false;
-#endif
+  #endif
         // Copy area
         uint16_t start_x = area.start_x;
         uint16_t start_y = area.start_y;
         uint16_t end_x = area.end_x;
         uint16_t end_y = area.end_y;
+#else
+        // No update area - update whole display
+        uint16_t start_x = 0u;
+        uint16_t start_y = 0u;
+        uint16_t end_x = width - 1u;
+        uint16_t end_y = height - 1u;
+#endif
+
         // Give semaphore after changes
         line_mutex.Release();
 
@@ -144,32 +151,30 @@ Result DisplayDrv::Loop()
           else                                 list.DrawInBufW(scr_buf[scr_line_idx], pixels_cnt, i, start_x);
           // Give semaphore after changes
           line_mutex.Release();
-          // Show display area as needed. Allow to debug unnecessary display updates.
-          if(DISPLAY_DEBUG_AREA)
+#if defined(DISPLAY_DEBUG_AREA) // Show display area as needed. Allow to debug unnecessary display updates.
+          // Sequential colors will help to see updated area.
+          static color_t colors[] = {COLOR_WHITE, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_CYAN, COLOR_MAGENTA};
+          static uint32_t cidx = 0;
+          // Change color only at first line
+          if(i == start_y)
           {
-            // Sequential colors will help to see updated area.
-            static color_t colors[] = {COLOR_WHITE, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_CYAN, COLOR_MAGENTA};
-            static uint32_t cidx = 0;
-            // Change color only at first line
-            if(i == start_y)
-            {
-              cidx++;
-              if(cidx >= NumberOf(colors)) cidx = 0u;
-            }
+            cidx++;
+            if(cidx >= NumberOf(colors)) cidx = 0u;
+          }
 
-            if((i == start_y) || (i == end_y))
+          if((i == start_y) || (i == end_y))
+          {
+            for(uint32_t i = 0; i < pixels_cnt; i++)
             {
-              for(uint32_t i = 0; i < pixels_cnt; i++)
-              {
-                scr_buf[scr_line_idx][i] = colors[cidx];
-              }
-            }
-            else
-            {
-              scr_buf[scr_line_idx][0] = colors[cidx];
-              scr_buf[scr_line_idx][pixels_cnt - 1] = colors[cidx];
+              scr_buf[scr_line_idx][i] = colors[cidx];
             }
           }
+          else
+          {
+            scr_buf[scr_line_idx][0] = colors[cidx];
+            scr_buf[scr_line_idx][pixels_cnt - 1] = colors[cidx];
+          }
+#endif
           // Check display bits per color
           if(is_data_need_preparation)
           {
@@ -190,12 +195,10 @@ Result DisplayDrv::Loop()
       }
       // Give semaphore after draw frame
       UnlockDisplay();
-      // Calculate FPS if debug info is ON
-      if(DISPLAY_DEBUG_INFO)
-      {
-        // FPS in format XX.X
-        fps_x10 = (1000 * 10) / (RtosTick::GetTimeMs() - time_ms);
-      }
+#if defined(DISPLAY_DEBUG_INFO)
+      // Calculate FPS in format XX.X
+      fps_x10 = (1000 * 10) / (RtosTick::GetTimeMs() - time_ms);
+#endif
     }
   }
 
@@ -244,23 +247,22 @@ Result DisplayDrv::Loop()
     // Give semaphore after changes
     line_mutex.Release();
   }
-  // Debug code. Can be enabled at compilation time. Show touch position.
-  if(DISPLAY_DEBUG_TOUCH)
-  {
-    if((tx != tmp_tx) || (ty != tmp_ty)) touch_cir.Move(tmp_tx, tmp_ty);
-  }
+
+#if defined(DISPLAY_DEBUG_TOUCH)
+  // Debug code. Can be enabled at compilation time to show touch position.
+  if((tx != tmp_tx) || (ty != tmp_ty)) touch_cir.Move(tmp_tx, tmp_ty);
+#endif
+
   // Save new touch state
   is_touch = tmp_is_touch;
   tx = tmp_tx;
   ty = tmp_ty;
 
+#if defined(DISPLAY_DEBUG_INFO)
   // Debug code. Can be enabled at compilation time.
-  if(DISPLAY_DEBUG_INFO)
-  {
-    if(is_touch) sprintf(str, "X: %4ld, Y: %4ld", tx, ty);
-    else sprintf(str, "FPS: %2lu.%1lu, time: %lu", fps_x10/10, fps_x10%10, RtosTick::GetTimeMs()/1000UL);
-    fps_str.SetString(str);
-  }
+  if(is_touch) fps_str.SetString(str, "X: %4ld, Y: %4ld", tx, ty);
+  else fps_str.SetString(str, "FPS: %2lu.%1lu, time: %lu", fps_x10/10, fps_x10%10, RtosTick::GetTimeMs()/1000UL);
+#endif
 
   // Always run
   return Result::RESULT_OK;
@@ -357,6 +359,8 @@ Result DisplayDrv::UpdateDisplay(void)
 Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y)
 {
   Result result = Result::ERR_BAD_PARAMETER;
+
+#if defined(UPDATE_AREA_ENABLED)
   // Lock display line
   line_mutex.Lock();
 #if defined(COLOR_3BIT)
@@ -415,70 +419,11 @@ Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_
   }
   // Unlock display line
   line_mutex.Release();
-  // Return result
-  return result;
-}
+#else
+  // All checks passed - result good
+  result = Result::RESULT_OK;
+#endif
 
-// *****************************************************************************
-// ***   Set Update Area   *****************************************************
-// *****************************************************************************
-Result DisplayDrv::SetUpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
-{
-  Result result = Result::ERR_BAD_PARAMETER;
-  // Lock display
-  LockDisplay();
-  // Check end points - it can't be greater than screen size
-  if(end_x >= width) end_x = width - 1;
-  if(end_y >= height) end_y = height - 1;
-  // Set area only if it is valid
-  if((start_x < end_x) && (start_y < end_y))
-  {
-    if(update_mode == UPDATE_TOP_BOTTOM)
-    {
-      area.start_x = start_x;
-      area.end_x = end_x;
-      area.start_y = start_y;
-      area.end_y = end_y;
-    }
-    else // UPDATE_LEFT_RIGHT
-    {
-      // Swap area X and Y it refresh mode left to right
-      area.start_x = start_y;
-      area.end_x = end_y;
-      area.start_y = start_x;
-      area.end_y = end_x;
-    }
-    // All checks passed - result good
-    result = Result::RESULT_OK;
-  }
-  // Unlock display
-  UnlockDisplay();
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Update area covered by VisObject on display   *************************
-// *****************************************************************************
-Result DisplayDrv::UpdateObjArea(VisObject& obj)
-{
-  // Set update area to full screen
-  SetUpdateArea(obj.GetStartX(), obj.GetStartY(), obj.GetEndX(), obj.GetEndY());
-  // Give semaphore for update screen
-  Result result = screen_update.Give();
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Update specific display area   ****************************************
-// *****************************************************************************
-Result DisplayDrv::UpdateArea(uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
-{
-  // Set update area to full screen
-  SetUpdateArea(start_x, start_y, end_x, end_y);
-  // Give semaphore for update screen
-  Result result = screen_update.Give();
   // Return result
   return result;
 }

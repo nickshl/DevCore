@@ -88,7 +88,7 @@ class InputDrv : public AppTask
       EXT_DEV_JOY,  // Joystick
       EXT_DEV_MAX   // Device types count
     } ExtDeviceType;
-    
+
     // *************************************************************************
     // ***   Enum with all buttons   *******************************************
     // *************************************************************************

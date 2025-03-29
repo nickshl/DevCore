@@ -75,7 +75,7 @@ class SoundDrv : public AppTask
     // *************************************************************************
     // ***   Init Sound Driver Task   ******************************************
     // *************************************************************************
-    virtual void InitTask(TIM_HandleTypeDef *htm = SOUND_HTIM);
+    virtual void InitTask(TIM_HandleTypeDef *htm, uint32_t ch);
 
     // *************************************************************************
     // ***   Sound Driver Setup   **********************************************
@@ -119,9 +119,9 @@ class SoundDrv : public AppTask
 
   private:
     // Timer handle
-    TIM_HandleTypeDef* htim = SOUND_HTIM;
+    TIM_HandleTypeDef* htim = nullptr;
     // Timer channel
-    uint32_t channel = SOUND_CHANNEL;
+    uint32_t channel = 0u;
 
     // Ticks variable
     uint32_t last_wake_ticks = 0U;
