@@ -21,7 +21,7 @@
 #include "DisplayDrv.h"
 
 // *****************************************************************************
-// ***   Get Instance   ********************************************************
+// ***   Public: Get Instance   ************************************************
 // *****************************************************************************
 DisplayDrv& DisplayDrv::GetInstance(void)
 {
@@ -30,7 +30,25 @@ DisplayDrv& DisplayDrv::GetInstance(void)
 }
 
 // *****************************************************************************
-// ***   Display Driver Setup   ************************************************
+// ***   Public: Init Display Driver Task   ************************************
+// *****************************************************************************
+void DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
+{
+  // Save display driver pointer
+  display = &in_display;
+  // Set width and height variables for screen
+  width = display->GetWidth();
+  height = display->GetHeight();
+  // Store new touch pointer. It may point to nullptr it no ITouchscreen object
+  // passed, but it is ok, since we  check this condition everywhere where we
+  // using this pointer
+  touch = &in_touch;
+  // Create task
+  CreateTask();
+}
+
+// *****************************************************************************
+// ***   Public: Display Driver Setup   ****************************************
 // *****************************************************************************
 Result DisplayDrv::Setup()
 {
@@ -80,7 +98,7 @@ Result DisplayDrv::Setup()
 }
 
 // *****************************************************************************
-// ***   Display Driver Loop   *************************************************
+// ***   Public: Display Driver Loop   *****************************************
 // *****************************************************************************
 Result DisplayDrv::Loop()
 {
@@ -202,61 +220,63 @@ Result DisplayDrv::Loop()
     }
   }
 
-  bool tmp_is_touch = false;
-  int32_t tmp_tx = tx;
-  int32_t tmp_ty = ty;
-  // Try to take mutex. 1 ms should be enough.
-  if(touchscreen_mutex.Lock(1u) == Result::RESULT_OK)
+  // If pointer to touchscreen present
+  if(touch != nullptr)
   {
-    // If pointer to touchscreen present
-    if(touch != nullptr)
+    bool tmp_is_touch = false;
+    int32_t tmp_tx = tx;
+    int32_t tmp_ty = ty;
+
+    // Get touch coordinates
+    tmp_is_touch = touch->GetXY(tmp_tx, tmp_ty);
+
+    // If touch state changed (move)
+    if(is_touch && tmp_is_touch)
     {
-      // Get touch coordinates
-      tmp_is_touch = touch->GetXY(tmp_tx, tmp_ty);
+      // Take semaphore before draw line
+      line_mutex.Lock();
+      if((tx != tmp_tx) || (ty != tmp_ty))
+      {
+        // Call action for parent list
+        list.Action(VisObject::ACT_MOVE, tmp_tx, tmp_ty, tx, ty);
+      }
+      else
+      {
+        // Call action for parent list
+        list.Action(VisObject::ACT_HOLD, tmp_tx, tmp_ty, tx, ty);
+      }
+      // Give semaphore after changes
+      line_mutex.Release();
     }
-    // Give semaphore for drawing frame - we can enter in this "if" statement
-    // only if mutex taken
-    touchscreen_mutex.Release();
-  }
-  // If touch state changed (move)
-  if(is_touch && tmp_is_touch)
-  {
-    // Take semaphore before draw line
-    line_mutex.Lock();
-    if((tx != tmp_tx) || (ty != tmp_ty))
+    // If touch state changed (touch & release)
+    if(is_touch != tmp_is_touch)
     {
+      // Go thru VisObject list and call Active() function for active object
+      // Take semaphore before draw line
+      line_mutex.Lock();
       // Call action for parent list
-      list.Action(VisObject::ACT_MOVE, tmp_tx, tmp_ty, tx, ty);
+      list.Action(tmp_is_touch ? VisObject::ACT_TOUCH : VisObject::ACT_UNTOUCH, tmp_tx, tmp_ty, tx, ty);
+      // Give semaphore after changes
+      line_mutex.Release();
     }
-    else
-    {
-      // Call action for parent list
-      list.Action(VisObject::ACT_HOLD, tmp_tx, tmp_ty, tx, ty);
-    }
-    // Give semaphore after changes
-    line_mutex.Release();
-  }
-  // If touch state changed (touch & release)
-  if(is_touch != tmp_is_touch)
-  {
-    // Go thru VisObject list and call Active() function for active object
-    // Take semaphore before draw line
-    line_mutex.Lock();
-    // Call action for parent list
-    list.Action(tmp_is_touch ? VisObject::ACT_TOUCH : VisObject::ACT_UNTOUCH, tmp_tx, tmp_ty, tx, ty);
-    // Give semaphore after changes
-    line_mutex.Release();
-  }
 
 #if defined(DISPLAY_DEBUG_TOUCH)
-  // Debug code. Can be enabled at compilation time to show touch position.
-  if((tx != tmp_tx) || (ty != tmp_ty)) touch_cir.Move(tmp_tx, tmp_ty);
+    // Debug code. Can be enabled at compilation time to show touch position.
+    if((tx != tmp_tx) || (ty != tmp_ty)) touch_cir.Move(tmp_tx, tmp_ty);
 #endif
 
-  // Save new touch state
-  is_touch = tmp_is_touch;
-  tx = tmp_tx;
-  ty = tmp_ty;
+    // Try to take mutex. 1 ms should be enough.
+    if(touchscreen_mutex.Lock(1u) == Result::RESULT_OK)
+    {
+      // Save new touch state
+      is_touch = tmp_is_touch;
+      tx = tmp_tx;
+      ty = tmp_ty;
+      // Give semaphore for drawing frame - we can enter in this "if" statement
+      // only if mutex taken
+      touchscreen_mutex.Release();
+    }
+  }
 
 #if defined(DISPLAY_DEBUG_INFO)
   // Debug code. Can be enabled at compilation time.
@@ -269,92 +289,28 @@ Result DisplayDrv::Loop()
 }
 
 // *****************************************************************************
-// ***   Set display driver(or clear if nullptr used as argument)   ************
+// ***   Public: Set display driver   ******************************************
 // *****************************************************************************
-Result DisplayDrv::SetDisplayDrv(IDisplay* in_display)
+Result DisplayDrv::SetDisplayDrv(IDisplay& in_display)
 {
   Result result = Result::ERR_INVALID_ITEM;
   // Display driver should be set before scheduler started
   if(Rtos::IsSchedulerNotRunning())
   {
-    // If pointer to display present
-    if(in_display != nullptr)
-    {
-      // Save display driver pointer
-      display = in_display;
-      // Set width and height variables for screen
-      width = display->GetWidth();
-      height = display->GetHeight();
-      // Set result
-      result = Result::RESULT_OK;
-    }
-    else
-    {
-      // Task can't be initialized without display driver
-      result = Result::ERR_NULL_PTR;
-    }
+    // Save display driver pointer
+    display = &in_display;
+    // Set width and height variables for screen
+    width = display->GetWidth();
+    height = display->GetHeight();
+    // Set result
+    result = Result::RESULT_OK;
   }
   // Return result
   return result;
 }
 
 // *****************************************************************************
-// ***   Lock display   ********************************************************
-// *****************************************************************************
-Result DisplayDrv::LockDisplay(uint32_t wait_ms)
-{
-  // Take semaphore for protect draw frame
-  Result result = frame_mutex.Lock(wait_ms);
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Unlock display   ******************************************************
-// *****************************************************************************
-Result DisplayDrv::UnlockDisplay(void)
-{
-  // Give semaphore for drawing frame
-  Result result = frame_mutex.Release();
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Lock display line   ***************************************************
-// *****************************************************************************
-Result DisplayDrv::LockDisplayLine(uint32_t wait_ms)
-{
-  // Take semaphore for protect draw line
-  Result result = line_mutex.Lock(wait_ms);
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Unlock display line   *************************************************
-// *****************************************************************************
-Result DisplayDrv::UnlockDisplayLine(void)
-{
-  // Give semaphore for drawing frame
-  Result result = line_mutex.Release();
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Update display   ******************************************************
-// *****************************************************************************
-Result DisplayDrv::UpdateDisplay(void)
-{
-  // Give semaphore for update screen
-  Result result = screen_update.Give();
-  // Return result
-  return result;
-}
-
-// *****************************************************************************
-// ***   Invalidate Area   *****************************************************
+// ***   Public: Invalidate Area   *********************************************
 // *****************************************************************************
 Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y)
 {
@@ -429,7 +385,7 @@ Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_
 }
 
 // *****************************************************************************
-// ***   Invert Display   ******************************************************
+// ***   Public: Invert Display   **********************************************
 // *****************************************************************************
 void DisplayDrv::InvertDisplay(bool invert)
 {
@@ -446,7 +402,7 @@ void DisplayDrv::InvertDisplay(bool invert)
 }
 
 // *****************************************************************************
-// ***   Set Rotation   ********************************************************
+// ***   Public: Set Rotation   ************************************************
 // *****************************************************************************
 void DisplayDrv::SetRotation(IDisplay::Rotation rot)
 {
@@ -481,7 +437,7 @@ void DisplayDrv::SetRotation(IDisplay::Rotation rot)
 }
 
 // *****************************************************************************
-// ***   Set Update Mode   *****************************************************
+// ***   Public: Set Update Mode   *********************************************
 // *****************************************************************************
 /// TODO: this function probably isn't work as intended. Main reason for existance
 /// of Left to Right update mode to draw functions(like oscilloscope buffer on grid)
@@ -512,7 +468,7 @@ void DisplayDrv::SetUpdateMode(UpdateMode mode)
 }
 
 // *****************************************************************************
-// ***   Set touchscreen driver(or clear if nullptr used as argument)   ********
+// ***   Public: Set touchscreen driver(or clear if nullptr passed)   **********
 // *****************************************************************************
 Result DisplayDrv::SetTouchDrv(ITouchscreen* in_touch)
 {
@@ -530,65 +486,69 @@ Result DisplayDrv::SetTouchDrv(ITouchscreen* in_touch)
 }
 
 // *****************************************************************************
-// ***   Get Touch X and Y coordinate   ****************************************
+// ***   Public: Get Touch X and Y coordinate   ********************************
 // *****************************************************************************
 bool DisplayDrv::GetTouchXY(int32_t& x, int32_t& y)
 {
   // Result variable
   bool result = false;
-  
-  // Try to take mutex. 1 ms should be enough.
-  if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+
+  // Only if touch present
+  if(touch != nullptr)
   {
-    // If display driver gets touch coordinates and touch still present
-    if((touch != nullptr) && is_touch && touch->IsTouched())
+    // Try to take mutex. 1 ms should be enough.
+    if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
     {
-      // Return last values
-      x = tx;
-      y = ty;
-      // Set result
-      result = true;
+      // If display driver gets touch coordinates and touch still present
+      if(is_touch && touch->IsTouched())
+      {
+        // Return last values
+        x = tx;
+        y = ty;
+        // Set result
+        result = true;
+      }
+      else
+      {
+        // If no touch - clear flag for prevent return wrong coordinates if
+        // display will touched without reads new coordinates
+        is_touch = false;
+      }
+      // Give semaphore for drawing frame - we can enter in this "if" statement
+      // only if mutex taken
+      touchscreen_mutex.Release();
     }
-    else
-    {
-      // If no touch - clear flag for prevent return wrong coordinates if
-      // display will touched without reads new coordinates
-      is_touch = false;
-    }
-    // Give semaphore for drawing frame - we can enter in this "if" statement
-    // only if mutex taken
-    touchscreen_mutex.Release();
   }
   // Return result
   return result;
 }
 
 // *************************************************************************
-// ***   Check touch   *****************************************************
+// ***   Public: Check touch   *********************************************
 // *************************************************************************
 bool DisplayDrv::IsTouched()
 {
   // Not touched by default
   bool touched = false;
-  // Try to take mutex. 1 ms should be enough.
-  if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+  // If pointer to touchscreen is present
+  if(touch != nullptr)
   {
-    // If pointer to touchscreen present
-    if(touch != nullptr)
+    // Try to take mutex. 1 ms should be enough.
+    if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
     {
       // Get status
       touched = touch->IsTouched();
+      // Give semaphore for drawing frame - we can enter in this "if" statement
+      // only if mutex taken
+      touchscreen_mutex.Release();
     }
-    // Give semaphore for drawing frame - we can enter in this "if" statement
-    // only if mutex taken
-    touchscreen_mutex.Release();
   }
   // Return status
   return touched;
 }
 
 // *****************************************************************************
-// ***   Calibrate Touchscreen   ***********************************************
+// ***   Public: Calibrate Touchscreen   ***************************************
 // *****************************************************************************
 void DisplayDrv::TouchCalibrate()
 {
