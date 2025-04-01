@@ -25,7 +25,7 @@
 #include "Rtos.h"
 
 // *****************************************************************************
-// ***   Get Instance   ********************************************************
+// ***   Public: Get Instance   ************************************************
 // *****************************************************************************
 SoundDrv& SoundDrv::GetInstance(void)
 {
@@ -36,20 +36,22 @@ SoundDrv& SoundDrv::GetInstance(void)
 }
 
 // *****************************************************************************
-// ***   Init Display Driver Task   ********************************************
+// ***   Public: Init Sound Driver Task   **************************************
 // *****************************************************************************
-void SoundDrv::InitTask(TIM_HandleTypeDef* htm, uint32_t ch)
+void SoundDrv::InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer)
 {
   // Save timer handle
-  htim = htm;
+  htim = &htm;
   // Save channel
   channel = ch;
+  // Save GPIO
+  buzzer_gpio = &buzzer;
   // Create task
   CreateTask();
 }
 
 // *****************************************************************************
-// ***   Sound Driver Setup   **************************************************
+// ***   Public: Sound Driver Setup   ******************************************
 // *****************************************************************************
 Result SoundDrv::Setup()
 {
@@ -60,7 +62,7 @@ Result SoundDrv::Setup()
 }
 
 // *****************************************************************************
-// ***   Sound Driver Loop   ***************************************************
+// ***   Public: Sound Driver Loop   *******************************************
 // *****************************************************************************
 Result SoundDrv::Loop()
 {
@@ -133,23 +135,23 @@ Result SoundDrv::Loop()
 }
 
 // *****************************************************************************
-// ***   Click function   ******************************************************
+// ***   Public: Click function   **********************************************
 // *****************************************************************************
 void SoundDrv::Click()
 {
-  if((mute == false) && (sound_table != nullptr))
+  if((mute == false) && (sound_table != nullptr) && (buzzer_gpio != nullptr))
   {
     // Set Speaker output pin for click
-    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+    buzzer_gpio->SetHigh();
     // Read when actual state changed
-    while(HAL_GPIO_ReadPin(BUZZER_GPIO_Port, BUZZER_Pin) == GPIO_PIN_RESET);
+    while(buzzer_gpio->IsLow());
     // Clear Speaker output pin
-    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+    buzzer_gpio->SetLow();
   }
 }
 
 // *****************************************************************************
-// ***   Beep function   *******************************************************
+// ***   Public: Beep function   ***********************************************
 // *****************************************************************************
 void SoundDrv::Beep(uint16_t freq, uint16_t del, bool pause_after_play)
 {
@@ -172,7 +174,7 @@ void SoundDrv::Beep(uint16_t freq, uint16_t del, bool pause_after_play)
 }
 
 // *****************************************************************************
-// ***   Play sound function   *************************************************
+// ***   Public: Play sound function   *****************************************
 // *****************************************************************************
 void SoundDrv::PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms, bool rep)
 {
@@ -210,7 +212,7 @@ void SoundDrv::PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms
 }
 
 // *****************************************************************************
-// ***   Stop sound function   *************************************************
+// ***   Public: Stop sound function   *****************************************
 // *****************************************************************************
 void SoundDrv::StopSound(void)
 {
@@ -233,7 +235,7 @@ void SoundDrv::StopSound(void)
 }
 
 // *****************************************************************************
-// ***   Mute sound function   *************************************************
+// ***   Public: Mute sound function   *****************************************
 // *****************************************************************************
 void SoundDrv::Mute(bool mute_flag)
 {
@@ -247,7 +249,7 @@ void SoundDrv::Mute(bool mute_flag)
 }
 
 // *****************************************************************************
-// ***   Is sound played function   ********************************************
+// ***   Public: Is sound played function   ************************************
 // *****************************************************************************
 bool SoundDrv::IsSoundPlayed(void)
 {
@@ -264,7 +266,7 @@ bool SoundDrv::IsSoundPlayed(void)
 }
 
 // *****************************************************************************
-// ***   Process Button Input function   ***************************************
+// ***   Private: Process Button Input function   ******************************
 // *****************************************************************************
 void SoundDrv::Tone(uint16_t freq)
 {
@@ -296,7 +298,7 @@ void SoundDrv::Tone(uint16_t freq)
     // Stop timer
     HAL_TIM_OC_Stop(htim, channel);
     // Clear Speaker output pin for decrease power consumer
-    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+    if(buzzer_gpio != nullptr) buzzer_gpio->SetLow();
   }
 }
 

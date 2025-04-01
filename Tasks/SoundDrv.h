@@ -59,6 +59,8 @@
 #include "RtosMutex.h"
 #include "RtosSemaphore.h"
 
+#include "IGpio.h"
+
 // *****************************************************************************
 // ***   Sound Driver Class. This class implement work with sound.   ***********
 // *****************************************************************************
@@ -66,54 +68,54 @@ class SoundDrv : public AppTask
 {
   public:
     // *************************************************************************
-    // ***   Get Instance   ****************************************************
+    // ***   Public: Get Instance   ********************************************
     // *************************************************************************
     // * This class is singleton. For use this class you must call GetInstance()
     // * to receive reference to Sound Driver class
     static SoundDrv& GetInstance(void);
 
     // *************************************************************************
-    // ***   Init Sound Driver Task   ******************************************
+    // ***   Public: Init Sound Driver Task   **********************************
     // *************************************************************************
-    virtual void InitTask(TIM_HandleTypeDef *htm, uint32_t ch);
+    virtual void InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer);
 
     // *************************************************************************
-    // ***   Sound Driver Setup   **********************************************
+    // ***   Public: Sound Driver Setup   **************************************
     // *************************************************************************
     virtual Result Setup();
 
     // *************************************************************************
-    // ***   Sound Driver Loop   ***********************************************
+    // ***   Public: Sound Driver Loop   ***************************************
     // *************************************************************************
     virtual Result Loop();
 
     // *************************************************************************
-    // ***   Click function   ***************************************************
+    // ***   Public: Click function   ******************************************
     // *************************************************************************
     void Click();
 
     // *************************************************************************
-    // ***   Beep function   ***************************************************
+    // ***   Public: Beep function   *******************************************
     // *************************************************************************
     void Beep(uint16_t freq, uint16_t del, bool pause_after_play = false);
 
     // *************************************************************************
-    // ***   Play sound function   *********************************************
+    // ***   Public: Play sound function   *************************************
     // *************************************************************************
-    void PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms = 100U, bool rep = false);
+    void PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms = 100u, bool rep = false);
 
     // *************************************************************************
-    // ***   Stop sound function   *********************************************
+    // ***   Public: Stop sound function   *************************************
     // *************************************************************************
     void StopSound(void);
 
     // *************************************************************************
-    // ***   Mute sound function   *********************************************
+    // ***   Public: Mute sound function   *************************************
     // *************************************************************************
     void Mute(bool mute_flag);
 
     // *************************************************************************
-    // ***   Is sound played function   ****************************************
+    // ***   Public: Is sound played function   ********************************
     // *************************************************************************
     bool IsSoundPlayed(void);
 
@@ -123,19 +125,22 @@ class SoundDrv : public AppTask
     // Timer channel
     uint32_t channel = 0u;
 
+    // Reference to buzzer GPIO
+    IGpio *buzzer_gpio = nullptr;
+
     // Ticks variable
-    uint32_t last_wake_ticks = 0U;
+    uint32_t last_wake_ticks = 0u;
 
     // Pointer to table contains melody
     const uint16_t* sound_table = nullptr;
     // Size of table
-    uint16_t sound_table_size = 0U;
+    uint16_t sound_table_size = 0u;
     // Current position
-    uint16_t sound_table_position = 0U;
+    uint16_t sound_table_position = 0u;
     // Current frequency delay
-    uint16_t current_delay = 0U;
+    uint16_t current_delay = 0u;
     // Time for one frequency in ms
-    uint32_t delay_ms = 100U;
+    uint32_t delay_ms = 100u;
     // Repeat flag
     bool repeat = false;
 
@@ -149,12 +154,12 @@ class SoundDrv : public AppTask
     RtosSemaphore sound_update;
 
     // *************************************************************************
-    // ***   Process Button Input function   ***********************************
+    // ***   Private: Process Button Input function   **************************
     // *************************************************************************
     void Tone(uint16_t freq);
 
     // *************************************************************************
-    // ** Private constructor. Only GetInstance() allow to access this class. **
+    // ** Private constructor: Only GetInstance() allow to access this class ***
     // *************************************************************************
     SoundDrv() : AppTask(SOUND_DRV_TASK_STACK_SIZE, SOUND_DRV_TASK_PRIORITY,
                          "SoundDrv") {};
