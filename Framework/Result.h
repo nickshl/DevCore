@@ -63,6 +63,7 @@ class Result
       RESULT_OK = 0,
 
       // ***   Generic   *******************************************************
+      ERR_CANCEL,
       ERR_NULL_PTR,
       ERR_BAD_PARAMETER,
       ERR_INVALID_ITEM,
