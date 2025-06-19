@@ -59,7 +59,7 @@ Result FT6236::Init(void)
         result = Result::ERR_INVALID_ITEM;
     }
   }
-  
+
   if(result.IsGood())
   {
     uint8_t id = 0u;
@@ -160,7 +160,7 @@ bool FT6236::GetXY(int32_t& x, int32_t& y)
 {
   // Get coordinates
   bool touched = GetRawXY(x, y);
-  // Convert raw coordinates to coorinates including rotation
+  // Convert raw coordinates to coordinates including rotation
   if(touched)
   {
     int32_t tmp = 0u;
@@ -184,7 +184,7 @@ bool FT6236::GetXY(int32_t& x, int32_t& y)
         y = tmp;
         break;
 
-      case ITouchscreen::ROTATION_TOP: // Intational fall trough - for TOP rotation we should't do anythyng
+      case ITouchscreen::ROTATION_TOP: // Intentional fall trough - for TOP rotation we should't do anything
       default:
         break;
     }

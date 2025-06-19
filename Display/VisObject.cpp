@@ -189,10 +189,12 @@ void VisObject::Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, i
 // *****************************************************************************
 void VisObject::InvalidateObjArea(bool force)
 {
+#if defined(UPDATE_AREA_ENABLED)
   // Only if VisObject is show
   if((IsShow() || force) && (list != nullptr))
   {
     // Invalidate area
     list->InvalidateArea(x_start, y_start, x_end, y_end);
   }
+#endif
 }

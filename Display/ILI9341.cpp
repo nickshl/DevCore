@@ -116,21 +116,21 @@
 // *****************************************************************************
 Result ILI9341::Init(void)
 {
+  // Reset sequence. Used only if GPIO pin used as LCD reset.
   if(display_rst != nullptr)
   {
-    // Reset sequence. Used only if GPIO pin used as LCD reset.
-    display_rst->SetHigh();
-    HAL_Delay(5);
-    display_rst->SetLow();
-    HAL_Delay(20);
-    display_rst->SetHigh();
-    HAL_Delay(150);
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(5u);              // Wait for 5 ms
+    display_rst->SetLow();  // Pull down reset line
+    Delay(20u);             // Wait for 20 ms
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(150u);            // Wait for 150 ms
   }
 
   // Exit Sleep
   WriteCommand(CMD_SWRESET);
   // Delay for execute previous command
-  HAL_Delay(100U);
+  Delay(100u);
 
   // Power control 1
   WriteCommand(CMD_PWCTR1);
@@ -257,7 +257,7 @@ Result ILI9341::Init(void)
   // Exit Sleep
   WriteCommand(CMD_SLPOUT);
   // Delay for execute previous command
-  HAL_Delay(120U);
+  Delay(120u);
   // Display on
   WriteCommand(CMD_DISPON);
 
@@ -281,7 +281,7 @@ Result ILI9341::WriteDataStream(uint8_t* data, uint32_t n)
 }
 
 // *****************************************************************************
-// ***   Public:  Check SPI transfer status   **********************************
+// ***   Public: Check SPI transfer status   ***********************************
 // *****************************************************************************
 bool ILI9341::IsTransferComplete(void)
 {
@@ -289,7 +289,7 @@ bool ILI9341::IsTransferComplete(void)
 }
 
 // *****************************************************************************
-// ***   Pull up CS line for LCD  **********************************************
+// ***   Public: Pull up CS line for LCD  **************************************
 // *****************************************************************************
 Result ILI9341::StopTransfer(void)
 {
@@ -305,7 +305,7 @@ Result ILI9341::StopTransfer(void)
 }
 
 // *****************************************************************************
-// ***   Set output window   ***************************************************
+// ***   Public: Set output window   *******************************************
 // *****************************************************************************
 Result ILI9341::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
@@ -322,15 +322,16 @@ Result ILI9341::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
   WriteData(y1);        // YEND
 
   WriteCommand(CMD_RAMWR); // write to RAM
-  
+
   // Prepare for write data
   display_dc.SetHigh(); // Data
+
   // Always Ok
   return Result::RESULT_OK;
 }
 
 // *****************************************************************************
-// ***   Set screen orientation   **********************************************
+// ***   Public: Set screen orientation   **************************************
 // *****************************************************************************
 Result ILI9341::SetRotation(IDisplay::Rotation r)
 {
@@ -370,7 +371,7 @@ Result ILI9341::SetRotation(IDisplay::Rotation r)
 }
 
 // *****************************************************************************
-// ***   Write color to screen   ***********************************************
+// ***   Public: Write color to screen   ***************************************
 // *****************************************************************************
 Result ILI9341::PushColor(color_t color)
 {
@@ -383,7 +384,7 @@ Result ILI9341::PushColor(color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw one pixel on  screen   *******************************************
+// ***   Public: Draw one pixel on  screen   ***********************************
 // *****************************************************************************
 Result ILI9341::DrawPixel(int16_t x, int16_t y, color_t color)
 {
@@ -399,7 +400,7 @@ Result ILI9341::DrawPixel(int16_t x, int16_t y, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw vertical line   **************************************************
+// ***   Public: Draw vertical line   ******************************************
 // *****************************************************************************
 Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 {
@@ -425,7 +426,7 @@ Result ILI9341::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw horizontal line   ************************************************
+// ***   Public: Draw horizontal line   ****************************************
 // *****************************************************************************
 Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 {
@@ -450,7 +451,7 @@ Result ILI9341::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 }
 
 // *****************************************************************************
-// ***   Fill rectangle on screen   ********************************************
+// ***   Public: Fill rectangle on screen   ************************************
 // *****************************************************************************
 Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color)
 {
@@ -465,9 +466,9 @@ Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t col
     uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
-    for(y=h; y>0; y--)
+    for(y = h; y > 0; y--)
     {
-      for(x=w; x>0; x--)
+      for(x = w; x > 0; x--)
       {
         spi.Write(&clr, sizeof(clr));
       }
@@ -479,7 +480,7 @@ Result ILI9341::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t col
 }
 
 // *****************************************************************************
-// ***   Invert display   ******************************************************
+// ***   Public: Invert display   **********************************************
 // *****************************************************************************
 Result ILI9341::InvertDisplay(bool invert)
 {
@@ -489,37 +490,46 @@ Result ILI9341::InvertDisplay(bool invert)
 }
 
 // *****************************************************************************
-// ***   Read data from SPI   **************************************************
+// ***   Private: Delay in ms    ***********************************************
 // *****************************************************************************
-inline uint8_t ILI9341::SpiRead(void)
+inline void ILI9341::Delay(uint32_t delay_ms)
 {
-  // Result variable
-  uint8_t r = 0;
-  // Pull down CS
-  display_cs.SetLow();
-  // Receive data
-  spi.Read(&r, sizeof(r));
-  // Pull up CS
-  display_cs.SetHigh();
-  // Return result
-  return r;
+  // If RTOS scheduler is running - we can use RTOS delay function to allow
+  // other tasks to work, but if it not - use HAL_Delay.
+  if(Rtos::IsSchedulerRunning()) RtosTick::DelayMs(delay_ms);
+  else                           HAL_Delay(delay_ms);
 }
 
 // *****************************************************************************
-// ***   Read data from display   **********************************************
+// ***   Private: Write command to SPI   ***************************************
 // *****************************************************************************
-inline uint8_t ILI9341::ReadData(void)
+inline void ILI9341::WriteCommand(uint8_t c)
 {
-  // Data
+  display_dc.SetLow(); // Command
+  SpiWrite(c);
+}
+
+// *****************************************************************************
+// ***   Private: Write data to SPI   ******************************************
+// *****************************************************************************
+inline void ILI9341::WriteData(uint8_t c)
+{
   display_dc.SetHigh(); // Data
-  // Receive data
-  uint8_t r = SpiRead();
-  // Return result
-  return r;
+  SpiWrite(c);
 }
 
 // *****************************************************************************
-// ***   Send read command ad read result   ************************************
+// ***   Private: Write byte to SPI   ******************************************
+// *****************************************************************************
+inline void ILI9341::SpiWrite(uint8_t c)
+{
+  display_cs.SetLow(); // Pull down CS
+  spi.Write(&c, sizeof(c));
+  display_cs.SetHigh(); // Pull up CS
+}
+
+// *****************************************************************************
+// ***   Private: Send read command ad read result   ***************************
 // *****************************************************************************
 uint8_t ILI9341::ReadCommand(uint8_t c)
 {
@@ -537,29 +547,31 @@ uint8_t ILI9341::ReadCommand(uint8_t c)
 }
 
 // *****************************************************************************
-// ***   Write byte to SPI   ***************************************************
+// ***   Private: Read data from display   *************************************
 // *****************************************************************************
-inline void ILI9341::SpiWrite(uint8_t c)
+inline uint8_t ILI9341::ReadData(void)
 {
-  display_cs.SetLow(); // Pull down CS
-  spi.Write(&c, sizeof(c));
-  display_cs.SetHigh(); // Pull up CS
-}
-
-// *****************************************************************************
-// ***   Write command to SPI   ************************************************
-// *****************************************************************************
-inline void ILI9341::WriteCommand(uint8_t c)
-{
-  display_dc.SetLow(); // Command
-  SpiWrite(c);
-}
-
-// *****************************************************************************
-// ***   Write data to SPI   ***************************************************
-// *****************************************************************************
-inline void ILI9341::WriteData(uint8_t c)
-{
+  // Data
   display_dc.SetHigh(); // Data
-  SpiWrite(c);
+  // Receive data
+  uint8_t r = SpiRead();
+  // Return result
+  return r;
+}
+
+// *****************************************************************************
+// ***   Private: Read data from SPI   *****************************************
+// *****************************************************************************
+inline uint8_t ILI9341::SpiRead(void)
+{
+  // Result variable
+  uint8_t r = 0;
+  // Pull down CS
+  display_cs.SetLow();
+  // Receive data
+  spi.Read(&r, sizeof(r));
+  // Pull up CS
+  display_cs.SetHigh();
+  // Return result
+  return r;
 }

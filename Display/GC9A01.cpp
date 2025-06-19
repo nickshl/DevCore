@@ -29,41 +29,41 @@
 // *****************************************************************************
 Result GC9A01::Init(void)
 {
+  // Reset sequence. Used only if GPIO pin used as LCD reset.
   if(display_rst != nullptr)
   {
-    // Reset sequence. Used only if GPIO pin used as LCD reset.
-    display_rst->SetHigh();
-    HAL_Delay(100);
-    display_rst->SetLow();
-    HAL_Delay(100);
-    display_rst->SetHigh();
-    HAL_Delay(100);
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(100u);            // Wait for 100 ms
+    display_rst->SetLow();  // Pull down reset line
+    Delay(100u);            // Wait for 100 ms
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(100u);            // Wait for 100 ms
   }
 
   // Set the resolution and scanning method of the screen
   // Set the read / write scan direction of the frame memory
   WriteCommand(0x36); // MX, MY, RGB mode
   WriteData(0XC8);    // 0x08 set RGB
-  
+
   // Set the initialization register
   WriteCommand(0xEF);
   WriteCommand(0xEB);
-  WriteData(0x14); 
+  WriteData(0x14);
 
   WriteCommand(0xFE);
   WriteCommand(0xEF);
 
   WriteCommand(0xEB);
-  WriteData(0x14); 
+  WriteData(0x14);
 
   WriteCommand(0x84);
-  WriteData(0x40); 
+  WriteData(0x40);
 
   WriteCommand(0x85);
-  WriteData(0xFF); 
+  WriteData(0xFF);
 
   WriteCommand(0x86);
-  WriteData(0xFF); 
+  WriteData(0xFF);
 
   WriteCommand(0x87);
   WriteData(0xFF);
@@ -72,26 +72,25 @@ Result GC9A01::Init(void)
   WriteData(0x0A);
 
   WriteCommand(0x89);
-  WriteData(0x21); 
+  WriteData(0x21);
 
   WriteCommand(0x8A);
-  WriteData(0x00); 
+  WriteData(0x00);
 
   WriteCommand(0x8B);
-  WriteData(0x80); 
+  WriteData(0x80);
 
   WriteCommand(0x8C);
-  WriteData(0x01); 
+  WriteData(0x01);
 
   WriteCommand(0x8D);
-  WriteData(0x01); 
+  WriteData(0x01);
 
   WriteCommand(0x8E);
-  WriteData(0xFF); 
+  WriteData(0xFF);
 
   WriteCommand(0x8F);
-  WriteData(0xFF); 
-
+  WriteData(0xFF);
 
   WriteCommand(0xB6);
   WriteData(0x00);
@@ -101,7 +100,7 @@ Result GC9A01::Init(void)
   WriteData(0x08); // Set as vertical screen
 
   WriteCommand(0x3A);
-  WriteData(0x05); 
+  WriteData(0x05);
 
 
   WriteCommand(0x90);
@@ -141,7 +140,7 @@ Result GC9A01::Init(void)
   WriteData(0x0c);
   WriteData(0x02);
 
-  WriteCommand(0xF0);   
+  WriteCommand(0xF0);
   WriteData(0x45);
   WriteData(0x09);
   WriteData(0x08);
@@ -149,16 +148,16 @@ Result GC9A01::Init(void)
   WriteData(0x26);
   WriteData(0x2A);
 
-  WriteCommand(0xF1);    
+  WriteCommand(0xF1);
   WriteData(0x43);
   WriteData(0x70);
   WriteData(0x72);
   WriteData(0x36);
-  WriteData(0x37);  
+  WriteData(0x37);
   WriteData(0x6F);
 
 
-  WriteCommand(0xF2);   
+  WriteCommand(0xF2);
   WriteData(0x45);
   WriteData(0x09);
   WriteData(0x08);
@@ -166,7 +165,7 @@ Result GC9A01::Init(void)
   WriteData(0x26);
   WriteData(0x2A);
 
-  WriteCommand(0xF3);   
+  WriteCommand(0xF3);
   WriteData(0x43);
   WriteData(0x70);
   WriteData(0x72);
@@ -174,9 +173,9 @@ Result GC9A01::Init(void)
   WriteData(0x37); 
   WriteData(0x6F);
 
-  WriteCommand(0xED);    
-  WriteData(0x1B); 
-  WriteData(0x0B); 
+  WriteCommand(0xED);
+  WriteData(0x1B);
+  WriteData(0x0B);
 
   WriteCommand(0xAE);
   WriteData(0x77);
@@ -189,8 +188,8 @@ Result GC9A01::Init(void)
   WriteData(0x07);
   WriteData(0x07);
   WriteData(0x04);
-  WriteData(0x0E); 
-  WriteData(0x0F); 
+  WriteData(0x0E);
+  WriteData(0x0F);
   WriteData(0x09);
   WriteData(0x07);
   WriteData(0x08);
@@ -204,13 +203,13 @@ Result GC9A01::Init(void)
   WriteData(0x0D);
   WriteData(0x71);
   WriteData(0xED);
-  WriteData(0x70); 
+  WriteData(0x70);
   WriteData(0x70);
   WriteData(0x18);
   WriteData(0x0F);
   WriteData(0x71);
   WriteData(0xEF);
-  WriteData(0x70); 
+  WriteData(0x70);
   WriteData(0x70);
 
   WriteCommand(0x63);
@@ -218,13 +217,13 @@ Result GC9A01::Init(void)
   WriteData(0x11);
   WriteData(0x71);
   WriteData(0xF1);
-  WriteData(0x70); 
+  WriteData(0x70);
   WriteData(0x70);
   WriteData(0x18);
   WriteData(0x13);
   WriteData(0x71);
   WriteData(0xF3);
-  WriteData(0x70); 
+  WriteData(0x70);
   WriteData(0x70);
 
   WriteCommand(0x64);
@@ -261,25 +260,25 @@ Result GC9A01::Init(void)
   WriteData(0x98);
 
   WriteCommand(0x74);
-  WriteData(0x10);    
-  WriteData(0x85);    
+  WriteData(0x10);
+  WriteData(0x85);
   WriteData(0x80);
   WriteData(0x00); 
   WriteData(0x00); 
   WriteData(0x4E);
-  WriteData(0x00);        
+  WriteData(0x00);
 
   WriteCommand(0x98);
   WriteData(0x3e);
   WriteData(0x07);
 
-  WriteCommand(0x35);    
+  WriteCommand(0x35);
   WriteCommand(0x21);
 
   WriteCommand(0x11);
-  HAL_Delay(120);
+  Delay(120u);
   WriteCommand(0x29);
-  HAL_Delay(20U);
+  Delay(20u);
 
   // Always Ok
   return Result::RESULT_OK;
@@ -301,7 +300,7 @@ Result GC9A01::WriteDataStream(uint8_t* data, uint32_t n)
 }
 
 // *****************************************************************************
-// ***   Public:  Check SPI transfer status   **********************************
+// ***   Public: Check SPI transfer status   ***********************************
 // *****************************************************************************
 bool GC9A01::IsTransferComplete(void)
 {
@@ -309,7 +308,7 @@ bool GC9A01::IsTransferComplete(void)
 }
 
 // *****************************************************************************
-// ***   Pull up CS line for LCD  **********************************************
+// ***   Public: Pull up CS line for LCD  **************************************
 // *****************************************************************************
 Result GC9A01::StopTransfer(void)
 {
@@ -325,7 +324,7 @@ Result GC9A01::StopTransfer(void)
 }
 
 // *****************************************************************************
-// ***   Set output window   ***************************************************
+// ***   Public: Set output window   *******************************************
 // *****************************************************************************
 Result GC9A01::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
@@ -353,7 +352,7 @@ Result GC9A01::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 }
 
 // *****************************************************************************
-// ***   Set screen orientation   **********************************************
+// ***   Public: Set screen orientation   **************************************
 // *****************************************************************************
 Result GC9A01::SetRotation(IDisplay::Rotation r)
 {
@@ -393,7 +392,7 @@ Result GC9A01::SetRotation(IDisplay::Rotation r)
 }
 
 // *****************************************************************************
-// ***   Write color to screen   ***********************************************
+// ***   Public: Write color to screen   ***************************************
 // *****************************************************************************
 Result GC9A01::PushColor(color_t color)
 {
@@ -406,7 +405,7 @@ Result GC9A01::PushColor(color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw one pixel on  screen   *******************************************
+// ***   Public: Draw one pixel on  screen   ***********************************
 // *****************************************************************************
 Result GC9A01::DrawPixel(int16_t x, int16_t y, color_t color)
 {
@@ -422,7 +421,7 @@ Result GC9A01::DrawPixel(int16_t x, int16_t y, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw vertical line   **************************************************
+// ***   Public: Draw vertical line   ******************************************
 // *****************************************************************************
 Result GC9A01::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 {
@@ -448,7 +447,7 @@ Result GC9A01::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw horizontal line   ************************************************
+// ***   Public: Draw horizontal line   ****************************************
 // *****************************************************************************
 Result GC9A01::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 {
@@ -473,7 +472,7 @@ Result GC9A01::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 }
 
 // *****************************************************************************
-// ***   Fill rectangle on screen   ********************************************
+// ***   Public: Fill rectangle on screen   ************************************
 // *****************************************************************************
 Result GC9A01::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color)
 {
@@ -488,9 +487,9 @@ Result GC9A01::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t colo
     uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
-    for(y=h; y>0; y--)
+    for(y = h; y > 0; y--)
     {
-      for(x=w; x>0; x--)
+      for(x = w; x > 0; x--)
       {
         spi.Write(&clr, sizeof(clr));
       }
@@ -502,7 +501,7 @@ Result GC9A01::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t colo
 }
 
 // *****************************************************************************
-// ***   Invert display   ******************************************************
+// ***   Public: Invert display   **********************************************
 // *****************************************************************************
 Result GC9A01::InvertDisplay(bool invert)
 {
@@ -512,37 +511,46 @@ Result GC9A01::InvertDisplay(bool invert)
 }
 
 // *****************************************************************************
-// ***   Read data from SPI   **************************************************
+// ***   Private: Delay in ms    ***********************************************
 // *****************************************************************************
-inline uint8_t GC9A01::SpiRead(void)
+inline void GC9A01::Delay(uint32_t delay_ms)
 {
-  // Result variable
-  uint8_t r = 0;
-  // Pull down CS
-  display_cs.SetLow();
-  // Receive data
-  spi.Read(&r, sizeof(r));
-  // Pull up CS
-  display_cs.SetHigh();
-  // Return result
-  return r;
+  // If RTOS scheduler is running - we can use RTOS delay function to allow
+  // other tasks to work, but if it not - use HAL_Delay.
+  if(Rtos::IsSchedulerRunning()) RtosTick::DelayMs(delay_ms);
+  else                           HAL_Delay(delay_ms);
 }
 
 // *****************************************************************************
-// ***   Read data from display   **********************************************
+// ***   Private: Write command to SPI   ***************************************
 // *****************************************************************************
-inline uint8_t GC9A01::ReadData(void)
+inline void GC9A01::WriteCommand(uint8_t c)
 {
-  // Data
+  display_dc.SetLow(); // Command
+  SpiWrite(c);
+}
+
+// *****************************************************************************
+// ***   Private: Write data to SPI   ******************************************
+// *****************************************************************************
+inline void GC9A01::WriteData(uint8_t c)
+{
   display_dc.SetHigh(); // Data
-  // Receive data
-  uint8_t r = SpiRead();
-  // Return result
-  return r;
+  SpiWrite(c);
 }
 
 // *****************************************************************************
-// ***   Send read command ad read result   ************************************
+// ***   Private: Write byte to SPI   ******************************************
+// *****************************************************************************
+inline void GC9A01::SpiWrite(uint8_t c)
+{
+  display_cs.SetLow(); // Pull down CS
+  spi.Write(&c, sizeof(c));
+  display_cs.SetHigh(); // Pull up CS
+}
+
+// *****************************************************************************
+// ***   Private: Send read command ad read result   ***************************
 // *****************************************************************************
 uint8_t GC9A01::ReadCommand(uint8_t c)
 {
@@ -560,29 +568,31 @@ uint8_t GC9A01::ReadCommand(uint8_t c)
 }
 
 // *****************************************************************************
-// ***   Write byte to SPI   ***************************************************
+// ***   Private: Read data from display   *************************************
 // *****************************************************************************
-inline void GC9A01::SpiWrite(uint8_t c)
+inline uint8_t GC9A01::ReadData(void)
 {
-  display_cs.SetLow(); // Pull down CS
-  spi.Write(&c, sizeof(c));
-  display_cs.SetHigh(); // Pull up CS
-}
-
-// *****************************************************************************
-// ***   Write command to SPI   ************************************************
-// *****************************************************************************
-inline void GC9A01::WriteCommand(uint8_t c)
-{
-  display_dc.SetLow(); // Command
-  SpiWrite(c);
-}
-
-// *****************************************************************************
-// ***   Write data to SPI   ***************************************************
-// *****************************************************************************
-inline void GC9A01::WriteData(uint8_t c)
-{
+  // Data
   display_dc.SetHigh(); // Data
-  SpiWrite(c);
+  // Receive data
+  uint8_t r = SpiRead();
+  // Return result
+  return r;
+}
+
+// *****************************************************************************
+// ***   Private: Read data from SPI   *****************************************
+// *****************************************************************************
+inline uint8_t GC9A01::SpiRead(void)
+{
+  // Result variable
+  uint8_t r = 0;
+  // Pull down CS
+  display_cs.SetLow();
+  // Receive data
+  spi.Read(&r, sizeof(r));
+  // Pull up CS
+  display_cs.SetHigh();
+  // Return result
+  return r;
 }

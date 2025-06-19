@@ -376,7 +376,7 @@ Result DisplayDrv::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_
   // Unlock display line
   line_mutex.Release();
 #else
-  // All checks passed - result good
+  // Update area isn't enabled - always good
   result = Result::RESULT_OK;
 #endif
 

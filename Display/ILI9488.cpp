@@ -29,13 +29,14 @@
 #define CMD_NOP        0x00 // No Operation
 #define CMD_SWRESET    0x01 // Software Reset
 #define CMD_RDDID      0x04 // Read Display Identification Information
+#define CMD_RDERRDSI   0x05 // Read Number of the Errors on DSI
 #define CMD_RDDST      0x09 // Read Display Status
 
 #define CMD_RDMODE     0x0A // Read Display Power Mode
 #define CMD_RDMADCTL   0x0B // Read Display MADCTL
 #define CMD_RDPIXFMT   0x0C // Read Display Pixel Format
 #define CMD_RDIMGFMT   0x0D // Read Display Image Format
-//#define CMD_RDSIGMOD   0x0E // Read Display Signal Mode
+#define CMD_RDSIGMOD   0x0E // Read Display Signal Mode
 #define CMD_RDSELFDIAG 0x0F // Read Display Self-Diagnostic Result
 
 #define CMD_SLPIN      0x10 // Enter Sleep Mode
@@ -45,66 +46,66 @@
 
 #define CMD_INVOFF     0x20 // Display Inversion OFF
 #define CMD_INVON      0x21 // Display Inversion ON
-#define CMD_GAMMASET   0x26 // Gamma Set
+#define CMD_ALLPIXOFF  0x22 // All Pixel OFF
+#define CMD_ALLPIXON   0x23 // All Pixel ON
 #define CMD_DISPOFF    0x28 // Display OFF
 #define CMD_DISPON     0x29 // Display ON
 
 #define CMD_CASET      0x2A // Column Address Set
 #define CMD_PASET      0x2B // Page Address Set
 #define CMD_RAMWR      0x2C // Memory Write
-//#define CMD_GSET       0x2D // Color SET
 #define CMD_RAMRD      0x2E // Memory Read
 
 #define CMD_PTLAR      0x30 // Partial Area
-//#define CMD_VSCRDEF    0x33 // Vertical Scrolling Definition
-//#define CMD_TELOFF     0x34 // Tearing Effect Line OFF
-//#define CMD_TELON      0x35 // Tearing Effect Line ON
+#define CMD_VSCRDEF    0x33 // Vertical Scrolling Definition
+#define CMD_TELOFF     0x34 // Tearing Effect Line OFF
+#define CMD_TELON      0x35 // Tearing Effect Line ON
 #define CMD_MADCTL     0x36 // Memory Access Control
-//#define CMD_VSAADDR    0x37 // Vertical Scrolling Start Address
-//#define CMD_IDLMOFF    0x38 // Idle Mode OFF
-//#define CMD_IDLMON     0x39 // Idle Mode ON
+#define CMD_VSAADDR    0x37 // Vertical Scrolling Start Address
+#define CMD_IDLMOFF    0x38 // Idle Mode OFF
+#define CMD_IDLMON     0x39 // Idle Mode ON
 #define CMD_PIXFMT     0x3A // Pixel Format Set
+#define CMD_MEMWC      0x3C // Memory Write Continue
+#define CMD_MEMRC      0x3E // Memory Read Continue
 
 #define CMD_RGBISC     0xB0 // RGB Interface Signal Control
 #define CMD_FRMCTR1    0xB1 // Frame Control (In Normal Mode)
 #define CMD_FRMCTR2    0xB2 // Frame Control (In Idle Mode)
 #define CMD_FRMCTR3    0xB3 // Frame Control (In Partial Mode)
 #define CMD_INVCTR     0xB4 // Display Inversion Control
-//#define CMD_BLKPC      0xB5 // Blanking Porch Control
+#define CMD_BLKPC      0xB5 // Blanking Porch Control
 #define CMD_DFUNCTR    0xB6 // Display Function Control
 
 #define CMD_PWCTR1     0xC0 // Power Control 1
 #define CMD_PWCTR2     0xC1 // Power Control 2
-#define CMD_PWCTR3     0xC2
-#define CMD_PWCTR4     0xC3
-#define CMD_PWCTR5     0xC4
-//#define CMD_PWCTR6     0xFC
+#define CMD_PWCTR3     0xC2 // Power Control 3
+#define CMD_PWCTR4     0xC3 // Power Control 4
+#define CMD_PWCTR5     0xC4 // Power Control 5
 #define CMD_VMCTR1     0xC5 // VCOM Control 1
-#define CMD_VMCTR2     0xC7 // VCOM Control 2
-//#define CMD_PWCTRA     0xCB // Power control A
-//#define CMD_PWCTRB     0xCF // Power control B
 
-//#define CMD_NVMEMWR    0xD0 // NV Memory Write
-//#define CMD_NVMEMPK    0xD1 // NV Memory Protection Key
-//#define CMD_NVMEMSR    0xD2 // NV Memory Status Read
-//#define CMD_READID4    0xD3 // Read ID4
+#define CMD_NVMEMWR    0xD0 // NV Memory Write
+#define CMD_NVMEMPK    0xD1 // NV Memory Protection Key
+#define CMD_NVMEMSR    0xD2 // NV Memory Status Read
+#define CMD_READID4    0xD3 // Read ID4
 
 #define CMD_RDID1      0xDA // Read ID1
 #define CMD_RDID2      0xDB // Read ID2
 #define CMD_RDID3      0xDC // Read ID3
-#define CMD_RDID4      0xDD
 
 #define CMD_GMCTRP1    0xE0 // Positive Gamma Correction
 #define CMD_GMCTRN1    0xE1 // Negative Gamma Correction
-//#define CMD_DGCTRL1    0xE2 // Digital Gamma Control 1
-//#define CMD_DGCTRL2    0xE3 // Digital Gamma Control 2
-//#define CMD_DRVTMCA    0xE8 // Driver timing control A
-//#define CMD_DRVTMCB    0xEA // Driver timing control B
-//#define CMD_PWONSC     0xED // Power on sequence control
+#define CMD_DGCTRL1    0xE2 // Digital Gamma Control 1
+#define CMD_DGCTRL2    0xE3 // Digital Gamma Control 2
+#define CMD_SETIMGF    0xE9 // Set Image Function
 
-//#define CMD_EN3G       0xF2 // Enable 3 gamma control
-//#define CMD_INTCTRL    0xF6 // Interface Control
-#define CMD_PUMPRC     0xF7 // Pump ratio control
+#define CMD_ADJCTRL2   0xF2 // Adjust Control 2
+#define CMD_ADJCTRL3   0xF7 // Adjust Control 3
+#define CMD_ADJCTRL4   0xF8 // Adjust Control 4
+#define CMD_ADJCTRL5   0xF9 // Adjust Control 5
+#define CMD_SPIRCS     0xFB // SPI Read Command Setting
+#define CMD_ADJCTRL6   0xFC // Adjust Control 6
+#define CMD_ADJCTRL7   0xFF // Adjust Control 7
+
 
 // Memory Access Control register bits definitions
 
@@ -116,47 +117,26 @@
 #define MADCTL_RGB 0x00 // RGB Order (No BGR bit)
 #define MADCTL_MH  0x04 // Horizontal Refresh ORDER
 
-// Color definitions
-#define ILI9488_BLACK       0x0000      //   0,   0,   0
-#define ILI9488_NAVY        0x000F      //   0,   0, 128
-#define ILI9488_DARKGREEN   0x03E0      //   0, 128,   0
-#define ILI9488_DARKCYAN    0x03EF      //   0, 128, 128
-#define ILI9488_MAROON      0x7800      // 128,   0,   0
-#define ILI9488_PURPLE      0x780F      // 128,   0, 128
-#define ILI9488_OLIVE       0x7BE0      // 128, 128,   0
-#define ILI9488_LIGHTGREY   0xC618      // 192, 192, 192
-#define ILI9488_DARKGREY    0x7BEF      // 128, 128, 128
-#define ILI9488_BLUE        0x001F      //   0,   0, 255
-#define ILI9488_GREEN       0x07E0      //   0, 255,   0
-#define ILI9488_CYAN        0x07FF      //   0, 255, 255
-#define ILI9488_RED         0xF800      // 255,   0,   0
-#define ILI9488_MAGENTA     0xF81F      // 255,   0, 255
-#define ILI9488_YELLOW      0xFFE0      // 255, 255,   0
-#define ILI9488_WHITE       0xFFFF      // 255, 255, 255
-#define ILI9488_ORANGE      0xFD20      // 255, 165,   0
-#define ILI9488_GREENYELLOW 0xAFE5      // 173, 255,  47
-#define ILI9488_PINK        0xF81F
-
 // *****************************************************************************
 // ***   Public: Init screen   *************************************************
 // *****************************************************************************
 Result ILI9488::Init(void)
 {
+  // Reset sequence. Used only if GPIO pin used as LCD reset.
   if(display_rst != nullptr)
   {
-    // Reset sequence. Used only if GPIO pin used as LCD reset.
-    display_rst->SetHigh();
-    HAL_Delay(5);
-    display_rst->SetLow();
-    HAL_Delay(20);
-    display_rst->SetHigh();
-    HAL_Delay(150);
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(5u);              // Wait for 5 ms
+    display_rst->SetLow();  // Pull down reset line
+    Delay(20u);             // Wait for 20 ms
+    display_rst->SetHigh(); // Pull up reset line
+    Delay(150u);            // Wait for 150 ms
   }
 
   // Exit Sleep
   WriteCommand(CMD_SWRESET);
   // Delay for execute previous command
-  HAL_Delay(100U);
+  Delay(100u);
 
   // Power control 1
   WriteCommand(CMD_PWCTR1);
@@ -185,12 +165,12 @@ Result ILI9488::Init(void)
   WriteCommand(CMD_FRMCTR1);
   WriteData(0xA0); // Frame rate 60Hz
 
-  // Pump ratio control
-  WriteCommand(CMD_PUMPRC);
+  // Adjust control 3: data from datasheet
+  WriteCommand(CMD_ADJCTRL3);
   WriteData(0xA9);
   WriteData(0x51);
   WriteData(0x2C);
-  WriteData(0x82);    // D7 stream, loose
+  WriteData(0x82);
 
   // Memory Access Control
   WriteCommand(CMD_MADCTL);
@@ -243,7 +223,7 @@ Result ILI9488::Init(void)
   // Display Function Control RGB/MCU Interface Control
   WriteCommand(CMD_DFUNCTR);
   WriteData(0x02); // MCU
-  WriteData(0x02); // Source,Gate scan dieection
+  WriteData(0x02); // Source, Gate scan direction
 
   WriteCommand(0xE9); // Set Image Function
   WriteData(0x00);    // Disable 24 bit data
@@ -251,7 +231,7 @@ Result ILI9488::Init(void)
   // Exit Sleep
   WriteCommand(CMD_SLPOUT);
   // Delay for execute previous command
-  HAL_Delay(120U);
+  Delay(120u);
   // Display on
   WriteCommand(CMD_DISPON);
 
@@ -345,7 +325,7 @@ Result ILI9488::WriteDataStream(uint8_t* data, uint32_t n)
 }
 
 // *****************************************************************************
-// ***   Public:  Check SPI transfer status   **********************************
+// ***   Public: Check SPI transfer status   ***********************************
 // *****************************************************************************
 bool ILI9488::IsTransferComplete(void)
 {
@@ -353,7 +333,7 @@ bool ILI9488::IsTransferComplete(void)
 }
 
 // *****************************************************************************
-// ***   Pull up CS line for LCD  **********************************************
+// ***   Public: Pull up CS line for LCD  **************************************
 // *****************************************************************************
 Result ILI9488::StopTransfer(void)
 {
@@ -369,7 +349,7 @@ Result ILI9488::StopTransfer(void)
 }
 
 // *****************************************************************************
-// ***   Set output window   ***************************************************
+// ***   Public: Set output window   *******************************************
 // *****************************************************************************
 Result ILI9488::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
@@ -389,12 +369,13 @@ Result ILI9488::SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
 
   // Prepare for write data
   display_dc.SetHigh(); // Data
+
   // Always Ok
   return Result::RESULT_OK;
 }
 
 // *****************************************************************************
-// ***   Set screen orientation   **********************************************
+// ***   Public: Set screen orientation   **************************************
 // *****************************************************************************
 Result ILI9488::SetRotation(IDisplay::Rotation r)
 {
@@ -434,7 +415,7 @@ Result ILI9488::SetRotation(IDisplay::Rotation r)
 }
 
 // *****************************************************************************
-// ***   Write color to screen   ***********************************************
+// ***   Public: Write color to screen   ***************************************
 // *****************************************************************************
 Result ILI9488::PushColor(uint32_t color)
 {
@@ -450,7 +431,7 @@ Result ILI9488::PushColor(uint32_t color)
 }
 
 // *****************************************************************************
-// ***   Write color to screen   ***********************************************
+// ***   Public: Write color to screen   ***************************************
 // *****************************************************************************
 Result ILI9488::PushColor(uint16_t color)
 {
@@ -473,7 +454,7 @@ Result ILI9488::PushColor(uint16_t color)
 }
 
 // *****************************************************************************
-// ***   Write color to screen   ***********************************************
+// ***   Public: Write color to screen   ***************************************
 // *****************************************************************************
 Result ILI9488::PushColor(uint8_t color)
 {
@@ -487,7 +468,7 @@ Result ILI9488::PushColor(uint8_t color)
 }
 
 // *****************************************************************************
-// ***   Draw one pixel on  screen   *******************************************
+// ***   Public: Draw one pixel on  screen   ***********************************
 // *****************************************************************************
 Result ILI9488::DrawPixel(int16_t x, int16_t y, color_t color)
 {
@@ -502,7 +483,7 @@ Result ILI9488::DrawPixel(int16_t x, int16_t y, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw vertical line   **************************************************
+// ***   Public: Draw vertical line   ******************************************
 // *****************************************************************************
 Result ILI9488::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 {
@@ -528,7 +509,7 @@ Result ILI9488::DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color)
 }
 
 // *****************************************************************************
-// ***   Draw horizontal line   ************************************************
+// ***   Public: Draw horizontal line   ****************************************
 // *****************************************************************************
 Result ILI9488::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 {
@@ -553,7 +534,7 @@ Result ILI9488::DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color)
 }
 
 // *****************************************************************************
-// ***   Fill rectangle on screen   ********************************************
+// ***   Public: Fill rectangle on screen   ************************************
 // *****************************************************************************
 Result ILI9488::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color)
 {
@@ -568,9 +549,9 @@ Result ILI9488::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t col
     uint8_t clr = ((color >> 8) & 0x00FF) | ((color << 8) & 0xFF00);
 
     display_cs.SetLow(); // Pull down CS
-    for(y=h; y>0; y--)
+    for(y = h; y > 0; y--)
     {
-      for(x=w; x>0; x--)
+      for(x = w; x > 0; x--)
       {
         spi.Write(&clr, sizeof(clr));
       }
@@ -582,7 +563,7 @@ Result ILI9488::FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t col
 }
 
 // *****************************************************************************
-// ***   Invert display   ******************************************************
+// ***   Public: Invert display   **********************************************
 // *****************************************************************************
 Result ILI9488::InvertDisplay(bool invert)
 {
@@ -592,37 +573,46 @@ Result ILI9488::InvertDisplay(bool invert)
 }
 
 // *****************************************************************************
-// ***   Read data from SPI   **************************************************
+// ***   Private: Delay in ms    ***********************************************
 // *****************************************************************************
-inline uint8_t ILI9488::SpiRead(void)
+inline void ILI9488::Delay(uint32_t delay_ms)
 {
-  // Result variable
-  uint8_t r = 0;
-  // Pull down CS
-  display_cs.SetLow();
-  // Receive data
-  spi.Read(&r, sizeof(r));
-  // Pull up CS
-  display_cs.SetHigh();
-  // Return result
-  return r;
+  // If RTOS scheduler is running - we can use RTOS delay function to allow
+  // other tasks to work, but if it not - use HAL_Delay.
+  if(Rtos::IsSchedulerRunning()) RtosTick::DelayMs(delay_ms);
+  else                           HAL_Delay(delay_ms);
 }
 
 // *****************************************************************************
-// ***   Read data from display   **********************************************
+// ***   Private: Write command to SPI   ***************************************
 // *****************************************************************************
-inline uint8_t ILI9488::ReadData(void)
+inline void ILI9488::WriteCommand(uint8_t c)
 {
-  // Data
+  display_dc.SetLow(); // Command
+  SpiWrite(c);
+}
+
+// *****************************************************************************
+// ***   Private: Write data to SPI   ******************************************
+// *****************************************************************************
+inline void ILI9488::WriteData(uint8_t c)
+{
   display_dc.SetHigh(); // Data
-  // Receive data
-  uint8_t r = SpiRead();
-  // Return result
-  return r;
+  SpiWrite(c);
 }
 
 // *****************************************************************************
-// ***   Send read command ad read result   ************************************
+// ***   Private: Write byte to SPI   ******************************************
+// *****************************************************************************
+inline void ILI9488::SpiWrite(uint8_t c)
+{
+  display_cs.SetLow(); // Pull down CS
+  spi.Write(&c, sizeof(c));
+  display_cs.SetHigh(); // Pull up CS
+}
+
+// *****************************************************************************
+// ***   Private: Send read command ad read result   ***************************
 // *****************************************************************************
 uint8_t ILI9488::ReadCommand(uint8_t c)
 {
@@ -640,29 +630,31 @@ uint8_t ILI9488::ReadCommand(uint8_t c)
 }
 
 // *****************************************************************************
-// ***   Write byte to SPI   ***************************************************
+// ***   Private: Read data from display   *************************************
 // *****************************************************************************
-inline void ILI9488::SpiWrite(uint8_t c)
+inline uint8_t ILI9488::ReadData(void)
 {
-  display_cs.SetLow(); // Pull down CS
-  spi.Write(&c, sizeof(c));
-  display_cs.SetHigh(); // Pull up CS
-}
-
-// *****************************************************************************
-// ***   Write command to SPI   ************************************************
-// *****************************************************************************
-inline void ILI9488::WriteCommand(uint8_t c)
-{
-  display_dc.SetLow(); // Command
-  SpiWrite(c);
-}
-
-// *****************************************************************************
-// ***   Write data to SPI   ***************************************************
-// *****************************************************************************
-inline void ILI9488::WriteData(uint8_t c)
-{
+  // Data
   display_dc.SetHigh(); // Data
-  SpiWrite(c);
+  // Receive data
+  uint8_t r = SpiRead();
+  // Return result
+  return r;
+}
+
+// *****************************************************************************
+// ***   Private: Read data from SPI   *****************************************
+// *****************************************************************************
+inline uint8_t ILI9488::SpiRead(void)
+{
+  // Result variable
+  uint8_t r = 0;
+  // Pull down CS
+  display_cs.SetLow();
+  // Receive data
+  spi.Read(&r, sizeof(r));
+  // Pull up CS
+  display_cs.SetHigh();
+  // Return result
+  return r;
 }

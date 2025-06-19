@@ -324,6 +324,7 @@ void VisList::Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int
 // *****************************************************************************
 void VisList::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, int16_t end_y)
 {
+#if defined(UPDATE_AREA_ENABLED)
   // Find invalidate absolute coordinates
   int32_t sx = GetStartX() + start_x;
   int32_t sy = GetStartY() + start_y;
@@ -344,6 +345,7 @@ void VisList::InvalidateArea(int16_t start_x, int16_t start_y, int16_t end_x, in
     // Invalidate area
     DisplayDrv::GetInstance().InvalidateArea(sx, sy, ex, ey);
   }
+#endif
 }
 
 // *****************************************************************************
