@@ -68,14 +68,20 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool 
 // *****************************************************************************
 void Box::SetBorderWidth(int32_t width)
 {
-  // Lock object for changes
-  LockVisObject();
-  // Set new border width
-  border_width = width;
-  // Invalidate area
-  InvalidateObjArea();
-  // Unlock object after changes
-  UnlockVisObject();
+  // Update box only if border width changed
+  if(width != border_width)
+  {
+    // Lock object for changes
+    LockVisObject();
+    // Set new border width
+    border_width = width;
+    // Set background color the same if border width is zero
+    if(border_width == 0) bg_color = color;
+    // Invalidate area
+    InvalidateObjArea();
+    // Unlock object after changes
+    UnlockVisObject();
+  }
 }
 
 // *****************************************************************************
@@ -83,16 +89,20 @@ void Box::SetBorderWidth(int32_t width)
 // *****************************************************************************
 void Box::SetColor(color_t c)
 {
-  // Lock object for changes
-  LockVisObject();
-  // Do changes
-  color = c;
-  // Set background color the same if border width is zero
-  if(border_width == 0) bg_color = c;
-  // Invalidate area
-  InvalidateObjArea();
-  // Unlock object after changes
-  UnlockVisObject();
+  // Update box only if color changed
+  if(c != color)
+  {
+    // Lock object for changes
+    LockVisObject();
+    // Do changes
+    color = c;
+    // Set background color the same if border width is zero
+    if(border_width == 0) bg_color = c;
+    // Invalidate area
+    InvalidateObjArea();
+    // Unlock object after changes
+    UnlockVisObject();
+  }
 }
 
 // *****************************************************************************
@@ -100,14 +110,18 @@ void Box::SetColor(color_t c)
 // *****************************************************************************
 void Box::SetBackgroundColor(color_t bgc)
 {
-  // Lock object for changes
-  LockVisObject();
-  // Do changes
-  bg_color = bgc;
-  // Invalidate area
-  InvalidateObjArea();
-  // Unlock object after changes
-  UnlockVisObject();
+  // Update box only if background color changed
+  if(bgc != bg_color)
+  {
+    // Lock object for changes
+    LockVisObject();
+    // Do changes
+    bg_color = bgc;
+    // Invalidate area
+    InvalidateObjArea();
+    // Unlock object after changes
+    UnlockVisObject();
+  }
 }
 
 // *****************************************************************************
@@ -456,15 +470,15 @@ void Line::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-Circle::Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
+Circle::Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill, bool is_even)
 {
-  SetParams(x, y, r, c, is_fill);
+  SetParams(x, y, r, c, is_fill, is_even);
 }
 
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
+void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill, bool is_even)
 {
   // Lock object for changes
   LockVisObject();
@@ -481,10 +495,29 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill)
   height = r*2;
   rotation = 0;
   fill = is_fill;
+  even = is_even;
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
   UnlockVisObject();
+}
+
+// *************************************************************************
+// ***   SetColor   **************************************II****************
+// *************************************************************************
+void Circle::SetColor(color_t c)
+{
+  if(c != color)
+  {
+    // Lock object for changes
+    LockVisObject();
+    // Do changes
+    color = c;
+    // Invalidate area
+    InvalidateObjArea();
+    // Unlock object after changes
+    UnlockVisObject();
+  }
 }
 
 // *****************************************************************************
@@ -518,7 +551,7 @@ void Circle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
     int32_t shift = (radius * 4799) >> 14;
 
     // Top and bottom half of circle(on Y axis)
-    if((line <= y_start + shift) || (line >= y_end - shift))
+    if((line <= y_start + shift) || (line >= y_end - shift - (even ? 1 : 0)))
     {
       // X and Y variables
       int32_t x = 0;
@@ -528,7 +561,7 @@ void Circle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
       // Calculate cycle
       while(y >= x)
       {
-        if((y0 + y == line) || (y0 - y == line))
+        if((y0 + y == (even ? line + 1 : line)) || (y0 - y == line))
         {
           // Update buffer
           UpdateBuffer(buf, n, x0 - x, x0 + x);
@@ -560,7 +593,7 @@ void Circle::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
       // Calculate cycle
       while(x >= y)
       {
-        if((y0 + y == line) || (y0 - y == line))
+        if((y0 + y == (even ? line + 1 : line)) || (y0 - y == line))
         {
           // Update buffer
           UpdateBuffer(buf, n, x0 - x, x0 + x);
@@ -612,7 +645,7 @@ void Circle::UpdateBuffer(color_t* buf, int32_t n, int32_t xl, int32_t xr)
   if(fill)
   {
     if(xl < 0) xl = 0;
-    if(xr < n) n = xr;// + 1 ???
+    if(xr < n) n = xr + (even ? 0 : 1); // We have to draw line from xl to xr including both coordinates, so we have to set n to xr + 1
     for(;xl < n; xl++)
     {
       buf[xl] = color;
@@ -621,7 +654,7 @@ void Circle::UpdateBuffer(color_t* buf, int32_t n, int32_t xl, int32_t xr)
   else
   {
     if((xl > 0) && (xl < n)) buf[xl] = color;
-    if((xr > 0) && (xr < n)) buf[xr] = color;
+    if((xr > 0) && (xr < n)) buf[even ? xr - 1 : xr] = color;
   }
 }
 

@@ -169,7 +169,7 @@ Result AppTask::IntLoop()
       switch(ctrl_msg.type)
       {
         case CTRL_TIMER_MSG:
-          result = TimerExpired();
+          result = TimerExpired((uint32_t)ctrl_msg.ptr); // Call timer and pass time passed since last call
           break;
 
         case CTRL_CALLBACK_MSG:
@@ -302,15 +302,24 @@ void AppTask::TimerCallback(void* ptr)
     // Create control timer message
     CtrlQueueMsg timer_msg;
     timer_msg.type = CTRL_TIMER_MSG;
+    timer_msg.ptr = (void*)task.timer_skip_cnt; // Save timer skip counter as pointer
 
     // Send message to the control queue
     result = task.SendControlMessage(timer_msg, task.timer_priority);
-  }
 
-  // Check result
-  if(result.IsBad())
+    // Check result and if it good clear time variable
+    if(result.IsGood())
+    {
+      task.timer_skip_cnt = 0u; // Clear skip counter after successful send
+    }
+    else
+    {
+      task.timer_skip_cnt++; // Increment timer skip counter
+    }
+  }
+  else
   {
-    // TODO: implement error handling
+    // Should never happen, but if it does - set error
     Break();
   }
 }

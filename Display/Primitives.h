@@ -197,12 +197,17 @@ class Circle : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
-    Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false);
+    Circle(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false, bool is_even = false);
 
     // *************************************************************************
     // ***   SetParams   **************************************II***************
     // *************************************************************************
-    void SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false);
+    void SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill = false, bool is_even = false);
+
+    // *************************************************************************
+    // ***   SetColor   ********************************************************
+    // *************************************************************************
+    void SetColor(color_t c);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
@@ -219,6 +224,8 @@ class Circle : public VisObject
     color_t color = COLOR_BLACK;
     // Circle radius
     int16_t radius = 0;
+    // If circle is even - decrease radius by half a pixel(or diameter by 1 pixel)
+    bool even = false;
     // Is box fill ?
     bool fill = false;
 

@@ -47,18 +47,24 @@ Image::Image(int32_t x, int32_t y, const ImageDesc& img_dsc)
 // *****************************************************************************
 // ***   Set Image function   **************************************************
 // *****************************************************************************
-void Image::SetImage(const ImageDesc& img_dsc, bool semaphore_taken)
+void Image::SetImage(const ImageDesc& img_dsc)
 {
-  if(semaphore_taken == false) LockVisObject();
-  width = img_dsc.width;
-  height = img_dsc.height;
-  x_end = x_start + width - 1;
-  y_end = y_start + height - 1;
-  bits_per_pixel = img_dsc.bits_per_pixel;
-  img = img_dsc.img;
-  palette = img_dsc.palette;
-  transparent_color = img_dsc.transparent_color;
-  if(semaphore_taken == false) UnlockVisObject();
+  LockVisObject();
+  // Update image only if something changed
+  if((img != img_dsc.img) || (width != img_dsc.width) || (height != img_dsc.height) || (palette != img_dsc.palette) || (transparent_color != img_dsc.transparent_color))
+  {
+    InvalidateObjArea();
+    width = img_dsc.width;
+    height = img_dsc.height;
+    x_end = x_start + width - 1;
+    y_end = y_start + height - 1;
+    bits_per_pixel = img_dsc.bits_per_pixel;
+    img = img_dsc.img;
+    palette = img_dsc.palette;
+    transparent_color = img_dsc.transparent_color;
+    InvalidateObjArea();
+  }
+  UnlockVisObject();
 }
 
 // *****************************************************************************
@@ -67,7 +73,7 @@ void Image::SetImage(const ImageDesc& img_dsc, bool semaphore_taken)
 void Image::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
-  if((line >= y_start) && (line <= y_end))
+  if((line >= y_start) && (line <= y_end) && (img != nullptr))
   {
     // Find idx in the image buffer
     uint32_t idx = (line - y_start) * width;
@@ -173,12 +179,66 @@ ImagePalette::ImagePalette(int32_t x, int32_t y, int32_t w, int32_t h, const uin
 }
 
 // *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
+Result ImagePalette::SetImage(const ImageDesc& img_dsc)
+{
+  Result result = Result::RESULT_OK;
+
+  if(img_dsc.bits_per_pixel == sizeof(uint8_t) * 8u)
+  {
+    LockVisObject();
+    // Update image only if something changed
+    if((img != img_dsc.img) || (width != img_dsc.width) || (height != img_dsc.height) || (palette != img_dsc.palette))
+    {
+      InvalidateObjArea();
+      width = img_dsc.width;
+      height = img_dsc.height;
+      x_end = x_start + width - 1;
+      y_end = y_start + height - 1;
+      img = img_dsc.imgp;
+      palette = img_dsc.palette;
+      InvalidateObjArea();
+    }
+    UnlockVisObject();
+  }
+  else
+  {
+    // Error - only palette images is supported
+    result = Result::ERR_BAD_PARAMETER;
+  }
+
+  return result;
+}
+
+// *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
+void ImagePalette::SetImage(const uint8_t* p_img, int32_t w, int32_t h, const color_t* p_palette)
+{
+  LockVisObject();
+  // Update image only if something changed
+  if((img != p_img) || (width != w) || (height != h) || (palette != p_palette))
+  {
+    InvalidateObjArea();
+    width = w;
+    height = h;
+    x_end = x_start + width - 1;
+    y_end = y_start + height - 1;
+    img = p_img;
+    palette = p_palette;
+    InvalidateObjArea();
+  }
+  UnlockVisObject();
+}
+
+// *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
 void ImagePalette::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
-  if((line >= y_start) && (line <= y_end))
+  if((line >= y_start) && (line <= y_end) && (img != nullptr) && (palette != nullptr))
   {
     // Find start x position
     int32_t start = x_start - start_x;
@@ -206,7 +266,7 @@ void ImagePalette::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t sta
 void ImagePalette::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
-  if((row >= x_start) && (row <= x_end))
+  if((row >= x_start) && (row <= x_end) && (img != nullptr) && (palette != nullptr))
   {
     // Find start x position
     int32_t start = y_start - start_y;
@@ -245,12 +305,64 @@ ImageBitmap::ImageBitmap(int32_t x, int32_t y, int32_t w, int32_t h, const color
 }
 
 // *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
+Result ImageBitmap::SetImage(const ImageDesc& img_dsc)
+{
+  Result result = Result::RESULT_OK;
+
+  if(img_dsc.bits_per_pixel == sizeof(color_t) * 8u)
+  {
+    LockVisObject();
+    // Update image only if something changed
+    if((img != img_dsc.img) || (width != img_dsc.width) || (height != img_dsc.height))
+    {
+      InvalidateObjArea();
+      width = img_dsc.width;
+      height = img_dsc.height;
+      x_end = x_start + width - 1;
+      y_end = y_start + height - 1;
+      img = img_dsc.imgb;
+      InvalidateObjArea();
+    }
+    UnlockVisObject();
+  }
+  else
+  {
+    // Error - only bitmap images is supported
+    result = Result::ERR_BAD_PARAMETER;
+  }
+
+  return result;
+}
+
+// *************************************************************************
+// ***   Set Image function   **********************************************
+// *************************************************************************
+void ImageBitmap::SetImage(const color_t* p_img, int32_t w, int32_t h)
+{
+  LockVisObject();
+  // Update image only if something changed
+  if((img != p_img) || (width != w) || (height != h))
+  {
+    InvalidateObjArea();
+    width = w;
+    height = h;
+    x_end = x_start + width - 1;
+    y_end = y_start + height - 1;
+    img = p_img;
+    InvalidateObjArea();
+  }
+  UnlockVisObject();
+}
+
+// *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
 void ImageBitmap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw only if needed
-  if((line >= y_start) && (line <= y_end))
+  if((line >= y_start) && (line <= y_end) && (img != nullptr))
   {
     // Find start x position
     int32_t start = x_start - start_x;
@@ -278,7 +390,7 @@ void ImageBitmap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
 void ImageBitmap::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Draw only if needed
-  if((row >= x_start) && (row <= x_end))
+  if((row >= x_start) && (row <= x_end) && (img != nullptr))
   {
     // Find start x position
     int32_t start = y_start - start_y;

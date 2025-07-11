@@ -57,22 +57,22 @@ extern const color_t PALETTE_676[256];
 typedef struct typeImageDesc
 {
   // Image width
-  uint16_t width;
+  uint16_t width = 0u;
   // Image height
-  uint16_t height;
+  uint16_t height = 0u;
   // Bits per pixel
-  uint8_t bits_per_pixel;
+  uint8_t bits_per_pixel = 0u;
   // Pointer to image data
   union
   {
-    const uint8_t*  imgp;
-    const color_t*  imgb;
-    const void*     img;
+    const void*    img  = nullptr;
+    const uint8_t* imgp;
+    const color_t* imgb;
   };
   // Pointer to palette
-  const color_t* palette;
+  const color_t* palette = nullptr;
   // Transparent color (-1 no transparent colors)
-  int32_t transparent_color;
+  int32_t transparent_color = -1;
 } ImageDesc;
 
 // *****************************************************************************
@@ -92,6 +92,16 @@ class Image : public VisObject
     Image(int32_t x, int32_t y, const ImageDesc& img_dsc);
 
     // *************************************************************************
+    // ***   Set Image function   **********************************************
+    // *************************************************************************
+    void SetImage(const ImageDesc& img_dsc);
+
+    // *************************************************************************
+    // ***   Set Horizontal Flip function   ************************************
+    // *************************************************************************
+    inline void SetHorizontalFlip(bool flip) {hor_mirror = flip;}
+
+    // *************************************************************************
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t y = 0);
@@ -100,16 +110,6 @@ class Image : public VisObject
     // ***   Put line in buffer   **********************************************
     // *************************************************************************
     virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
-
-    // *************************************************************************
-    // ***   Set Horizontal Flip function   ************************************
-    // *************************************************************************
-    void SetHorizontalFlip(bool flip) {hor_mirror = flip;}
-
-    // *************************************************************************
-    // ***   Set Image function   **********************************************
-    // *************************************************************************
-    void SetImage(const ImageDesc& img_dsc, bool semaphore_taken = false);
 
   protected:
     // Bits per pixel
@@ -133,7 +133,22 @@ class ImagePalette : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
+    ImagePalette() {};
+
+    // *************************************************************************
+    // ***   Constructor   *****************************************************
+    // *************************************************************************
     ImagePalette(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* p_img, const color_t* p_palette);
+
+    // *************************************************************************
+    // ***   Set Image function   **********************************************
+    // *************************************************************************
+    Result SetImage(const ImageDesc& img_dsc);
+
+    // *************************************************************************
+    // ***   Set Image function   **********************************************
+    // *************************************************************************
+    void SetImage(const uint8_t* p_img, int32_t w, int32_t h, const color_t* p_palette);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
@@ -147,9 +162,9 @@ class ImagePalette : public VisObject
 
   private:
     // Pointer to the image
-    const uint8_t* img;
+    const uint8_t* img = nullptr;
     // Pointer to the palette
-    const color_t* palette;
+    const color_t* palette = nullptr;
 };
 
 // *****************************************************************************
@@ -161,7 +176,22 @@ class ImageBitmap : public VisObject
     // *************************************************************************
     // ***   Constructor   *****************************************************
     // *************************************************************************
+    ImageBitmap() {};
+
+    // *************************************************************************
+    // ***   Constructor   *****************************************************
+    // *************************************************************************
     ImageBitmap(int32_t x, int32_t y, int32_t w, int32_t h, const color_t* p_img);
+
+    // *************************************************************************
+    // ***   Set Image function   **********************************************
+    // *************************************************************************
+    Result SetImage(const ImageDesc& img_dsc);
+
+    // *************************************************************************
+    // ***   Set Image function   **********************************************
+    // *************************************************************************
+    void SetImage(const color_t* p_img, int32_t w, int32_t h);
 
     // *************************************************************************
     // ***   Put line in buffer   **********************************************
@@ -175,7 +205,7 @@ class ImageBitmap : public VisObject
 
   private:
     // Pointer to the image
-    const color_t* img;
+    const color_t* img = nullptr;
 };
 
 #endif

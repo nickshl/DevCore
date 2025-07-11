@@ -130,7 +130,7 @@ template <class T, int N> class CircularBuffer
     // *************************************************************************
     // ***   Public: IsFilled   ************************************************
     // *************************************************************************
-    bool IsFilled(void)
+    inline bool IsFilled(void)
     {
       return filled;
     }
@@ -138,7 +138,7 @@ template <class T, int N> class CircularBuffer
     // *************************************************************************
     // ***   Public: GetBufferPointer   ****************************************
     // *************************************************************************
-    T* GetBufferPointer(void)
+    inline T* GetBufferPointer(void)
     {
       // Return result
       return array;

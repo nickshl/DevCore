@@ -75,6 +75,11 @@ class SoundDrv : public AppTask
     static SoundDrv& GetInstance(void);
 
     // *************************************************************************
+    // ***   Public: InitTask from AppTask to prevent warning   ****************
+    // *************************************************************************
+    using AppTask::InitTask;
+
+    // *************************************************************************
     // ***   Public: Init Sound Driver Task   **********************************
     // *************************************************************************
     virtual void InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer);

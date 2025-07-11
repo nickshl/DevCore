@@ -124,7 +124,7 @@ class AppTask
     // ***   IntervalTimerExpired function   ***********************************
     // *************************************************************************
     // * Empty virtual function - some tasks may not have TimerExpired() actions
-    virtual Result TimerExpired() {return Result::RESULT_OK;}
+    virtual Result TimerExpired(uint32_t missed_cnt) {return Result::RESULT_OK;}
 
     // *************************************************************************
     // ***   ProcessMessage function   *****************************************
@@ -177,6 +177,8 @@ class AppTask
     RtosTimer timer;
     // Flag indicates that timer control message have to be priority
     bool timer_priority = false;
+    // How many times timer skipped call because of the queue error
+    uint32_t timer_skip_cnt = 0u;
 
     // Task stack size
     uint16_t stack_size;

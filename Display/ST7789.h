@@ -1,0 +1,172 @@
+//******************************************************************************
+//  @file ST7789.h
+//  @author Nicolai Shlapunov
+//
+//  @details DevCore: ST7789 Low Level Driver Class, header
+//
+//  @section LICENSE
+//
+//   Software License Agreement (BSD License)
+//
+//   Copyright (c) 2025, Devtronic & Nicolai Shlapunov
+//   All rights reserved.
+//
+//   Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions are met:
+//   1. Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//   2. Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//   3. Neither the name of the Devtronic nor the names of its contributors
+//      may be used to endorse or promote products derived from this software
+//      without specific prior written permission.
+//
+//   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
+//   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+//   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//   IN NO EVENT SHALL DEVTRONIC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+//   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+//   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+//   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//******************************************************************************
+
+#ifndef ST7789_h
+#define ST7789_h
+
+// *****************************************************************************
+// ***   Includes   ************************************************************
+// *****************************************************************************
+#include <DevCfg.h>
+#include "IDisplay.h"
+#include "ISpi.h"
+#include "IGpio.h"
+
+// *****************************************************************************
+// ***   ST7789   *************************************************************
+// *****************************************************************************
+class ST7789 : public IDisplay
+{
+  public:
+    // *************************************************************************
+    // ***   Public: Constructor   *********************************************
+    // *************************************************************************
+    explicit ST7789(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
+      IDisplay(in_width, in_height, 2), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {};
+
+    // *************************************************************************
+    // ***   Public: Init screen   *********************************************
+    // *************************************************************************
+    virtual Result Init(void);
+
+    // *************************************************************************
+    // ***   Public: Write data stream to SPI   ********************************
+    // *************************************************************************
+    virtual Result WriteDataStream(uint8_t* data, uint32_t n);
+
+    // *************************************************************************
+    // ***   Public: Check SPI transfer status  ********************************
+    // *************************************************************************
+    virtual bool IsTransferComplete(void);
+
+    // *************************************************************************
+    // ***   Public: Pull up CS line for LCD  **********************************
+    // *************************************************************************
+    virtual Result StopTransfer(void);
+
+    // *************************************************************************
+    // ***   Public: Set output window   ***************************************
+    // *************************************************************************
+    virtual Result SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+
+    // *************************************************************************
+    // ***   Public: Set screen orientation   **********************************
+    // *************************************************************************
+    virtual Result SetRotation(IDisplay::Rotation r);
+
+    // *************************************************************************
+    // ***   Public: Write color to screen   ***********************************
+    // *************************************************************************
+    virtual Result PushColor(color_t color);
+
+    // *************************************************************************
+    // ***   Public: Draw one pixel on  screen   *******************************
+    // *************************************************************************
+    virtual Result DrawPixel(int16_t x, int16_t y, color_t color);
+
+    // *************************************************************************
+    // ***   Public: Draw vertical line   **************************************
+    // *************************************************************************
+    virtual Result DrawFastVLine(int16_t x, int16_t y, int16_t h, color_t color);
+
+    // *************************************************************************
+    // ***   Public: Draw horizontal line   ************************************
+    // *************************************************************************
+    virtual Result DrawFastHLine(int16_t x, int16_t y, int16_t w, color_t color);
+
+    // *************************************************************************
+    // ***   Public: Fill rectangle on screen   ********************************
+    // *************************************************************************
+    virtual Result FillRect(int16_t x, int16_t y, int16_t w, int16_t h, color_t color);
+
+    // *************************************************************************
+    // ***   Public: Invert display   ******************************************
+    // *************************************************************************
+    virtual Result InvertDisplay(bool invert);
+
+  private:
+    // Some displays have width and height less than ST7789 offer(320x240).
+    // Those displays utilize only the part of the screen, and it may not be
+    // in the particular corner. So, we need offsets for window to set.
+    int32_t display_x_start = 0;
+    int32_t display_y_start = 0;
+
+    // Handle to SPI used for display
+    ISpi& spi;
+    // Reference to CS and DC - mandatory
+    IGpio& display_cs;
+    IGpio& display_dc;
+    // Pointer to Reset - optional
+    IGpio* display_rst = nullptr;
+
+    // *************************************************************************
+    // ***   Private: Delay in ms    *******************************************
+    // *************************************************************************
+    inline void Delay(uint32_t delay_ms);
+
+    // *************************************************************************
+    // ***   Private: Write command to SPI   ***********************************
+    // *************************************************************************
+    inline void WriteCommand(uint8_t c);
+
+    // *************************************************************************
+    // ***   Private: Write data to SPI   **************************************
+    // *************************************************************************
+    inline void WriteData(uint8_t c);
+
+    // *************************************************************************
+    // ***   Private: Write byte to SPI   **************************************
+    // *************************************************************************
+    inline void SpiWrite(uint8_t c);
+
+    // *************************************************************************
+    // ***   Private: Send read command ad read result   ***********************
+    // *************************************************************************
+    uint8_t ReadCommand(uint8_t c);
+
+    // *************************************************************************
+    // ***   Private: Read data from display   *********************************
+    // *************************************************************************
+    inline uint8_t ReadData(void);
+
+    // *************************************************************************
+    // ***   Private: Read data from SPI   *************************************
+    // *************************************************************************
+    inline uint8_t SpiRead(void);
+};
+
+#endif

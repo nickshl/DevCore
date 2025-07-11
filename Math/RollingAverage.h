@@ -106,7 +106,7 @@ template <class T, int N> class RollingAverage : public CircularBuffer<T, N>
     // *************************************************************************
     // ***   Public: GetSum   **************************************************
     // *************************************************************************
-    T GetSum(void)
+    inline T GetSum(void)
     {
       return sum;
     }
@@ -114,7 +114,7 @@ template <class T, int N> class RollingAverage : public CircularBuffer<T, N>
     // *************************************************************************
     // ***   Public: GetAverage   **********************************************
     // *************************************************************************
-    T GetAverage(void)
+    inline T GetAverage(void)
     {
       return average;
     }

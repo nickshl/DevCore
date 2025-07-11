@@ -180,13 +180,13 @@ class IDisplay
     // Byte(s) per pixel
     const int32_t byte_per_pixel = 0u;
     // Width during initialization(need because of rotation)
-    const int32_t init_width = 0U;
+    const int32_t init_width = 0u;
     // Height during initialization(need because of rotation)
-    const int32_t init_height = 0U;
+    const int32_t init_height = 0u;
     // Current width
-    int32_t width = 0U;
+    int32_t width = 0u;
     // Current height
-    int32_t height = 0U;
+    int32_t height = 0u;
     // Rotation
     Rotation rotation = ROTATION_TOP;
 

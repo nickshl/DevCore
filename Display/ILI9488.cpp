@@ -106,7 +106,6 @@
 #define CMD_ADJCTRL6   0xFC // Adjust Control 6
 #define CMD_ADJCTRL7   0xFF // Adjust Control 7
 
-
 // Memory Access Control register bits definitions
 
 #define MADCTL_MY  0x80 // Row Address Order
@@ -133,7 +132,7 @@ Result ILI9488::Init(void)
     Delay(150u);            // Wait for 150 ms
   }
 
-  // Exit Sleep
+  // Reset display
   WriteCommand(CMD_SWRESET);
   // Delay for execute previous command
   Delay(100u);

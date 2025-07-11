@@ -119,6 +119,11 @@ class InputDrv : public AppTask
     static InputDrv& GetInstance(void);
 
     // *************************************************************************
+    // ***   Public: InitTask from AppTask to prevent warning   ****************
+    // *************************************************************************
+    using AppTask::InitTask;
+
+    // *************************************************************************
     // ***   Init Input Driver Task   ******************************************
     // *************************************************************************
     // * This function initialize Input Driver class. If htim provided, this 
@@ -159,7 +164,7 @@ class InputDrv : public AppTask
     // *************************************************************************
     // Return button state: true - pressed, false - unpressed
     bool GetButtonState(PortType port, ButtonType button);
-    
+
     // *************************************************************************
     // ***   Get button state   ************************************************
     // *************************************************************************

@@ -84,6 +84,11 @@ class DisplayDrv : public AppTask
     static DisplayDrv& GetInstance(void);
 
     // *************************************************************************
+    // ***   Public: InitTask from AppTask to prevent warning   ****************
+    // *************************************************************************
+    using AppTask::InitTask;
+
+    // *************************************************************************
     // ***   Public: Init Display Driver Task   ********************************
     // *************************************************************************
     void InitTask(IDisplay& in_display, ITouchscreen& in_touch = *((ITouchscreen*)(nullptr)));

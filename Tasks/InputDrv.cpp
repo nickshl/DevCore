@@ -152,7 +152,7 @@ void InputDrv::ProcessButtonInput(ButtonProfile& button)
 {
   // Read Button state
   bool new_status = (HAL_GPIO_ReadPin(button.button_port, button.button_pin) == button.pin_state);
-    
+
   // No sense do something if button status already set
   if(button.btn_state != new_status)
   {
@@ -200,7 +200,7 @@ void InputDrv::ProcessEncoderInput(EncoderProfile& encoder)
   // Read Button state
   uint8_t en_new_status = (HAL_GPIO_ReadPin(encoder.enc_clk_port, encoder.enc_clk_pin) << 1) |
                            HAL_GPIO_ReadPin(encoder.enc_data_port, encoder.enc_data_pin);
-    
+
   // States must be different
   if(en_new_status != encoder.enc_state)
   {
@@ -246,7 +246,6 @@ void InputDrv::ProcessJoystickInput(JoystickProfile& joystick, PortType port)
 // *****************************************************************************
 void InputDrv::EmulateButtonsByJoystick(PortType port)
 {
-
   // Center values
   int32_t x_val;
   int32_t y_val;
