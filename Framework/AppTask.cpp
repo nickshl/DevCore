@@ -77,7 +77,7 @@ Result AppTask::Callback(const CallbackPtr func_ptr, void* obj_ptr, void* ptr)
 // *****************************************************************************
 // ***   Create task function   ************************************************
 // *****************************************************************************
-void AppTask::CreateTask()
+Result AppTask::CreateTask()
 {
   Result result = Result::RESULT_OK;
 
@@ -112,6 +112,9 @@ void AppTask::CreateTask()
     // TODO: implement error handling
     Break();
   }
+
+  // Return result
+  return result;
 }
 
 // *****************************************************************************

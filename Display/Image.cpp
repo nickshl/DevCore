@@ -336,9 +336,9 @@ Result ImageBitmap::SetImage(const ImageDesc& img_dsc)
   return result;
 }
 
-// *************************************************************************
-// ***   Set Image function   **********************************************
-// *************************************************************************
+// *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
 void ImageBitmap::SetImage(const color_t* p_img, int32_t w, int32_t h)
 {
   LockVisObject();
@@ -375,7 +375,7 @@ void ImageBitmap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
     // Have sense draw only if end pointer in buffer
     if(x_end > 0)
     {
-      int idx = (line - y_start) * width;
+      int32_t idx = (line - y_start) * width;
       for(int32_t i = start; i <= end; i++)
       {
         buf[i] = img[idx++];
@@ -405,6 +405,137 @@ void ImageBitmap::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start
     {
       // Not implemented yet
     }
+  }
+}
+
+// *****************************************************************************
+// *****************************************************************************
+// ***   ImageBinary   *********************************************************
+// *****************************************************************************
+// *****************************************************************************
+
+// *****************************************************************************
+// ***   Constructor   *********************************************************
+// *****************************************************************************
+ImageBinary::ImageBinary(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* p_img)
+{
+  x_start = x;
+  y_start = y;
+  x_end = x + w - 1;
+  y_end = y + h - 1;
+  width = w;
+  height = h;
+  img = p_img;
+}
+
+// *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
+Result ImageBinary::SetImage(const ImageDesc& img_dsc)
+{
+  Result result = Result::RESULT_OK;
+
+  if(img_dsc.bits_per_pixel == 1u)
+  {
+    LockVisObject();
+    // Update image only if something changed
+    if((img != img_dsc.img) || (width != img_dsc.width) || (height != img_dsc.height))
+    {
+      InvalidateObjArea();
+      width = img_dsc.width;
+      height = img_dsc.height;
+      x_end = x_start + width - 1;
+      y_end = y_start + height - 1;
+      img = img_dsc.imgp;
+      transparent_color = img_dsc.transparent_color;
+      InvalidateObjArea();
+    }
+    UnlockVisObject();
+  }
+  else
+  {
+    // Error - only bitmap images is supported
+    result = Result::ERR_BAD_PARAMETER;
+  }
+
+  return result;
+}
+
+// *****************************************************************************
+// ***   Set Image function   **************************************************
+// *****************************************************************************
+void ImageBinary::SetImage(const uint8_t* p_img, int32_t w, int32_t h)
+{
+  LockVisObject();
+  // Update image only if something changed
+  if((img != p_img) || (width != w) || (height != h))
+  {
+    InvalidateObjArea();
+    width = w;
+    height = h;
+    x_end = x_start + width - 1;
+    y_end = y_start + height - 1;
+    img = p_img;
+    InvalidateObjArea();
+  }
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void ImageBinary::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
+{
+  // Draw only if needed
+  if((line >= y_start) && (line <= y_end) && (img != nullptr))
+  {
+    // Find idx in the image buffer. Since it binary image, it can have up to
+    // 7 unused "pixels" in the end of line
+    int32_t idx = (line - y_start) * (((width % 8) == 0) ? (width / 8) : (width / 8 + 1));
+
+    // Find start x position
+    int32_t start = x_start - start_x;
+    // Prevent write in memory before buffer
+    if(start < 0)
+    {
+      // Minus minus - plus
+      idx -= start / 8;
+      start = 0;
+    }
+    // Find start x position
+    int32_t end = x_end - start_x;
+    // Prevent buffer overflow
+    if(end >= n) end = n - 1;
+    // Have sense draw only if end pointer in buffer
+    if(x_end > 0)
+    {
+      // Draw image
+      for(int32_t i = start; i <= end; i++)
+      {
+        if((img[idx] >> (i % 8u)) & 0x01u)
+        {
+          if(color != transparent_color) buf[i] = color;
+        }
+        else
+        {
+          if(bg_color != transparent_color) buf[i] = bg_color;
+        }
+        // Advance pointer
+        if((i%8) == 7) idx++;
+      }
+    }
+  }
+}
+
+// *****************************************************************************
+// ***   Put line in buffer   **************************************************
+// *****************************************************************************
+void ImageBinary::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
+{
+  // Draw only if needed
+  if((row >= x_start) && (row <= x_end) && (img != nullptr))
+  {
+    // Not implemented yet
   }
 }
 

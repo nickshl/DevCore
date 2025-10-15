@@ -61,7 +61,6 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& 
   height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
-  rotation = 0;
   // Invalidate area for new string(needed if new string longer than old)
   InvalidateObjArea();
   // Unlock object after changes
@@ -89,7 +88,6 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_
   height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
-  rotation = 0;
   // Invalidate area for new string(needed if new string longer than old)
   InvalidateObjArea();
   // Unlock object after changes

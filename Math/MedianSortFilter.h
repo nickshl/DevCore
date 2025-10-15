@@ -1,14 +1,14 @@
 //******************************************************************************
-//  @file RollingAverage.h
+//  @file MedianSortFilter.h
 //  @author Nicolai Shlapunov
 //
-//  @details Rolling Average template class, header
+//  @details Median template class, header
 //
 //  @section LICENSE
 //
 //   Software License Agreement (Modified BSD License)
 //
-//   Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2025, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,8 @@
 //
 //******************************************************************************
 
-#ifndef RollingAverage_h
-#define RollingAverage_h
+#ifndef MedianSortFilter_h
+#define MedianSortFilter_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -54,30 +54,25 @@
 
 #include "CircularBuffer.h"
 
-//#include <climits>
-
-// TODO: remove!
-//#include <cmath>
-
 // *****************************************************************************
-// ***   Rolling Average template class   **************************************
+// ***   Median template class   ***********************************************
 // *****************************************************************************
-template <class T, int N, class ST = T> class RollingAverage : public CircularBuffer<T, N, ST>
+template <class T, int N, class ST = T> class MedianSortFilter : public CircularBuffer<T, N, ST>
 {
   public:
     // *************************************************************************
-    // ***   Public: RollingAverage   ******************************************
+    // ***   Public: Median   **************************************************
     // *************************************************************************
-    RollingAverage()
+    MedianSortFilter()
     {
       // Clear array
       Clear();
     }
 
     // *************************************************************************
-    // ***   Public: ~RollingAverage   *****************************************
+    // ***   Public: ~Median   ************************************************
     // *************************************************************************
-    ~RollingAverage() {};
+    ~MedianSortFilter() {};
 
     // *************************************************************************
     // ***   Public: Add   *****************************************************
@@ -96,17 +91,25 @@ template <class T, int N, class ST = T> class RollingAverage : public CircularBu
       // Add value into circular buffer
       CircularBuffer<T,N,ST>::Add(value);
 
-      // Find average
-      average = sum / static_cast<ST>(CircularBuffer<T,N,ST>::GetItemsCnt());
+      // Calculate median
+      CalcMedian();
 
       // Return result
-      return average;
+      return median;
+    }
+
+    // *************************************************************************
+    // ***   Public: GetMedian   ***********************************************
+    // *************************************************************************
+    inline T GetMedian(void)
+    {
+      return median;
     }
 
     // *************************************************************************
     // ***   Public: GetSum   **************************************************
     // *************************************************************************
-    inline ST GetSum(void)
+    inline T GetSum(void)
     {
       return sum;
     }
@@ -116,7 +119,7 @@ template <class T, int N, class ST = T> class RollingAverage : public CircularBu
     // *************************************************************************
     inline T GetAverage(void)
     {
-      return average;
+      return (sum / static_cast<T>(CircularBuffer<T,N,ST>::GetItemsCnt()));
     }
 
     // *************************************************************************
@@ -125,9 +128,9 @@ template <class T, int N, class ST = T> class RollingAverage : public CircularBu
     T GetAverage(uint32_t n)
     {
       // Get sum for n elements and correct n if needed
-      ST avg = CircularBuffer<T,N,ST>::GetSumByCnt(n);
+      T avg = CircularBuffer<T,N,ST>::GetSumByCnt(n);
       // Find average
-      avg = avg / static_cast<ST>(n);
+      avg = avg / static_cast<T>(n);
       // Return result
       return avg;
     }
@@ -139,72 +142,106 @@ template <class T, int N, class ST = T> class RollingAverage : public CircularBu
     {
       // Calculate sum from array
       sum = CircularBuffer<T,N,ST>::GetSum();
-      // Find average
-      average = sum / static_cast<ST>(CircularBuffer<T,N,ST>::GetItemsCnt());
       // Return result
-      return average;
+      return (sum / static_cast<T>(CircularBuffer<T,N,ST>::GetItemsCnt()));
     }
-
-//    // *************************************************************************
-//    // ***   Public: GetStandardDeviation   ************************************
-//    // *************************************************************************
-//    T GetStandardDeviation(void)
-//    {
-//      // Get maximum difference value
-//      T max_val = CircularBuffer<T,N,ST>::GetMaxValue() - average;
-//      // Max difference allowed for calculate square root without overflow
-//      T max_dif = std::numeric_limits<T>::max() >> ((sizeof(T) * CHAR_BIT) / 2U);
-//      // Shift variable
-//      uint32_t shift = 0u;
-//      // Find shift
-//      while(max_val > max_dif)
-//      {
-//        max_val >>= 1u;
-//        shift++;
-//      }
-//      // Find corrected average for calculations
-//      T avg = average >> shift;
-//      // Clear sum
-//      T variance = 0;
-//      // Store count
-//      uint32_t n = CircularBuffer<T,N,ST>::GetItemsCnt();
-//      // Calculate sum from array
-//      for(uint32_t i = 0u; i < n; i++)
-//      {
-//        // Get value from buffer
-//        T val = CircularBuffer<T,N,ST>::array[i] >> shift;
-//        // Find difference between value and average, result always positive
-//        if(val > avg) val = val - avg;
-//        else          val = avg - val;
-//        // Calculate variance
-//        variance += (val * val) / static_cast<T>(n);
-//      }
-//      // Find deviation
-//      T deviation = static_cast<T>(sqrt((float)variance));
-//      // Revert back correction
-//      deviation = deviation << shift;
-//      // Return result
-//      return deviation;
-//    }
 
     // *************************************************************************
     // ***   Public: Clear   ***************************************************
     // *************************************************************************
     void Clear(void)
     {
+      // Clear median value
+      median = 0;
       // Clear sum of array value
       sum = 0;
-      // Clear average
-      average = 0;
       // Clear Circular Buffer
       CircularBuffer<T,N,ST>::Clear();
     }
 
   private:
+    // Array for calculating median
+    T array_sorted[N] = {0};
+    // Median value
+    T median = 0;
     // Sum of array value
-    ST sum = 0;
-    // Average value
-    T average = 0;
+    T sum = 0;
+
+    // *************************************************************************
+    // ***   Private: CalcMedian   *********************************************
+    // *************************************************************************
+    void CalcMedian()
+    {
+      // Helper to calculate the median. Copies the buffer into the temp area,
+      // then calls Hoare's in-place selection algorithm to obtain the median.
+      for(uint32_t i = 0u; i < CircularBuffer<T,N,ST>::GetItemsCnt(); i++)
+      {
+        array_sorted[i] = CircularBuffer<T,N,ST>::array[i];
+      }
+      // Calculate median
+      median = Select(0, CircularBuffer<T,N,ST>::GetItemsCnt() - 1, CircularBuffer<T,N,ST>::GetItemsCnt() / 2);
+    }
+
+    // *************************************************************************
+    // ***   Private: Partition   **********************************************
+    // *************************************************************************
+    int Partition(int l, int r, int p)
+    {
+      // Partition function, like from quicksort. l and r are the left and right
+      // bounds of the array (m_tmp), respectively, and p is the pivot index.
+      T tmp;
+      T pv = array_sorted[p];
+      array_sorted[p] = array_sorted[r];
+      array_sorted[r] = pv;
+      int s = l;
+      for(int i = l; i < r; i++)
+      {
+        if(array_sorted[i] < pv)
+        {
+          tmp = array_sorted[s];
+          array_sorted[s] = array_sorted[i];
+          array_sorted[i] = tmp;
+          s++;
+        }
+      }
+      tmp = array_sorted[s];
+      array_sorted[s] = array_sorted[r];
+      array_sorted[r] = tmp;
+      return s;
+    }
+
+    // *************************************************************************
+    // ***   Private: Select   *************************************************
+    // *************************************************************************
+    T Select(int l, int r, int k)
+    {
+      // Result variable
+      T result = 0;
+      // Hoare's quickselect. l and r are the array bounds, and k conveys that
+      // we want to return the k-th value
+      if(l == r)
+      {
+        result = array_sorted[l];
+      }
+      else
+      {
+        int32_t p = (l + r) / 2;
+        p = Partition(l, r, p);
+        if(p == k)
+        {
+          result = array_sorted[k];
+        }
+        else if(k < p)
+        {
+          result = Select(l, p - 1, k);
+        }
+        else
+        {
+          result = Select(p + 1, r, k);
+        }
+      }
+      return result;
+    }
 };
 
 #endif

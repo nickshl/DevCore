@@ -64,6 +64,8 @@ Result DisplayDrv::Setup()
     InvertDisplay(inversion);
     // Set mode - mode can be set earlier than Display initialization
     SetUpdateMode(update_mode);
+    // Update rotation
+    SetRotation(rotation);
 
     // Main list always full screen
     list.SetParams(0, 0, width, height);

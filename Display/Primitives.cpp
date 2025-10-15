@@ -54,7 +54,6 @@ void Box::SetParams(int32_t x, int32_t y, int32_t w, int32_t h, color_t c, bool 
   y_end = y + h - 1;
   width = w;
   height = h;
-  rotation = 0;
   fill = is_fill;
   border_width = is_fill ? 0 : 1; // Set border 1 pixel if border isn't fill
   // Invalidate area for new position/size
@@ -235,7 +234,6 @@ void ShadowBox::SetParams(int32_t x, int32_t y, int32_t w, int32_t h)
   y_end = y + h - 1;
   width = w;
   height = h;
-  rotation = 0;
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
@@ -340,7 +338,6 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
   y_end = y2;
   width  = (x1 < x2) ? (x2 - x1) : (x1 - x2) + 1; // Width is one more than coordinates difference
   height = (y1 < y2) ? (y2 - y1) : (y1 - y2) + 1; // Height is one more than coordinates difference
-  rotation = 0;
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
@@ -493,7 +490,6 @@ void Circle::SetParams(int32_t x, int32_t y, int32_t r, color_t c, bool is_fill,
   y_end = y + r;
   width = r*2;
   height = r*2;
-  rotation = 0;
   fill = is_fill;
   even = is_even;
   // Invalidate area for new position/size
@@ -703,7 +699,6 @@ void Triangle::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t
   lines[2].y1 = y2;
   lines[2].x2 = x3;
   lines[2].y2 = y3;
-  rotation = 0;
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes

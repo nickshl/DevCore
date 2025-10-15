@@ -211,8 +211,6 @@ class VisObject
     int16_t x_end = 0, y_end = 0;
     // Width and Height of object
     int16_t width = 0, height = 0;
-    // Rotation of object
-    int8_t rotation = 0;
     // Object active
     bool active = false;
 

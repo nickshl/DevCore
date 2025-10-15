@@ -92,7 +92,7 @@ template <class T, int N> class FIFO
         if(head_idx >= N)
         {
           // Clear position
-          head_idx = 0U;
+          head_idx = 0u;
         }
         // Set result
         result = true;
@@ -139,7 +139,7 @@ template <class T, int N> class FIFO
         if(head_idx >= N)
         {
           // Clear position
-          head_idx = 0U;
+          head_idx = 0u;
         }
         // Set result
         result = true;
@@ -166,7 +166,7 @@ template <class T, int N> class FIFO
         if(tail_idx >= N)
         {
           // Clear position
-          tail_idx = 0U;
+          tail_idx = 0u;
         }
         // Set result
         result = true;
@@ -216,11 +216,11 @@ template <class T, int N> class FIFO
     void Clear(void)
     {
       // Clear head
-      head_idx = 0U;
+      head_idx = 0u;
       // Clear tail
-      tail_idx = 0U;
+      tail_idx = 0u;
       // Clear array
-      for(uint32_t i = 0U; i < N; i++)
+      for(uint32_t i = 0u; i < N; i++)
       {
         array[i] = {0};
       }
@@ -231,8 +231,8 @@ template <class T, int N> class FIFO
     T array[N];
 
     // Position in array for next add operation
-    int32_t head_idx = 0U;
-    int32_t tail_idx = 0U;
+    int32_t head_idx = 0u;
+    int32_t tail_idx = 0u;
 
   private:
 };

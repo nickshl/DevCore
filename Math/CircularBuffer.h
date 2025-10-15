@@ -57,7 +57,7 @@
 // *****************************************************************************
 // ***   Circular Buffer template class   **************************************
 // *****************************************************************************
-template <class T, int N> class CircularBuffer
+template <class T, int32_t N, class ST = T> class CircularBuffer
 {
   public:
     // *************************************************************************
@@ -87,7 +87,7 @@ template <class T, int N> class CircularBuffer
       if(position >= N)
       {
         // Clear position
-        position = 0U;
+        position = 0u;
         // Full array filled
         filled = true;
       }
@@ -150,17 +150,17 @@ template <class T, int N> class CircularBuffer
     uint32_t GetHeadIdx(void)
     {
       // Local variable for store index
-      uint32_t head_idx = 0U;
+      uint32_t head_idx = 0u;
       // Find head index
       if(position != 0U)
       {
-        head_idx = position - 1U;
+        head_idx = position - 1u;
       }
       else
       {
         if(filled == true)
         {
-          head_idx = N - 1U;
+          head_idx = N - 1u;
         }
       }
       // Return result
@@ -173,11 +173,11 @@ template <class T, int N> class CircularBuffer
     uint32_t GetTailIdx(void)
     {
       // Local variable for store index
-      uint32_t tail_idx = 0U;
+      uint32_t tail_idx = 0u;
       // Find tail index
       if(filled == false)
       {
-        tail_idx = 0U;
+        tail_idx = 0u;
       }
       else
       {
@@ -215,7 +215,7 @@ template <class T, int N> class CircularBuffer
       // Clear max value
       T min_val = std::numeric_limits<T>::max();
       // Calculate sum from array
-      for(uint32_t i = 0U; i < n; i++)
+      for(uint32_t i = 0u; i < n; i++)
       {
         if(array[i] < min_val)
         {
@@ -238,7 +238,7 @@ template <class T, int N> class CircularBuffer
       // Clear max value
       T max_val = std::numeric_limits<T>::min();
       // Calculate sum from array
-      for(uint32_t i = 0U; i < n; i++)
+      for(uint32_t i = 0u; i < n; i++)
       {
         if(array[i] > max_val)
         {
@@ -253,14 +253,14 @@ template <class T, int N> class CircularBuffer
     // *************************************************************************
     // ***   Public: GetSum   **************************************************
     // *************************************************************************
-    T GetSum(void)
+    ST GetSum(void)
     {
       // Clear sum
-      T sum = 0;
+      ST sum = 0;
       // Store count
       uint32_t n = GetItemsCnt();
       // Calculate sum from array
-      for(uint32_t i = 0U; i < n; i++)
+      for(uint32_t i = 0u; i < n; i++)
       {
         sum += array[i];
       }
@@ -271,7 +271,7 @@ template <class T, int N> class CircularBuffer
     // *************************************************************************
     // ***   Public: GetSumByCnt   *********************************************
     // *************************************************************************
-    T GetSumByCnt(uint32_t& cnt)
+    ST GetSumByCnt(uint32_t& cnt)
     {
       // Get head and tail indexes
       int32_t head_idx = (int32_t)CircularBuffer<T,N>::GetHeadIdx();
@@ -280,13 +280,13 @@ template <class T, int N> class CircularBuffer
       // Head can be equal to position only if buffer is empty
       if(head_idx == position)
       {
-        cnt = 0U;
+        cnt = 0u;
       }
 
       // Sum
-      T result = 0;
+      ST result = 0;
       // Counter
-      uint32_t i = 0U;
+      uint32_t i = 0u;
       // Cycle while we have items and sum less than desired
       while(i < cnt)
       {
@@ -318,7 +318,7 @@ template <class T, int N> class CircularBuffer
     // *************************************************************************
     // ***   Public: GetCntBySum   *********************************************
     // *************************************************************************
-    uint32_t GetCntBySum(T& sum)
+    uint32_t GetCntBySum(ST& sum)
     {
       // Get head and tail indexes
       int32_t head_idx = (int32_t)CircularBuffer<T,N>::GetHeadIdx();
@@ -331,7 +331,7 @@ template <class T, int N> class CircularBuffer
       }
 
       T result = 0;
-      uint32_t cnt = 0U;
+      uint32_t cnt = 0u;
       // Cycle while we have items and sum less than desired
       while(result < sum)
       {
@@ -366,7 +366,7 @@ template <class T, int N> class CircularBuffer
     T GetAverage(void)
     {
       // Find average
-      T avg = GetSum() / static_cast<T>(GetItemsCnt());
+      T avg = GetSum() / static_cast<ST>(GetItemsCnt());
       // Return result
       return avg;
     }
@@ -377,22 +377,22 @@ template <class T, int N> class CircularBuffer
     void Clear(void)
     {
       // Clear position
-      position = 0U;
+      position = 0u;
       // Clear full fill flag
       filled = false;
       // Clear array
-      for(uint32_t i = 0U; i < N; i++)
+      for(uint32_t i = 0u; i < N; i++)
       {
         array[i] = {0};
       }
     }
 
   protected:
-    // Array for calculating average
+    // Array for circular buffer
     T array[N];
 
     // Position in array for next add operation
-    int32_t position = 0U;
+    int32_t position = 0u;
 
     // Flag for track fill full array
     bool filled = false;

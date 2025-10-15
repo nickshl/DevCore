@@ -74,25 +74,26 @@ Result ST7789::Init(void)
   if(display_rst != nullptr)
   {
     display_rst->SetHigh(); // Pull up reset line
-    Delay(5u);              // Wait for 5 ms
+    Delay(2u);              // Wait for 1..2 ms
     display_rst->SetLow();  // Pull down reset line
-    Delay(20u);             // Wait for 20 ms
+    Delay(2u);              // Wait for 1..2 ms
     display_rst->SetHigh(); // Pull up reset line
-    Delay(150u);            // Wait for 150 ms
+    Delay(5u);              // Wait for 5 ms, but if reset happened during sleep mode it will take ~120 ms
   }
-
-  // Software reset
-  WriteCommand(CMD_SWRESET);
-  Delay(150u); // Delay for execute previous command
+  else
+  {
+    // Software reset
+    WriteCommand(CMD_SWRESET);
+    Delay(150u); // Wait for 5 ms, but if reset happened during sleep mode it will take ~120 ms
+  }
 
   // Out of sleep mode
   WriteCommand(CMD_SLPOUT);
-  Delay(10u); // Delay for execute previous command
+  Delay(5u); // Delay for execute previous command
 
   // Set color mode
   WriteCommand(CMD_COLMOD);
   WriteData(0x55); // 16-bit color
-  Delay(10u); // Delay for execute previous command
 
   // Mem access ctrl (directions)
   WriteCommand(CMD_MADCTL);
@@ -114,15 +115,13 @@ Result ST7789::Init(void)
 
   // Inversion
   WriteCommand(CMD_INVON);
-  Delay(10u); // Delay for execute previous command
 
   // Normal display on
   WriteCommand(CMD_NORON);
-  Delay(10u); // Delay for execute previous command
 
   // Main screen turn on
   WriteCommand(CMD_DISPON);
-  Delay(10u); // Delay for execute previous command
+
   // Always Ok
   return Result::RESULT_OK;
 }
@@ -228,7 +227,7 @@ Result ST7789::SetRotation(IDisplay::Rotation r)
       break;
 
     case IDisplay::ROTATION_BOTTOM:
-      WriteData(MADCTL_MV | MADCTL_RGB);
+      WriteData(MADCTL_MY | MADCTL_MV | MADCTL_RGB);
       width  = init_width;
       height = init_height;
       display_x_start = col_start;

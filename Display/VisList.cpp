@@ -37,7 +37,6 @@ void VisList::SetParams(int32_t x, int32_t y, int32_t w, int32_t h)
   y_end = y + h - 1;
   width = w;
   height = h;
-  rotation = 0;
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
@@ -51,37 +50,33 @@ Result VisList::AddVisObjectToList(VisObject* obj, uint32_t z)
 {
   Result result = Result::ERR_NULL_PTR;
 
-  if((obj != nullptr) && (obj->p_prev == nullptr) && (obj->p_next == nullptr) && (obj != object_list))
+  if((obj != nullptr) && (obj->p_prev == nullptr) && (obj->p_next == nullptr) && (obj != object_first))
   {
     // Take semaphore before add to list
     DisplayDrv::GetInstance().LockDisplayLine();
     // Set object Z
     obj->z = z;
-    // Set prev pointer to nullptr
-    obj->p_prev = nullptr;
-    // Set next pointer to nullptr
-    obj->p_next = nullptr;
     // If object list empty
-    if(object_list == nullptr)
+    if(object_first == nullptr)
     {
       // Add object to list
-      object_list = obj;
+      object_first = obj;
       // Set pointer to last object in the list
-      object_list_last = obj;
+      object_last = obj;
     }
-    else if(object_list->z > z)
+    else if(object_first->z > z)
     {
       // Set next element to current head element
-      obj->p_next = object_list;
+      obj->p_next = object_first;
       // Set prev element to next after head element
-      object_list->p_prev = obj;
+      object_first->p_prev = obj;
       // Set new head for list
-      object_list = obj;
+      object_first = obj;
     }
     else
     {
       // Set temporary pointer
-      VisObject* p_last = object_list;
+      VisObject* p_last = object_first;
       // Find last element(last added object to the list should show on top of objects with same z)
       while((p_last->p_next != nullptr) && (p_last->p_next->z <= z)) p_last = p_last->p_next;
       // If it not last element
@@ -95,7 +90,7 @@ Result VisList::AddVisObjectToList(VisObject* obj, uint32_t z)
       else
       {
         // Set pointer to last object in the list
-        object_list_last = obj;
+        object_last = obj;
       }
       // Set next pointer in prev element
       p_last->p_next = obj;
@@ -123,37 +118,30 @@ Result VisList::DelVisObjectFromList(VisObject* obj)
 {
   Result result = Result::ERR_NULL_PTR;
 
-  if((obj != nullptr) && ((obj->p_prev != nullptr) || (obj->p_next != nullptr) || (obj == object_list)) )
+  if((obj != nullptr) && ((obj->p_prev != nullptr) || (obj->p_next != nullptr) || (obj == object_first)) )
   {
     // Take semaphore before add to list
     DisplayDrv::GetInstance().LockDisplayLine();
     // Remove element from head
-    if(obj == object_list)
+    if(obj == object_first)
     {
       // Set pointer to next object or clear pointer if no more elements
-      object_list = obj->p_next;
-      // Clear previous element in first object
-      object_list->p_prev = nullptr;
+      object_first = obj->p_next;
+      // Clear previous element in first object(if there is one)
+      if(object_first != nullptr) object_first->p_prev = nullptr;
+      else object_last = nullptr; // If there no first, there is no last
     }
-    else if(obj == object_list_last)
+    else if(obj == object_last) // Remove element from tail
     {
       // Set next pointer in previous object to nullptr
       obj->p_prev->p_next = nullptr;
       // Set pointer to previous object
-      object_list_last = obj->p_prev;
+      object_last = obj->p_prev;
     }
-    else
+    else // Remove element from middle
     {
-      // Remove element from head
-      if(obj->p_prev == nullptr) object_list = obj->p_next;
-      // Remove element from middle
-      else if(obj->p_next != nullptr)
-      {
-        obj->p_prev->p_next = obj->p_next;
-        obj->p_next->p_prev = obj->p_prev;
-      }
-      // remove element from tail
-      else obj->p_prev->p_next = nullptr;
+      obj->p_prev->p_next = obj->p_next;
+      obj->p_next->p_prev = obj->p_prev;
     }
     // Clear pointers in object
     obj->p_prev = nullptr;
@@ -173,10 +161,10 @@ Result VisList::DelVisObjectFromList(VisObject* obj)
 void VisList::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Draw object only if it fit list
-  if((object_list != nullptr) && (line >= y_start) && (line <= y_end))
+  if((object_first != nullptr) && (line >= y_start) && (line <= y_end))
   {
     // Set pointer to first element
-    VisObject* p_obj = object_list;
+    VisObject* p_obj = object_first;
     // Count
     int32_t cnt = ((start_x + n - 1) > x_end) ? (x_end - start_x + 1) : n;
     // Do for all objects
@@ -194,10 +182,10 @@ void VisList::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 void VisList::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
-  if((object_list != nullptr) && (row >= x_start) && (row <= x_end))
+  if((object_first != nullptr) && (row >= x_start) && (row <= x_end))
   {
     // Set pointer to first element
-    VisObject* p_obj = object_list;
+    VisObject* p_obj = object_first;
     // Do for all objects
     while(p_obj != nullptr)
     {
@@ -228,7 +216,7 @@ void VisList::Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int
     case VisObject::ACT_UNTOUCH:
     {
       // Set pointer to first element
-      VisObject* p_obj = object_list_last;
+      VisObject* p_obj = object_last;
       // If list not empty
       if(p_obj != nullptr)
       {
@@ -261,7 +249,7 @@ void VisList::Action(ActionType action, int32_t tx, int32_t ty, int32_t tpx, int
     case VisObject::ACT_MOVEOUT:
     {
       // Set pointer to last element
-      VisObject* p_obj = object_list_last;
+      VisObject* p_obj = object_last;
       // If list not empty
       if(p_obj != nullptr)
       {

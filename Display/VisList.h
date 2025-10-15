@@ -104,9 +104,9 @@ class VisList : public VisObject
     // *************************************************************************
     // ***   Object parameters   ***********************************************
     // *************************************************************************    // Pointer to first object in list
-    VisObject* object_list = nullptr;
+    VisObject* object_first = nullptr;
     // Pointer to last object in list
-    VisObject* object_list_last = nullptr;
+    VisObject* object_last = nullptr;
 };
 
 #endif

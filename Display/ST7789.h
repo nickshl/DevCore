@@ -55,8 +55,11 @@ class ST7789 : public IDisplay
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit ST7789(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio* disp_rst = nullptr) :
-      IDisplay(in_width, in_height, 2), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(disp_rst) {};
+    explicit ST7789(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc, IGpio& disp_rst) :
+      IDisplay(in_width, in_height, 2), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(&disp_rst) {};
+
+    explicit ST7789(int32_t in_width, int32_t in_height, ISpi& in_spi, IGpio& disp_cs, IGpio& disp_dc) :
+      IDisplay(in_width, in_height, 2), spi(in_spi), display_cs(disp_cs), display_dc(disp_dc), display_rst(nullptr) {};
 
     // *************************************************************************
     // ***   Public: Init screen   *********************************************

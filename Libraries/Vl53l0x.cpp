@@ -528,7 +528,7 @@ Result Vl53l0x::GetSpadInfo(uint8_t& count, bool& type_is_aperture)
 {
   Result result = Result::RESULT_OK;
 
-  uint8_t reg;
+  uint8_t reg = 0u;
 
   result = Write8(0x80, 0x01);
   if(result.IsGood()) result = Write8(0xFF, 0x01);
@@ -557,10 +557,13 @@ Result Vl53l0x::GetSpadInfo(uint8_t& count, bool& type_is_aperture)
   if(result.IsGood()) result = Write8(0x83, 0x01);
   if(result.IsGood()) result = Read8(0x92, reg);
 
-  count = reg & 0x7f;
-  type_is_aperture = (reg >> 7) & 0x01;
+  if(result.IsGood())
+  {
+    count = reg & 0x7f;
+    type_is_aperture = (reg >> 7) & 0x01;
 
-  if(result.IsGood()) result = Write8(0x81, 0x00);
+    result = Write8(0x81, 0x00);
+  }
   if(result.IsGood()) result = Write8(0xFF, 0x06);
   if(result.IsGood()) result = Read8(0x83, reg);
   if(result.IsGood())

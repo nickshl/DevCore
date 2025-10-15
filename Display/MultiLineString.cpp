@@ -63,7 +63,6 @@ void MultiLineString::SetParams(const char* str, int32_t x, int32_t y, color_t t
   height = (line_height * GetStringCount(str)) - spacing;
   x_end = x + width - 1;
   y_end = y + height - 1;
-  rotation = 0;
   // Clear current line to set new pointer inside draw function.
   str_line = -1;
   // Invalidate area for new string(needed if new string longer than old)
@@ -94,7 +93,6 @@ void MultiLineString::SetParams(const char* str, int32_t x, int32_t y, color_t t
   height = (line_height * GetStringCount(str)) - spacing;
   x_end = x + width - 1;
   y_end = y + height - 1;
-  rotation = 0;
   // Clear current line to set new pointer inside draw function.
   str_line = -1;
   // Invalidate area for new string(needed if new string longer than old)
