@@ -41,7 +41,7 @@ UiTask& UiTask::GetInstance(void)
 Result UiTask::InitTask()
 {
   // Create task
-  return CreateTask();
+  return AppTask::InitTask();
 }
 
 // *****************************************************************************

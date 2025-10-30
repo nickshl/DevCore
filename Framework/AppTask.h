@@ -53,6 +53,10 @@
 // *****************************************************************************
 #include "DevCfg.h"
 
+// Type for callback function pointer. Input parameters:
+// pointer to object(to use ad this) and pointer to object that called callback
+// or other data(not more than pointer size), in last case separate callback
+// function should be used
 typedef Result (*CallbackPtr)(void* obj_ptr, void* ptr);
 
 // *****************************************************************************
@@ -69,7 +73,7 @@ class AppTask
     // *************************************************************************
     // ***   Callback   ********************************************************
     // *************************************************************************
-    virtual Result Callback(CallbackPtr func_ptr, void* obj_ptr, void* ptr);
+    Result Callback(CallbackPtr func_ptr, void* obj_ptr, void* ptr);
 
     // *************************************************************************
     // ***   GetCurrent   ******************************************************
@@ -91,8 +95,8 @@ class AppTask
     // ***   Constructor   *****************************************************
     // *************************************************************************
     AppTask(uint16_t stk_size, uint8_t task_prio, const char name[],
-            uint16_t queue_len = 0U, uint16_t queue_msg_size = 0U,
-            void* task_msg_p = nullptr, uint32_t task_interval_ms = 0U,
+            uint16_t queue_len = 0u, uint16_t queue_msg_size = 0u,
+            void* task_msg_p = nullptr, uint32_t task_interval_ms = 0u,
             bool tmr_priority = false) :
       ctrl_queue((queue_len + 2U), sizeof(CtrlQueueMsg)),
       task_queue(queue_len, queue_msg_size), task_msg_ptr(task_msg_p),

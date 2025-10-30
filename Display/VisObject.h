@@ -202,9 +202,6 @@ class VisObject
     // ***   Object parameters   ***********************************************
     // *************************************************************************
 
-    // Current list for object
-    VisList* list = nullptr;
-
     // X and Y start coordinates of object
     int16_t x_start = 0, y_start = 0;
     // X and Y end coordinates of object
@@ -220,14 +217,16 @@ class VisObject
     // *************************************************************************
     // * Only base class and DisplayDrv have access to this parameters
 
-    // Z position of object
-    uint16_t z = 0;
+    // Current list for object
+    VisList* list = nullptr;
     // Pointer to next object. This pointer need to maker object list. Object
     // can be added only to one list.
     VisObject* p_next = nullptr;
     // Pointer to next object. This pointer need to maker object list. Object
     // can be added only to one list.
     VisObject* p_prev = nullptr;
+    // Z position of object
+    uint16_t z = 0;
 
     // VisList is friend for access to pointers and Z
     friend class VisList;

@@ -38,7 +38,7 @@ SoundDrv& SoundDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Public: Init Sound Driver Task   **************************************
 // *****************************************************************************
-void SoundDrv::InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer)
+Result SoundDrv::InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer)
 {
   // Save timer handle
   htim = &htm;
@@ -47,7 +47,7 @@ void SoundDrv::InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer)
   // Save GPIO
   buzzer_gpio = &buzzer;
   // Create task
-  CreateTask();
+  return AppTask::InitTask();
 }
 
 // *****************************************************************************

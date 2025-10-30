@@ -208,7 +208,7 @@ void Box::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // *****************************************************************************
 
-#if defined(COLOR_24BIT) // Shadow box available only for 24 bit color
+#if defined(COLOR_24BIT) || defined(COLOR_16BIT) // Shadow box available only for 24 bit or 16 bit color
 
 // *****************************************************************************
 // ***   Constructor   *********************************************************
@@ -262,12 +262,16 @@ void ShadowBox::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_
       // Fill the line
       for(int32_t i = start; i <= end; i++)
       {
+#if defined(COLOR_24BIT)
         // Convert pointer to uint8_t to process color components individually
         uint8_t* color = reinterpret_cast<uint8_t*>(&buf[i]);
         // Process shadow
         color[0u] /= 2;
         color[1u] /= 2;
         color[2u] /= 2;
+#elif defined(COLOR_16BIT)
+        /// TODO: Implement 16 bit shadow processing
+#endif
       }
     }
   }

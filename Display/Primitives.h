@@ -114,7 +114,7 @@ class Box : public VisObject
 // *****************************************************************************
 // ***   ShadowBox Class   *****************************************************
 // *****************************************************************************
-#if defined(COLOR_24BIT) // Shadow box available only for 24 bit color
+#if defined(COLOR_24BIT) || defined(COLOR_16BIT) // Shadow box available only for 24 bit or 16 bit color
 class ShadowBox : public VisObject
 {
   public:

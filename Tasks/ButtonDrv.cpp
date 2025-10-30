@@ -52,7 +52,7 @@ Result ButtonDrv::InitTask(IGpio* btns[], uint8_t btn_num)
     result = Result::ERR_BAD_PARAMETER;
   }
   // Task shouldn't be already initialized
-  else if((buttons != nullptr) || (btn_pin_state_cnt != nullptr) || (btn_hold_cnt != nullptr))
+  else if((buttons != nullptr) || (btn_pin_state_cnt != nullptr) || (btn_press_time_ms != nullptr))
   {
     result = Result::ERR_INVALID_ITEM;
   }
@@ -66,12 +66,12 @@ Result ButtonDrv::InitTask(IGpio* btns[], uint8_t btn_num)
     btn_state = new ButtonState[btn_num];
     // Allocate memory for button state counters
     btn_pin_state_cnt = new uint8_t[btn_num];
-    // Allocate memory for button state counters
-    btn_hold_cnt = new uint16_t[btn_num];
+    // Allocate memory for button press timestamps
+    btn_press_time_ms = new uint32_t[btn_num];
   }
 
   // Create task
-  if(result.IsGood()) result = CreateTask();
+  if(result.IsGood()) result = AppTask::InitTask();
 
   // Return result
   return result;
@@ -106,16 +106,23 @@ Result ButtonDrv::Loop()
       {
         if(btn_cbl->mask & mask)
         {
-          // If there no AppTask pointer
-          if(btn_cbl->callback_task == nullptr)
+          // If there is AppTask pointer
+          if(btn_cbl->callback_task != nullptr)
+          {
+            // Call it via AppTask callback mechanism to execute callback in target task
+            btn_cbl->callback_task->Callback(btn_cbl->callback, btn_cbl->obj_ptr, this);
+          }
+          // Otherwise if there is callback
+          else if(btn_cbl->callback != nullptr)
           {
             // Call callback directly in ButtonDrv task(semaphores in other task may be needed!)
             btn_cbl->callback(btn_cbl->obj_ptr, this);
           }
           else
           {
-            // Otherwise call it via AppTask to execute callback in target task
-            btn_cbl->callback_task->Callback(btn_cbl->callback, btn_cbl->obj_ptr, this);
+            ; // Do nothing - MISRA rule
+            // In case both pointers are null we don't need to do anythyng.
+            // Subscriber "mask" those buttons to make it unoperable.
           }
           // Only first handler gets notification
           break;
@@ -245,13 +252,26 @@ inline bool ButtonDrv::ProcessButtonInput(uint8_t button, uint32_t btn_mask)
     if(((bool)(btn_pin_state_tmp & btn_mask) == new_status) && (btn_pin_state_cnt[button] >= button_read_delay_cnt))
     {
       // Set button state
-      if(new_status) btn_state[button] = ButtonState::PRESSED;
-      else           btn_state[button] = ButtonState::RELEASED;
+      if(new_status)
+      {
+        // If passed less than allowed time for double click - set double click state
+        if(RtosTick::CheckTimeDifferenceMs(btn_press_time_ms[button], button_double_delay_ms) == false)
+        {
+          btn_state[button] = ButtonState::DOUBLE;
+        }
+        else
+        {
+          btn_state[button] = ButtonState::PRESSED;
+          btn_press_time_ms[button] = RtosTick::GetTimeMs();
+        }
+      }
+      else
+      {
+        btn_state[button] = ButtonState::RELEASED;
+      }
       // If temporary button state true and delay done - update state
       btn_pin_state &= ~btn_mask; // Clear old state
       btn_pin_state |= (uint32_t)new_status << button; // Set new state
-      // Clear button hold counter
-      btn_hold_cnt[button] = 0u;
       // Button state changed
       is_changed = true;
     }
@@ -270,20 +290,12 @@ inline bool ButtonDrv::ProcessButtonInput(uint8_t button, uint32_t btn_mask)
   else
   {
     // If button is pressed and there is no hold state yet
-    if((new_status) && (btn_state[button] != ButtonState::HOLD))
+    if((btn_state[button] == ButtonState::PRESSED) && (RtosTick::CheckTimeDifferenceMs(btn_press_time_ms[button], button_hold_delay_ms)))
     {
-      if(btn_hold_cnt[button] >= button_hold_delay_cnt)
-      {
-        // Set hold state
-        btn_state[button] = ButtonState::HOLD;
-        // Button state changed
-        is_changed = true;
-      }
-      else
-      {
-        // Increase hold counter
-        btn_hold_cnt[button]++;
-      }
+      // Set hold state
+      btn_state[button] = ButtonState::HOLD;
+      // Button state changed
+      is_changed = true;
     }
   }
 

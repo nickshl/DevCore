@@ -32,7 +32,7 @@ DisplayDrv& DisplayDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Public: Init Display Driver Task   ************************************
 // *****************************************************************************
-void DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
+Result DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
 {
   // Save display driver pointer
   display = &in_display;
@@ -44,7 +44,7 @@ void DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
   // using this pointer
   touch = &in_touch;
   // Create task
-  CreateTask();
+  return AppTask::InitTask();
 }
 
 // *****************************************************************************
@@ -201,7 +201,7 @@ Result DisplayDrv::Loop()
             display->PrepareData(scr_buf[scr_line_idx], pixels_cnt);
           }
           // Wait until previous transfer complete
-          while(display->IsTransferComplete() == false) taskYIELD();
+          while(display->IsTransferComplete() == false) RtosTick::Yield();
           // Write stream to LCD
           display->WriteDataStream((uint8_t*)scr_buf[scr_line_idx], display->GetPixelDataCnt(pixels_cnt));
           // DO NOT TRY "OPTIMIZE" CODE !!!
@@ -209,7 +209,7 @@ Result DisplayDrv::Loop()
           // transfer via SPI to display.
         }
         // Wait until last transfer complete
-        while(display->IsTransferComplete() == false) taskYIELD();
+        while(display->IsTransferComplete() == false) RtosTick::Yield();
         // Pull up CS
         display->StopTransfer();
       }

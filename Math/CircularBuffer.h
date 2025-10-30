@@ -57,6 +57,9 @@
 // *****************************************************************************
 // ***   Circular Buffer template class   **************************************
 // *****************************************************************************
+// Template options: data type, size of circular buffer array, and sum type.
+// For example if we have uint16_t members, it sum can overflow uint16_t, so
+// we will need to use uint32_t as sum type to avoid overflow.
 template <class T, int32_t N, class ST = T> class CircularBuffer
 {
   public:

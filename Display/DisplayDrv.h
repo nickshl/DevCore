@@ -91,7 +91,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Public: Init Display Driver Task   ********************************
     // *************************************************************************
-    void InitTask(IDisplay& in_display, ITouchscreen& in_touch = *((ITouchscreen*)(nullptr)));
+    Result InitTask(IDisplay& in_display, ITouchscreen& in_touch = *((ITouchscreen*)(nullptr)));
 
     // *************************************************************************
     // ***   Public: Display Driver Setup   ************************************
@@ -146,7 +146,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Public: Invalidate Display   **************************************
     // *************************************************************************
-    Result InvalidateDisplay() {return InvalidateArea(0, 0, width, height);}
+    inline Result InvalidateDisplay() {return InvalidateArea(0, 0, width, height);}
 
     // *************************************************************************
     // ***   Public: Invalidate Area   *****************************************
@@ -171,7 +171,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Public: Set Background Color   ************************************
     // *************************************************************************
-    void SetBackgroundColor(color_t color) {bkg_color = color;}
+    inline void SetBackgroundColor(color_t color) {bkg_color = color;}
 
     // *************************************************************************
     // ***   Public: GetScreenW   **********************************************

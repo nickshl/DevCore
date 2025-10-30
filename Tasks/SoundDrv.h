@@ -82,7 +82,7 @@ class SoundDrv : public AppTask
     // *************************************************************************
     // ***   Public: Init Sound Driver Task   **********************************
     // *************************************************************************
-    virtual void InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer);
+    virtual Result InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer);
 
     // *************************************************************************
     // ***   Public: Sound Driver Setup   **************************************

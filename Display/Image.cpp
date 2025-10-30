@@ -249,7 +249,7 @@ void ImagePalette::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t sta
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
-    if(x_end > 0)
+    if(end > 0)
     {
       int idx = (line - y_start) * width;
       for(int32_t i = start; i <= end; i++)
@@ -373,7 +373,7 @@ void ImageBitmap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
-    if(x_end > 0)
+    if(end > 0)
     {
       int32_t idx = (line - y_start) * width;
       for(int32_t i = start; i <= end; i++)
@@ -507,12 +507,13 @@ void ImageBinary::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
-    if(x_end > 0)
+    if(end > 0)
     {
+      uint8_t sub_idx = 0u;
       // Draw image
       for(int32_t i = start; i <= end; i++)
       {
-        if((img[idx] >> (i % 8u)) & 0x01u)
+        if((img[idx] >> sub_idx) & 0x01u)
         {
           if(color != transparent_color) buf[i] = color;
         }
@@ -521,7 +522,15 @@ void ImageBinary::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
           if(bg_color != transparent_color) buf[i] = bg_color;
         }
         // Advance pointer
-        if((i%8) == 7) idx++;
+        if(sub_idx == 7u)
+        {
+          idx++;
+          sub_idx = 0u;
+        }
+        else
+        {
+          sub_idx++;
+        }
       }
     }
   }

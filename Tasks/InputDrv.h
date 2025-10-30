@@ -128,7 +128,7 @@ class InputDrv : public AppTask
     // *************************************************************************
     // * This function initialize Input Driver class. If htim provided, this 
     // * timer will be used instead FreeRTOS task.
-    virtual void InitTask(TIM_HandleTypeDef* htm, ADC_HandleTypeDef* had);
+    virtual Result InitTask(TIM_HandleTypeDef* htm, ADC_HandleTypeDef* had);
 
     // *************************************************************************
     // ***   Input Driver Setup   **********************************************

@@ -70,7 +70,8 @@ class ButtonDrv : public AppTask
     {
       RELEASED = 0u, // Button released
       PRESSED = 1u,  // Button pressed
-      HOLD = 2u      // Button hold
+      HOLD = 2u,     // Button hold
+      DOUBLE = 3u    // Button double click
     };
 
     // *************************************************************************
@@ -142,14 +143,21 @@ class ButtonDrv : public AppTask
     // *************************************************************************
     // ***   Public: Set button hold delay count(ms)   *************************
     // *************************************************************************
-    inline void SetButtonHoldDelay(uint8_t delay) {button_hold_delay_cnt = delay;}
+    inline void SetButtonHoldDelay(uint16_t delay) {button_hold_delay_ms = delay;}
+
+    // *************************************************************************
+    // ***   Public: Set button hold delay count(ms)   *************************
+    // *************************************************************************
+    inline void SetButtonDoubleDelay(uint16_t delay) {button_double_delay_ms = delay;}
 
   private:
     // How many cycles button must change state before state will be changed in
     // result returned by GetButtonState() function. For reduce debouncing
     uint8_t button_read_delay_cnt = 8u;
-    // How many ms button must be pressed before button hold event will be
-    uint16_t button_hold_delay_cnt = 500u;
+    // How much ms button must be pressed before button hold event will be
+    uint16_t button_hold_delay_ms = 500u;
+    // How much ms allowed between clicks in double click
+    uint16_t button_double_delay_ms = 250u;
 
     // Pointer to GPIO class for buttons
     IGpio** buttons;
@@ -161,7 +169,7 @@ class ButtonDrv : public AppTask
     uint32_t btn_pin_state; // Button state returned by GetButtonState() function
     uint32_t btn_pin_state_tmp; // Temporary button state for reduce debouncing
     uint8_t* btn_pin_state_cnt = nullptr; // Counters for reduce debouncing
-    uint16_t* btn_hold_cnt = nullptr; // Counters for track button hold time
+    uint32_t* btn_press_time_ms = nullptr; // Timestamp for track button hold/double click time
 
     // Button handlers
     CallbackListEntry* btn_callback_list = nullptr;

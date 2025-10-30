@@ -95,34 +95,20 @@ Result ST7789::Init(void)
   WriteCommand(CMD_COLMOD);
   WriteData(0x55); // 16-bit color
 
-  // Mem access ctrl (directions)
-  WriteCommand(CMD_MADCTL);
-  WriteData(0x08); // Row/col addr, bottom-top refresh
-
-  // Column address set
-  WriteCommand(CMD_CASET);
-  WriteData(0x00); // XSTART = 0
-  WriteData(0x00);
-  WriteData(0x00); // XEND = 240
-  WriteData(0xF0);
-
-  // Row address set
-  WriteCommand(CMD_RASET);
-  WriteData(0x00); // YSTART = 0
-  WriteData(0x00);
-  WriteData(0x01); // YEND = 320
-  WriteData(0x40);
+  // Set rotation and configure CMD_MADCTL register
+  SetRotation(IDisplay::ROTATION_TOP);
+  // Set address window to full screen(configure CMD_CASET and CMD_RASET registers)
+  SetAddrWindow(0, 0, init_width - 1, init_height - 1);
 
   // Inversion
-  WriteCommand(CMD_INVON);
+  WriteCommand(CMD_INVOFF);
 
   // Normal display on
   WriteCommand(CMD_NORON);
 
   // Main screen turn on
   WriteCommand(CMD_DISPON);
-
-  // Always Ok
+  // Always Ok
   return Result::RESULT_OK;
 }
 

@@ -62,6 +62,9 @@
 // *****************************************************************************
 // ***   Rolling Average template class   **************************************
 // *****************************************************************************
+// Template options: data type, size of rolling average buffer array, and sum type.
+// For example if we have uint16_t members, it sum can overflow uint16_t, so
+// we will need to use uint32_t as sum type to avoid overflow.
 template <class T, int N, class ST = T> class RollingAverage : public CircularBuffer<T, N, ST>
 {
   public:

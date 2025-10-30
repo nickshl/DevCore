@@ -88,12 +88,12 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
       {
         if(position != 0u)
         {
-          if(value <= array[median_idx].value)
+          if(value < array[median_idx].value)
           {
             // Get index of previous element
             IT idx = median_idx;
             // New value less or equal current value - travel list backwards
-            while((value <= array[idx].value) && (array[idx].prev_idx != N)) idx = array[idx].prev_idx;
+            while((value < array[idx].value) && (array[idx].prev_idx != N)) idx = array[idx].prev_idx;
             // Insert new element
             if(value < array[idx].value) InsertBefore(idx, position);
             else                         InsertAfter(idx, position);
@@ -103,10 +103,10 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
             // Get index of previous element
             IT idx = median_idx;
             // New value less than current - travel list backwards
-            while((value > array[idx].value) && (array[idx].next_idx != N)) idx = array[idx].next_idx;
+            while((value >= array[idx].value) && (array[idx].next_idx != N)) idx = array[idx].next_idx;
             // Insert new element
-            if(value > array[idx].value) InsertAfter(idx, position);
-            else                         InsertBefore(idx, position);
+            if(value >= array[idx].value) InsertAfter(idx, position);
+            else                          InsertBefore(idx, position);
           }
         }
 
@@ -123,6 +123,8 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
         {
           med_idx = array[med_idx].next_idx;
         }
+        // Update median index
+        median_idx = med_idx;
       }
       else
       {
@@ -143,12 +145,12 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
 
         // *** Then insert new element into the list ***************************
 
-        if(value <= median.value)
+        if(value < median.value)
         {
           // Get index of previous element
           IT idx = median.prev_idx;
           // New value less or equal current value - travel list backwards
-          while((value <= array[idx].value) && (array[idx].prev_idx != N)) idx = array[idx].prev_idx;
+          while((value < array[idx].value) && (array[idx].prev_idx != N)) idx = array[idx].prev_idx;
           // Insert new element
           if(value < array[idx].value) InsertBefore(idx, position);
           else                         InsertAfter(idx, position);
@@ -161,13 +163,13 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
           // Get index of previous element
           IT idx = median.next_idx;
           // New value less than current - travel list backwards
-          while((value > array[idx].value) && (array[idx].next_idx != N)) idx = array[idx].next_idx;
+          while((value >= array[idx].value) && (array[idx].next_idx != N)) idx = array[idx].next_idx;
           // Insert new element
-          if(value > array[idx].value) InsertAfter(idx, position);
-          else                         InsertBefore(idx, position);
+          if(value >= array[idx].value) InsertAfter(idx, position);
+          else                          InsertBefore(idx, position);
           // Update median median index
-          if(value > array[median.next_idx].value) median_idx = median.next_idx;
-          else                                     median_idx = position;
+          if(value >= array[median.next_idx].value) median_idx = median.next_idx;
+          else                                      median_idx = position;
         }
       }
 

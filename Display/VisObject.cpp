@@ -102,17 +102,8 @@ Result VisObject::Hide(void)
 // *****************************************************************************
 bool VisObject::IsShow(void)
 {
-  // Return false by default
-  bool ret = false;
-
   // Check if VisObject in the list, and if it is check if list is show
-  if(IsInList() && list->IsShow())
-  {
-    ret = true;
-  }
-
-  // Return result
-  return ret;
+  return (IsInList() && list->IsShow());
 }
 
 // *****************************************************************************
@@ -120,15 +111,8 @@ bool VisObject::IsShow(void)
 // *****************************************************************************
 bool VisObject::IsInList(void)
 {
-  // Return false by default
-  bool ret = false;
   // If any pointer is not null - object in list
-  if( (p_next != nullptr) || (p_prev != nullptr) )
-  {
-    ret = true;
-  }
-  // Return result
-  return ret;
+  return ((p_next != nullptr) || (p_prev != nullptr));
 }
 
 // *****************************************************************************

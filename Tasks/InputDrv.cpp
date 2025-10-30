@@ -38,7 +38,7 @@ InputDrv& InputDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Init Input Driver Task   **********************************************
 // *****************************************************************************
-void InputDrv::InitTask(TIM_HandleTypeDef* htm, ADC_HandleTypeDef* had)
+Result InputDrv::InitTask(TIM_HandleTypeDef* htm, ADC_HandleTypeDef* had)
 {
   // Save timer handle
   htim = htm;
@@ -53,7 +53,7 @@ void InputDrv::InitTask(TIM_HandleTypeDef* htm, ADC_HandleTypeDef* had)
   ConfigADC(devices[EXT_LEFT], devices[EXT_RIGHT]);
 
   // Create task
-  CreateTask();
+  return AppTask::InitTask();
 }
 
 // *****************************************************************************
