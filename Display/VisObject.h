@@ -217,16 +217,16 @@ class VisObject
     // *************************************************************************
     // * Only base class and DisplayDrv have access to this parameters
 
-    // Current list for object
-    VisList* list = nullptr;
+    // Z position of object
+    uint16_t z = 0;
     // Pointer to next object. This pointer need to maker object list. Object
     // can be added only to one list.
     VisObject* p_next = nullptr;
     // Pointer to next object. This pointer need to maker object list. Object
     // can be added only to one list.
     VisObject* p_prev = nullptr;
-    // Z position of object
-    uint16_t z = 0;
+    // Current list for object
+    VisList* list = nullptr;
 
     // VisList is friend for access to pointers and Z
     friend class VisList;
