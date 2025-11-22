@@ -52,7 +52,7 @@
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-#include "iGpio.h"
+#include "IGpio.h"
 #include "AppTask.h"
 
 #include "climits" // For CHAR_BIT
