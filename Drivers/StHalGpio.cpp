@@ -28,7 +28,7 @@
 // *****************************************************************************
 // ***   Public: Read   ********************************************************
 // *****************************************************************************
-StHalGpio::Polarity StHalGpio::Read()
+StHalGpio::State StHalGpio::Read()
 {
   // Get pin state
   GPIO_PinState pin = HAL_GPIO_ReadPin(gpio_port, pin_mask_bit);
@@ -39,10 +39,10 @@ StHalGpio::Polarity StHalGpio::Read()
 // *****************************************************************************
 // ***   Public: Write   *******************************************************
 // *****************************************************************************
-void StHalGpio::Write(StHalGpio::Polarity polarity)
+void StHalGpio::Write(StHalGpio::State state)
 {
   // Convert polarity to pin state
-  GPIO_PinState pin_state = (polarity == HIGH) ? GPIO_PIN_SET : GPIO_PIN_RESET;
+  GPIO_PinState pin_state = (state == HIGH) ? GPIO_PIN_SET : GPIO_PIN_RESET;
   // Write to hardware
   HAL_GPIO_WritePin(gpio_port, pin_mask_bit, pin_state);
 }

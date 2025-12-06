@@ -216,7 +216,7 @@ class DisplayDrv : public AppTask
     ITouchscreen* touch = nullptr;
 
     // List with visual objects
-    VisList list;
+    VisList list = VisList(*this);
 
     // Background color
     color_t bkg_color = COLOR_BLACK;
@@ -288,8 +288,15 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ** Private constructor: Only GetInstance() allow to access this class ***
     // *************************************************************************
-    DisplayDrv() : AppTask(DISPLAY_DRV_TASK_STACK_SIZE, DISPLAY_DRV_TASK_PRIORITY,
-                           "DisplayDrv") {};
+    DisplayDrv() : AppTask(DISPLAY_DRV_TASK_STACK_SIZE, DISPLAY_DRV_TASK_PRIORITY, "DisplayDrv")
+    {
+      // Set default list for all VisObjects. Every object should have list. If
+      // default list isn't set, SetList() should be explicitly called for every
+      // VisObject. To simplify in case only one display is present, default list
+      // is used. In order to get full advantage of it DisplayDrv::GetInstance()
+      // should be called before creation any objects that contains VisObjects.
+      VisObject::default_list = &list;
+    };
 };
 
 #endif

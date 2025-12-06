@@ -71,7 +71,7 @@ class VisObject
     // *************************************************************************
     // ***   VisObject   *******************************************************
     // ************************************************************************* 
-    VisObject() {};
+    VisObject();
 
     // *************************************************************************
     // ***   ~VisObject   ******************************************************
@@ -93,7 +93,7 @@ class VisObject
     // *************************************************************************
     // ***   SetList   *********************************************************
     // *************************************************************************
-    Result SetList(VisList& l);
+    virtual Result SetList(VisList& l);
 
     // *************************************************************************
     // ***   Show   ************************************************************
@@ -228,8 +228,14 @@ class VisObject
     // Current list for object
     VisList* list = nullptr;
 
+    // Default list that used for all objects in case of multiple DisplayDrv
+    // don't forget to set list manually for each VisObject
+    static VisList* default_list;
+
     // VisList is friend for access to pointers and Z
     friend class VisList;
+    // DisplayDrv is friend for update default_list
+    friend class DisplayDrv;
 };
 
 #endif

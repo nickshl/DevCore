@@ -298,8 +298,12 @@ enum Color
 #define NumberOf(x) (sizeof(x)/sizeof((x)[0]))
 
 // MIN and MAX
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#if !defined(MIN)
+  #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+#if !defined(MAX)
+  #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
 
 // Break macro - useful for debugging
 #define Break() asm volatile("bkpt #0")

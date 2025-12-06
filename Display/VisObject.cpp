@@ -23,6 +23,17 @@
 
 #include "DisplayDrv.h" // for AddVisObjectToList() and DelVisObjectFromList()
 
+// Default list is nullptr until redefined
+VisList* VisObject::default_list = nullptr;
+
+// *****************************************************************************
+// ***   VisObject   ***********************************************************
+// *****************************************************************************
+VisObject::VisObject()
+{
+  list = default_list;
+}
+
 // *****************************************************************************
 // ***   Destructor   **********************************************************
 // *****************************************************************************
@@ -38,7 +49,7 @@ VisObject::~VisObject()
 Result VisObject::LockVisObject()
 {
   // Lock line
-  return DisplayDrv::GetInstance().LockDisplayLine();
+  return list->display_drv->LockDisplayLine();
 };
 
 // *****************************************************************************
@@ -47,7 +58,7 @@ Result VisObject::LockVisObject()
 Result VisObject::UnlockVisObject()
 {
   // Unlock line
-  return DisplayDrv::GetInstance().UnlockDisplayLine();
+  return list->display_drv->UnlockDisplayLine();
 };
 
 // *****************************************************************************
@@ -55,13 +66,20 @@ Result VisObject::UnlockVisObject()
 // *****************************************************************************
 Result VisObject::SetList(VisList& l)
 {
-  Result result = Result::ERR_CANNOT_EXECUTE;
+  Result result = Result::RESULT_OK;
 
-  // If object doesn't have list or not in the list chain - we can add/change it
-  if((list == nullptr) || (!IsInList()))
+  // Check if already in this list
+  if(list == &l)
+  {
+    ; // If already in requested list - do nothing, return ok
+  }
+  else if(!IsInList()) // We can change list only if object doesn't added to the list chain(hidden)
   {
     list = &l;
-    result = Result::RESULT_OK;
+  }
+  else
+  {
+    result = Result::ERR_CANNOT_EXECUTE;
   }
 
   return result;
@@ -72,9 +90,8 @@ Result VisObject::SetList(VisList& l)
 // *****************************************************************************
 Result VisObject::Show(uint32_t z_pos)
 {
-  // By default all VisObjects attached to main display list
-  if(list == nullptr) list = DisplayDrv::GetInstance().GetVisList();
-  // Z position is 0 by default. In this case we can use 0 here as "no pos" flag
+  // z_pos is 0 by default. Next code allow call Show() without explicit Z and
+  // have the same Z as previous calls.
   if(z_pos != 0)
   {
     z = z_pos;
@@ -83,7 +100,7 @@ Result VisObject::Show(uint32_t z_pos)
   // Visual Object isn't show yet
   InvalidateObjArea(true);
   // Add to VisObject List
-  return list->AddVisObjectToList(this, z);//DisplayDrv::GetInstance().AddVisObjectToList(this, z);
+  return list->AddVisObjectToList(this, z);
 }
 
 // *****************************************************************************
@@ -94,7 +111,7 @@ Result VisObject::Hide(void)
   // Invalidate area for update
   InvalidateObjArea();
   // Delete from VisObject List
-  return list->DelVisObjectFromList(this);//DisplayDrv::GetInstance().DelVisObjectFromList(this);
+  return list->DelVisObjectFromList(this);
 }
 
 // *****************************************************************************
@@ -120,9 +137,8 @@ bool VisObject::IsInList(void)
 // *****************************************************************************
 Result VisObject::Move(int32_t x, int32_t y, bool is_delta)
 {
-  Result result;
   // Lock object for changes
-  result = LockVisObject();
+  Result result = LockVisObject();
   // Check result
   if(result.IsGood())
   {
@@ -175,7 +191,7 @@ void VisObject::InvalidateObjArea(bool force)
 {
 #if defined(UPDATE_AREA_ENABLED)
   // Only if VisObject is show
-  if((IsShow() || force) && (list != nullptr))
+  if(IsShow() || force)
   {
     // Invalidate area
     list->InvalidateArea(x_start, y_start, x_end, y_end);

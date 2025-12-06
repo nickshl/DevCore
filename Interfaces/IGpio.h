@@ -59,25 +59,32 @@
 class IGpio
 {
   public:
-    // ***   Polarity   ********************************************************
-    enum Polarity
+    // ***   State   ***********************************************************
+    enum State : bool
     {
-       LOW = 0U,
-       HIGH
+       LOW = false,
+       HIGH = true
     };
 
     // ***   Type specifies the input or output   ******************************
-    enum Type
+    enum Type : uint8_t
     {
-       INPUT,
+       INPUT = 0u,
        OUTPUT
+    };
+
+    // ***   Polarity   ********************************************************
+    enum Polarity : uint8_t
+    {
+       NORMAL = 0u,
+       INVERTED
     };
 
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    explicit IGpio(Type type_parm, Polarity polarity_parm = LOW) : type(type_parm),
-                                                                   polarity(polarity_parm) {};
+    explicit IGpio(Type type_parm, Polarity polarity_parm = NORMAL) : type(type_parm),
+                                                                      polarity(polarity_parm) {};
 
     // *************************************************************************
     // ***   Public: Destructor   **********************************************
@@ -97,37 +104,36 @@ class IGpio
     // *************************************************************************
     // ***   Public: Read   ****************************************************
     // *************************************************************************
-    virtual Polarity Read() = 0;
+    virtual State Read() = 0;
 
     // *************************************************************************
     // ***   Public: Write   ***************************************************
     // *************************************************************************
-    virtual void Write(Polarity polarity) = 0;
+    virtual void Write(State state) = 0;
 
     // *************************************************************************
     // ***   Public: SetHigh   *************************************************
     // *************************************************************************
-    inline void SetHigh() {Write(HIGH);}
+    inline void SetHigh() {Write((polarity == NORMAL) ? HIGH : LOW);}
 
     // *************************************************************************
     // ***   Public: SetLow   **************************************************
     // *************************************************************************
-    inline void SetLow() {Write(LOW);}
+    inline void SetLow() {Write((polarity == NORMAL) ? LOW : HIGH);}
 
     // *************************************************************************
     // ***   Public: IsHigh   **************************************************
     // *************************************************************************
-    inline bool IsHigh() {return (Read() == HIGH);}
+    inline bool IsHigh() {return (Read() == ((polarity == NORMAL) ? HIGH : LOW));}
 
     // *************************************************************************
     // ***   Public: IsLow   ***************************************************
     // *************************************************************************
-    inline bool IsLow() {return (Read() == LOW);}
+    inline bool IsLow() {return (Read() == ((polarity == NORMAL) ? LOW : HIGH));}
 
   protected:
     // Indicates type(Input/Output)
     Type type;
-
     // Indicates if this I/O is active low or active high
     Polarity polarity;
 

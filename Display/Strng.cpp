@@ -57,7 +57,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& 
   bg_color = 0;
   font_ptr = &font;
   transpatent_bg = true;
-  width = font.GetCharW() * strlen(str) * scale;
+  width = font.GetCharW() * ((str == nullptr) ? 0 : strlen(str)) * scale;
   height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
@@ -84,7 +84,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_
   bg_color = bgc;
   font_ptr = &font;
   transpatent_bg = false;
-  width = font.GetCharW() * strlen(str) * scale;
+  width = font.GetCharW() * ((str == nullptr) ? 0 : strlen(str)) * scale;
   height = font.GetCharH() * scale;
   x_end = x + width - 1;
   y_end = y + height - 1;
@@ -125,7 +125,7 @@ void String::SetFont(Font& font)
     InvalidateObjArea();
     // Do changes
     font_ptr = &font;
-    width = font.GetCharW() * strlen(string) * scale;
+    width = font.GetCharW() * ((string == nullptr) ? 0 : strlen(string)) * scale;
     height = font.GetCharH() * scale;
     x_end = x_start + width - 1;
     y_end = y_start + height - 1;
@@ -150,7 +150,7 @@ void String::SetScale(uint8_t s)
     InvalidateObjArea();
     // Do changes
     scale = s;
-    width = GetFontW() * strlen(string) * scale;
+    width = GetFontW() * ((string == nullptr) ? 0 : strlen(string)) * scale;
     height = GetFontH() * scale;
     x_end = x_start + width - 1;
     y_end = y_start + height - 1;
@@ -176,7 +176,7 @@ void String::SetString(const char* str, bool force)
     // Set new pointer to string
     string = str;
     // Recalculate string width
-    width = GetFontW() * strlen(str) * scale;
+    width = GetFontW() * ((str == nullptr) ? 0 : strlen(str)) * scale;
     // Update string X end coordinate
     x_end = x_start + width - 1;
     // Invalidate area for new string(needed if new string longer than old)
@@ -203,7 +203,7 @@ void String::SetString(char* buf, uint32_t len, const char* format, ...)
   va_end(arglist);
   //Set new pointer to string
   string = buf;
-  width = GetFontW() * strlen(buf) * scale;
+  width = GetFontW() * ((buf == nullptr) ? 0 : strlen(buf)) * scale;
   x_end = x_start + width - 1;
   // Invalidate area for new string(needed if new string longer than old)
   InvalidateObjArea();

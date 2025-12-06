@@ -25,8 +25,10 @@
 // *****************************************************************************
 DisplayDrv& DisplayDrv::GetInstance(void)
 {
-   static DisplayDrv display_drv;
-   return display_drv;
+  // Static declaration of display driver
+  static DisplayDrv display_drv;
+  // Return display driver
+  return display_drv;
 }
 
 // *****************************************************************************

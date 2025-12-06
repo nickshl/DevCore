@@ -28,8 +28,8 @@
 Result Eeprom24::Init()
 {
   Result result = Result::RESULT_OK;
-  iic.SetTxTimeout(10U);
-  iic.SetRxTimeout(100U);
+  iic.SetTxTimeout(10u);
+  iic.SetRxTimeout(100u);
   // Enable write protection
   if(write_protection != nullptr)
   {
@@ -96,7 +96,7 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
       // Get data size
       uint8_t data_size = size < page_size_bytes ? size : page_size_bytes;
       // For the first page
-      if((addr % page_size_bytes) != 0U)
+      if((addr % page_size_bytes) != 0u)
       {
         // Calculate data size from start address to the end of current page
         data_size = page_size_bytes - (addr % page_size_bytes);
@@ -106,14 +106,16 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
       // Decrease number of remaining bytes
       size -= data_size;
       // Store address
-      buf[0U] = (addr >> 8) & 0xFF; // MSB
-      buf[1U] = addr & 0xFF; // LSB
+      buf[0u] = (addr >> 8u) & 0xFFu; // MSB
+      buf[1u] = addr & 0xFFu; // LSB
       // Increment address for next transaction
       addr += data_size;
       // Copy data
-      memcpy(buf + 2U, tx_buf_ptr, data_size);
+      memcpy(buf + 2u, tx_buf_ptr, data_size);
+      // Advance data pointer to next chunk
+      tx_buf_ptr += data_size;
       // Transfer
-      result = iic.Write(I2C_ADDR, buf, 2U + data_size);
+      result = iic.Write(I2C_ADDR, buf, 2u + data_size);
 
       // Wait until writing finished
       if(result.IsGood())
@@ -121,12 +123,12 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
         // Check device response
         result = iic.IsDeviceReady(I2C_ADDR);
         // Clear repetition counter for tracking timeout
-        repetition_cnt = 0U;
+        repetition_cnt = 0u;
         // Wait until write operation finished
         while(result.IsBad())
         {
           // Delay 1 ms for start writing
-          RtosTick::DelayMs(1U);
+          RtosTick::DelayMs(1u);
           // Check is device ready
           result = iic.IsDeviceReady(I2C_ADDR);
           // Check timeout

@@ -177,45 +177,45 @@ Result StHalSpi::SetSpeed(uint32_t clock_rate)
   uint32_t baud_prescaler = SPI_BAUDRATEPRESCALER_2;
 
   // Set prescaler for SPI
-  if(divider <= 2U)
+  if(divider <= 2u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_2;
-    clock_rate = pclk2 / 2U;
+    clock_rate = pclk2 / 2u;
   }
-  else if(divider <= 4U)
+  else if(divider <= 4u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_4;
-    clock_rate = pclk2 / 4U;
+    clock_rate = pclk2 / 4u;
   }
-  else if(divider <= 8U)
+  else if(divider <= 8u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_8;
-    clock_rate = pclk2 / 8U;
+    clock_rate = pclk2 / 8u;
   }
-  else if(divider <= 16U)
+  else if(divider <= 16u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_16;
-    clock_rate = pclk2 / 16U;
+    clock_rate = pclk2 / 16u;
   }
-  else if(divider <= 32U)
+  else if(divider <= 32u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_32;
-    clock_rate = pclk2 / 32U;
+    clock_rate = pclk2 / 32u;
   }
-  else if(divider <= 64U)
+  else if(divider <= 64u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_64;
-    clock_rate = pclk2 / 64U;
+    clock_rate = pclk2 / 64u;
   }
-  else if(divider <= 128U)
+  else if(divider <= 128u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_128;
-    clock_rate = pclk2 / 128U;
+    clock_rate = pclk2 / 128u;
   }
-  else if(divider <= 256U)
+  else if(divider <= 256u)
   {
     baud_prescaler = SPI_BAUDRATEPRESCALER_256;
-    clock_rate = pclk2 / 256U;
+    clock_rate = pclk2 / 256u;
   }
   else
   {
@@ -226,7 +226,7 @@ Result StHalSpi::SetSpeed(uint32_t clock_rate)
   if(result.IsGood())
   {
     // Disable SPI peripheral
-    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0U);
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0u);
     // Set prescaler
     MODIFY_REG(hspi.Instance->CR1, (uint32_t)SPI_CR1_BR_Msk, baud_prescaler);
     // Enable SPI peripheral
@@ -251,40 +251,40 @@ Result StHalSpi::GetSpeed(uint32_t& clock_rate)
   // Set prescaler for SPI
   if(baud_prescaler == SPI_BAUDRATEPRESCALER_2)
   {
-    clock_rate = pclk2 / 2U;
+    clock_rate = pclk2 / 2u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_4)
   {
-    clock_rate = pclk2 / 4U;
+    clock_rate = pclk2 / 4u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_8)
   {
-    clock_rate = pclk2 / 8U;
+    clock_rate = pclk2 / 8u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_16)
   {
-    clock_rate = pclk2 / 16U;
+    clock_rate = pclk2 / 16u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_32)
   {
-    clock_rate = pclk2 / 32U;
+    clock_rate = pclk2 / 32u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_64)
   {
-    clock_rate = pclk2 / 64U;
+    clock_rate = pclk2 / 64u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_128)
   {
-    clock_rate = pclk2 / 128U;
+    clock_rate = pclk2 / 128u;
   }
   else if(baud_prescaler == SPI_BAUDRATEPRESCALER_256)
   {
-    clock_rate = pclk2 / 256U;
+    clock_rate = pclk2 / 256u;
   }
   else
   {
     // Clear result clock rate
-    clock_rate = 0U;
+    clock_rate = 0u;
     // We shouldn't get here
     result = Result::ERR_SPI_GENERAL;
   }
@@ -300,12 +300,12 @@ Result StHalSpi::SetMode(ISpi::Mode mode)
   Result result = Result::RESULT_OK;
 
   // Variables for store CPHA & CPOL
-  uint32_t setup = 0U;
+  uint32_t setup = 0u;
 
   // Find CPHA & CPOL by mode
   if(mode == ISpi::MODE_0)
   {
-    setup = 0U;
+    setup = 0u;
   }
   else if(mode == ISpi::MODE_1)
   {
@@ -327,7 +327,7 @@ Result StHalSpi::SetMode(ISpi::Mode mode)
   if(result.IsGood())
   {
     // Disable SPI peripheral
-    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0U);
+    MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_SPE_Msk), 0u);
     // Set mode
     MODIFY_REG(hspi.Instance->CR1, (uint32_t)(SPI_CR1_CPHA_Msk | SPI_CR1_CPOL_Msk), setup);
     // Enable SPI peripheral
@@ -382,7 +382,7 @@ Result StHalSpi::GetMode(ISpi::Mode& mode)
 uint32_t StHalSpi::GetToDataSizeBytes()
 {
    // Shift by a byte and add one because 0x300 is 4 bits
-   return(hspi.Init.DataSize >> 8U) + 1U;
+   return(hspi.Init.DataSize >> 8u) + 1u;
 }
 
 // *****************************************************************************

@@ -70,18 +70,18 @@ class StHalGpio : public IGpio
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    StHalGpio(GPIO_TypeDef* port, uint32_t pin, Type type_parm, Polarity polarity_parm = LOW) :
+    StHalGpio(GPIO_TypeDef* port, uint32_t pin, Type type_parm, Polarity polarity_parm = NORMAL) :
       IGpio(type_parm, polarity_parm), gpio_port(port), pin_mask_bit(pin) {};
 
     // *************************************************************************
     // ***   Public: Read   ****************************************************
     // *************************************************************************
-    virtual Polarity Read();
+    virtual State Read();
 
     // *************************************************************************
     // ***   Public: Write   ***************************************************
     // *************************************************************************
-    virtual void Write(Polarity polarity);
+    virtual void Write(State state);
 
     // *************************************************************************
     // ***   Public: GetPort   *************************************************
@@ -102,7 +102,6 @@ class StHalGpio : public IGpio
   private:
     // Pointer to the GPIO register set as provided by CubeMX
     GPIO_TypeDef* gpio_port;
-
     // Port pin bit mask as defined by CubeMX
     uint32_t pin_mask_bit;
 };
