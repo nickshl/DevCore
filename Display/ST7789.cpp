@@ -117,6 +117,9 @@ Result ST7789::Init(void)
 // *****************************************************************************
 Result ST7789::WriteDataStream(uint8_t* data, uint32_t n)
 {
+  // Pull up CS. In H5 there some problem wit we wouldn't pull up CS for every
+  // line. Looks like some data inserted between lines?
+  display_cs.SetHigh();
   // Data
   display_dc.SetHigh();
   // Pull down CS

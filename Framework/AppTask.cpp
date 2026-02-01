@@ -25,7 +25,7 @@
 // ***   Static variables   ****************************************************
 // *****************************************************************************
 static RtosMutex startup_mutex;
-static uint32_t startup_cnt = 0U;
+static uint32_t startup_cnt = 0u;
 
 // *****************************************************************************
 // ***   Callback function   ***************************************************
@@ -82,7 +82,7 @@ Result AppTask::CreateTask()
   Result result = Result::RESULT_OK;
 
   // If interval timer period isn't zero or task queue present
-  if((timer.GetTimerPeriod() != 0U) || (task_queue.GetQueueLen() != 0U))
+  if((timer.GetTimerPeriod() != 0u) || (task_queue.GetQueueLen() != 0u))
   {
     // Set Control Queue name
     ctrl_queue.SetName(task_name, "Ctrl");
@@ -90,7 +90,7 @@ Result AppTask::CreateTask()
     result = ctrl_queue.Create();
   }
   // If task queue present
-  if(task_queue.GetQueueLen() != 0U)
+  if(task_queue.GetQueueLen() != 0u)
   {
     // Set Task Queue name
     task_queue.SetName(task_name, "Task");
@@ -98,7 +98,7 @@ Result AppTask::CreateTask()
     result |= task_queue.Create();
   }
   // If interval timer period isn't zero
-  if(timer.GetTimerPeriod() != 0U)
+  if(timer.GetTimerPeriod() != 0u)
   {
     // Create timer
     result |= timer.Create();
@@ -164,7 +164,7 @@ Result AppTask::IntLoop()
     // Buffer for control message
     CtrlQueueMsg ctrl_msg;
     // Read on the control queue
-    result = ctrl_queue.Receive(&ctrl_msg, timer.GetTimerPeriod() * 2U);
+    result = ctrl_queue.Receive(&ctrl_msg, timer.GetTimerPeriod() * 2u);
     // If successful
     if(result.IsGood())
     {
@@ -192,7 +192,7 @@ Result AppTask::IntLoop()
          case CTRL_TASK_QUEUE_MSG:
          {
            // Non blocking read from the task queue
-           result = task_queue.Receive(task_msg_ptr, 0U);
+           result = task_queue.Receive(task_msg_ptr, 0u);
            // If successful
            if(result.IsGood())
            {
@@ -239,6 +239,8 @@ void AppTask::TaskFunctionCallback(void* ptr)
 
     // Increment counter before call Setup()
     ChangeCnt(true);
+    // Pause for give other tasks chance to run Setup() in order to increment counter
+    RtosTick::DelayTicks(1u);
     // Call virtual Setup() function from AppTask class
     result = app_task.Setup();
     // Prevent other task to start if Setup() unsuccessful
@@ -246,13 +248,11 @@ void AppTask::TaskFunctionCallback(void* ptr)
     {
       // Decrement counter after call Setup()
       ChangeCnt(false);
-      // Pause for give other tasks run Setup()
-      RtosTick::DelayTicks(1U);
       // Pause while other tasks run Setup() before executing any Loop()
-      while(startup_cnt) RtosTick::DelayTicks(1U);
+      while(startup_cnt) RtosTick::DelayTicks(1u);
 
       // If no timer or queue - just call Loop() function
-      if((app_task.timer.GetTimerPeriod() == 0U) && (app_task.task_queue.GetQueueLen() == 0U))
+      if((app_task.timer.GetTimerPeriod() == 0u) && (app_task.task_queue.GetQueueLen() == 0u))
       {
         // Call virtual Loop() function from AppTask class
         while(app_task.Loop() == Result::RESULT_OK);
@@ -260,7 +260,7 @@ void AppTask::TaskFunctionCallback(void* ptr)
       else
       {
         // Start task timer if needed
-        if(app_task.timer.GetTimerPeriod() != 0U)
+        if(app_task.timer.GetTimerPeriod() != 0u)
         {
           result = app_task.timer.Start();
         }
@@ -271,7 +271,7 @@ void AppTask::TaskFunctionCallback(void* ptr)
           result = app_task.IntLoop();
         }
         // Stop task timer if needed
-        if(app_task.timer.GetTimerPeriod() != 0U)
+        if(app_task.timer.GetTimerPeriod() != 0u)
         {
           result |= app_task.timer.Stop();
         }
