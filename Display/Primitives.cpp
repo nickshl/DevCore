@@ -84,6 +84,27 @@ void Box::SetBorderWidth(int32_t width)
 }
 
 // *****************************************************************************
+// ***   SetFill   *************************************************************
+// *****************************************************************************
+void Box::SetFill(bool f)
+{
+  // Update box only if color changed
+  if(f != fill)
+  {
+    // Lock object for changes
+    LockVisObject();
+    // Do changes
+    fill = f;
+    // Update border width
+    border_width = fill ? 0 : 1; // Set border 1 pixel if border isn't fill
+    // Invalidate area
+    InvalidateObjArea();
+    // Unlock object after changes
+    UnlockVisObject();
+  }
+}
+
+// *****************************************************************************
 // ***   SetColor   ************************************************************
 // *****************************************************************************
 void Box::SetColor(color_t c)

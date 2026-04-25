@@ -143,6 +143,11 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
 
         // *** Then insert new element into the list ***************************
 
+        // We need removed value to check if we need advance median index
+        T removed_value = array[position].value;
+        // Median copy since it may be removed
+        MedianData median_data = array[median_idx];
+
         if(value < array[median_idx].value)
         {
           // Get index of previous element
@@ -152,14 +157,18 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
           // Insert new element
           if(value < array[idx].value) InsertBefore(idx, position);
           else                         InsertAfter(idx, position);
-          // TODO: it is possible to skip last stem and advance median index
-          // there. The only problem that we should advance median index in
-          // right direction. If we placed new element on the same side as
-          // removed value, median index should not be advanced. If it placed on
-          // opposite side of median - we should advance it in that direction to
-          // keep in in the middle. It can be done when new value less or
-          // greater than median, but if we have equal values - we can't decide
-          //  if we need to advance median index or not.
+          // If we placed new element on the same side as removed value, median
+          // index should not be advanced. If it placed on opposite side of
+          // median - we should advance it in that direction to keep in in the
+          // middle.
+          if(removed_value > median_data.value)
+          {
+            // Advance index. We using copy of median there since it may be removed.
+            median_idx = median_data.prev_idx;
+            // New value can be placed in between median and previous value and
+            // median may be removed, we need additional check.
+            if(array[median_idx].next_idx == position) median_idx = position;
+          }
         }
         else
         {
@@ -170,39 +179,49 @@ template <class T, int N, class IT = uint16_t> class MedianListFilter
           // Insert new element
           if(value >= array[idx].value) InsertAfter(idx, position);
           else                          InsertBefore(idx, position);
-          // TODO: it is possible to skip last stem and advance median index
-          // there. The only problem that we should advance median index in
-          // right direction. If we placed new element on the same side as
-          // removed value, median index should not be advanced. If it placed on
-          // opposite side of median - we should advance it in that direction to
-          // keep in in the middle. It can be done when new value less or
-          // greater than median, but if we have equal values - we can't decide
-          //  if we need to advance median index or not.
+          // If we placed new element on the same side as removed value, median
+          // index should not be advanced. If it placed on opposite side of
+          // median - we should advance it in that direction to keep in in the
+          // middle.
+          if(removed_value < median_data.value)
+          {
+            // Advance index. We using copy of median there since it may be removed.
+            median_idx = median_data.next_idx;
+            // New value can be placed in between median and previous value and
+            // median may be removed, we need additional check.
+            if(array[median_idx].prev_idx == position) median_idx = position;
+          }
         }
 
         // Store new value in array. Done here to avoid overwrite median
         array[position].value = value;
 
-        // *** Finally find the median index ***********************************
+        // *** Finally find the median index(if needed) ************************
 
-        // Search median index if array isn't filled fully
-        IT med_idx = 0u;
-        // Find the first element of sorted array
-        for(IT i = 0u; i < GetItemsCnt(); i++)
+        // If removed value equal median value - we don't know if it was below
+        // or above median and if we need to advance median_idx. So, just
+        // find new median.
+        if(removed_value == median_data.value)
         {
-          med_idx = i;
-          if(array[med_idx].prev_idx == N) break;
+          // Find the first element of sorted array
+          for(IT i = 0u; i < GetItemsCnt(); i++)
+          {
+            // If element has no previous index - it is a first one
+            if(array[i].prev_idx == N)
+            {
+              // Set median index to this element
+              median_idx = i;
+              // And break the cycle
+              break;
+            }
+          }
+          // Now search median element
+          for(IT i = 0u; i < GetItemsCnt() / 2u; i++)
+          {
+            median_idx = array[median_idx].next_idx;
+          }
         }
-        // Now search median element
-        for(IT i = 0u; i < GetItemsCnt() / 2u; i++)
-        {
-          med_idx = array[med_idx].next_idx;
-        }
-        // Update median index
-        median_idx = med_idx;
       }
-
-      // *** Increase position for next insertion ******************************
 
       // Increase position
       position++;

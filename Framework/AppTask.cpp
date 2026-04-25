@@ -146,6 +146,27 @@ Result AppTask::SendTaskMessage(const void* task_msg, bool is_task_priority, boo
     // to be processed while task message loops task control message shouldn't be
     // sent as priority message
     result = SendControlMessage(ctrl_msg, is_task_priority && is_ctrl_priority);
+
+    if(result.IsBad())
+    {
+      // If we got there, it mean that control queue is full and we can't add
+      // CTRL_TASK_QUEUE_MSG to it. As result, message we added to task_queue
+      // will stuck there. To reduce task_queue by one message we added and
+      // prevent it stuck, we can do non blocking read from the task queue.
+      // The problem: we can add message to the front and to the back, but we
+      // can remove message only from the front. As result, we can lost
+      // previously added message and not the one we added just now.
+      task_queue.Receive(task_msg_ptr, 0u);
+
+      // Set specific error to indicate that we lost message, but not the one we
+      // just added(ERR_QUEUE_WRITE would indicate that).
+      result = Result::ERR_CTRL_QUEUE_WRITE;
+    }
+  }
+  else
+  {
+    // If we got there, it mean that task_queue is full and we lost that
+    // message. The developer should handle that by checking an error.
   }
 
   // Return result

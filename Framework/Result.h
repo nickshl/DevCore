@@ -96,6 +96,9 @@ class Result
       ERR_SEMAPHORE_TAKE,
       ERR_SEMAPHORE_GIVE,
 
+      // ***   Framework errors   **********************************************
+      ERR_CTRL_QUEUE_WRITE,
+
       // ***   UART errors   ***************************************************
       ERR_UART_GENERAL,
       ERR_UART_TRANSMIT,
