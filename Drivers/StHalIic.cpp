@@ -83,7 +83,7 @@ Result StHalIic::IsDeviceReady(uint16_t addr, uint8_t retries)
 {
   Result result;
   // Shift address one bit left - HAL blow away LSB, not MSB.
-  addr <<= 1U;
+  addr <<= 1u;
   // Check device status
   HAL_StatusTypeDef hal_result = HAL_I2C_IsDeviceReady(&hi2c, addr, retries, i2c_tx_timeout_ms);
   // Convert operation result to Result
@@ -101,16 +101,16 @@ Result StHalIic::Transfer(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size, 
 
   // Special hack for use HAL_I2C_Mem_Read() function for send Repeated Start if
   // tx_size is 1 or 2 bytes.
-  if((tx_buf_ptr != nullptr) && (rx_buf_ptr != nullptr) && ((tx_size == 1U) || (tx_size == 2U)))
+  if((tx_buf_ptr != nullptr) && (rx_buf_ptr != nullptr) && ((tx_size == 1u) || (tx_size == 2u)))
   {
     // Variable for store result from the HAL
     HAL_StatusTypeDef hal_result = HAL_OK;
 
     // Shift address one bit left - HAL blow away LSB, not MSB.
-    addr <<= 1U;
+    addr <<= 1u;
 
     // Transmit data
-    hal_result = HAL_I2C_Mem_Read(&hi2c, addr, tx_buf_ptr[0], tx_size, rx_buf_ptr, rx_size, i2c_tx_timeout_ms);
+    hal_result = HAL_I2C_Mem_Read(&hi2c, addr, ((uint16_t)tx_buf_ptr[1u] << 8u) | (uint16_t)tx_buf_ptr[0u], tx_size, rx_buf_ptr, rx_size, i2c_tx_timeout_ms);
 
     // Convert operation result to Result
     result = ConvertResult(hal_result);
@@ -126,9 +126,9 @@ Result StHalIic::Transfer(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size, 
     if((rx_buf_ptr != nullptr) && result.IsGood())
     {
       // Clear RX buffer
-      for(uint32_t i = 0; i < rx_size; i++)
+      for(uint32_t i = 0u; i < rx_size; i++)
       {
-        rx_buf_ptr[i] = 0;
+        rx_buf_ptr[i] = 0u;
       }
       // Receive data
       result = Read(addr, rx_buf_ptr, rx_size);
@@ -151,7 +151,7 @@ Result StHalIic::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size)
     HAL_StatusTypeDef hal_result = HAL_OK;
 
     // Shift address one bit left - HAL blow away LSB, not MSB.
-    addr <<= 1U;
+    addr <<= 1u;
 
     // Transmit data
     hal_result = HAL_I2C_Master_Transmit(&hi2c, addr, tx_buf_ptr, tx_size, i2c_tx_timeout_ms);
@@ -176,7 +176,7 @@ Result StHalIic::Read(uint16_t addr, uint8_t* rx_buf_ptr, uint32_t rx_size)
     HAL_StatusTypeDef hal_result = HAL_OK;
 
     // Shift address one bit left - HAL blow away LSB, not MSB.
-    addr <<= 1U;
+    addr <<= 1u;
 
     // Transmit data
     hal_result = HAL_I2C_Master_Receive(&hi2c, addr, rx_buf_ptr, rx_size, i2c_tx_timeout_ms);
@@ -199,7 +199,7 @@ Result StHalIic::WriteAsync(uint16_t addr, uint8_t* tx_buf_ptr, uint32_t tx_size
   if(hi2c.hdmatx != nullptr)
   {
     // Shift address one bit left - HAL blow away LSB, not MSB.
-    addr <<= 1U;
+    addr <<= 1u;
     // Receive data using DMA
     HAL_StatusTypeDef hal_result = HAL_I2C_Master_Transmit_DMA(&hi2c, addr, tx_buf_ptr, tx_size);
     // Convert operation result to Result
@@ -220,7 +220,7 @@ Result StHalIic::ReadAsync(uint16_t addr, uint8_t* rx_buf_ptr, uint32_t rx_size)
   if(hi2c.hdmarx != nullptr)
   {
     // Shift address one bit left - HAL blow away LSB, not MSB.
-    addr <<= 1U;
+    addr <<= 1u;
     // Receive data using DMA
     HAL_StatusTypeDef hal_result = HAL_I2C_Master_Receive_DMA(&hi2c, addr, rx_buf_ptr, rx_size);
     // Convert operation result to Result
