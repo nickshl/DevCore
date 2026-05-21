@@ -52,6 +52,8 @@
 #include "Font_10x18.h"
 #include "Font_12x16.h"
 
+#include <stdarg.h> // for va_list
+
 // *****************************************************************************
 // ***   String Class   ********************************************************
 // *****************************************************************************
@@ -99,9 +101,14 @@ class String : public VisObject
     void SetString(char* buffer, uint32_t n, const char* format, ...);
 
     // *************************************************************************
+    // ***   Public: Printf   **************************************************
+    // *************************************************************************
+    void Printf(const char* format, ...);
+
+    // *************************************************************************
     // ***   Public: SetStringPtr   ********************************************
     // *************************************************************************
-    void SetStringPtr(const char* str) {string = str;}
+    void SetStringPtr(const char* str) {string = str; length = 0u;}
 
     // *************************************************************************
     // ***   Public: SetColor   ************************************************
@@ -141,21 +148,23 @@ class String : public VisObject
     // *************************************************************************
     // ***   Public: GetFontW   ************************************************
     // *************************************************************************
-    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharW());}
+    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetCharW());}
 
     // *************************************************************************
     // ***   Public: GetFontH   ************************************************
     // *************************************************************************
-    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharH());}
+    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetCharH());}
 
     // *************************************************************************
     // ***   Public: GetFontBytePerChar   **************************************
     // *************************************************************************
-    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetBytesPerChar());}
+    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetBytesPerChar());}
 
   private:
     // Pointer to string
     const char* string = nullptr;
+    // Length of buffer(0 - we can't use SetString as printf style)
+    uint16_t length = 0u;
     // Text color
     color_t txt_color = 0u;
     // Background color
@@ -166,6 +175,16 @@ class String : public VisObject
     Font* font_ptr = nullptr;
     // Is background transparent ?
     bool transpatent_bg = false;
+
+    // *************************************************************************
+    // ***   Private: SetString   **********************************************
+    // *************************************************************************
+    void SetString(char* buf, uint32_t len, const char* format, va_list& arglist);
+
+    // *************************************************************************
+    // ***   Private: RecalculateSize   ****************************************
+    // *************************************************************************
+    void RecalculateSize();
 };
 
 #endif

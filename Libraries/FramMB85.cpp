@@ -110,7 +110,7 @@ Result FramMB85::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
       result = iic.Write(I2C_ADDR, buf, 2u + data_size);
 
       // MB85RS2MT does not take long time to write data like Flash memories
-      // or E2PROM, and MB85RS2MT takes no wait time
+      // or EEPROM, and MB85RS2MT takes no wait time
     }
     // Enable write protection
     if(write_protection != nullptr)

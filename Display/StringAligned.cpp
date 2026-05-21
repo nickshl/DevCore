@@ -1,10 +1,10 @@
 //******************************************************************************
-//  @file Strng.cpp
+//  @file StringAligned.cpp
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: String Visual Object Class, implementation
+//  @details DevCore: StringAligned Visual Object Class, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//  @copyright Copyright (c) 2026, Devtronic & Nicolai Shlapunov
 //             All rights reserved.
 //
 //  @section SUPPORT
@@ -18,31 +18,30 @@
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
-#include "Strng.h"
-
 #include <cstring>
 #include <stdio.h>
+#include <StringAligned.h>
 
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, color_t tc, Font& font)
+StringAligned::StringAligned(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, Font& font)
 {
-  SetParams(str, x, y, tc, font);
+  SetParams(str, algnmnt, x, y, w, tc, font);
 }
 
 // *****************************************************************************
 // ***   Constructor   *********************************************************
 // *****************************************************************************
-String::String(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font)
+StringAligned::StringAligned(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, color_t bgc, Font& font)
 {
-  SetParams(str, x, y, tc, bgc, font);
+  SetParams(str, algnmnt, x, y, tc, bgc, font);
 }
 
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font)
+void StringAligned::SetParams(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, Font& font)
 {
   // Lock object for changes
   LockVisObject();
@@ -52,11 +51,13 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& 
   string = str;
   x_start = x;
   y_start = y;
+  width = w;
   txt_color = tc;
   bg_color = 0;
   font_ptr = &font;
   transpatent_bg = true;
-  // Recalculate size based on string length, font and scale
+  alignment = algnmnt;
+  // Recalculate size based on font and scale
   RecalculateSize();
   // Invalidate area for new string(needed if new string longer than old)
   InvalidateObjArea();
@@ -67,7 +68,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& 
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font)
+void StringAligned::SetParams(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, color_t bgc, Font& font)
 {
   // Lock object for changes
   LockVisObject();
@@ -77,12 +78,29 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_
   string = str;
   x_start = x;
   y_start = y;
+  width = w;
   txt_color = tc;
   bg_color = bgc;
   font_ptr = &font;
   transpatent_bg = false;
-  // Recalculate size based on string length, font and scale
+  alignment = algnmnt;
+  // Recalculate size based on font and scale
   RecalculateSize();
+  // Invalidate area for new string(needed if new string longer than old)
+  InvalidateObjArea();
+  // Unlock object after changes
+  UnlockVisObject();
+}
+
+// *****************************************************************************
+// ***   SetAlignment   ********************************************************
+// *****************************************************************************
+void StringAligned::SetAlignment(alignment_t algnmnt)
+{
+  // Lock object for changes
+  LockVisObject();
+  // Save alignment
+  alignment = algnmnt;
   // Invalidate area for new string(needed if new string longer than old)
   InvalidateObjArea();
   // Unlock object after changes
@@ -92,7 +110,7 @@ void String::SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_
 // *****************************************************************************
 // ***   SetColor   ************************************************************
 // *****************************************************************************
-void String::SetColor(color_t tc, color_t bgc, bool is_trnsp)
+void StringAligned::SetColor(color_t tc, color_t bgc, bool is_trnsp)
 {
   // Check if parameters changed
   if((tc != txt_color) || (bgc != bg_color) || (is_trnsp != transpatent_bg))
@@ -109,7 +127,7 @@ void String::SetColor(color_t tc, color_t bgc, bool is_trnsp)
 // *****************************************************************************
 // ***   Public: SetFont   *****************************************************
 // *****************************************************************************
-void String::SetFont(Font& font)
+void StringAligned::SetFont(Font& font)
 {
   // Check if font changed
   if(&font != font_ptr)
@@ -120,7 +138,7 @@ void String::SetFont(Font& font)
     InvalidateObjArea();
     // Do changes
     font_ptr = &font;
-    // Recalculate size based on string length, font and scale
+    // Recalculate size based on font and scale
     RecalculateSize();
     // Invalidate area for new string(needed if new string font bigger than old one)
     InvalidateObjArea();
@@ -132,7 +150,7 @@ void String::SetFont(Font& font)
 // *****************************************************************************
 // ***   SetParams   ***********************************************************
 // *****************************************************************************
-void String::SetScale(uint8_t s)
+void StringAligned::SetScale(uint8_t s)
 {
   // Scale have to be positive number
   if(s > 0u)
@@ -143,7 +161,7 @@ void String::SetScale(uint8_t s)
     InvalidateObjArea();
     // Do changes
     scale = s;
-    // Recalculate size based on string length, font and scale
+    // Recalculate size based on font and scale
     RecalculateSize();
     // Invalidate area for new string(needed if new string scale bigger than old one)
     InvalidateObjArea();
@@ -155,7 +173,7 @@ void String::SetScale(uint8_t s)
 // *****************************************************************************
 // ***   SetString   ***********************************************************
 // *****************************************************************************
-void String::SetString(const char* str, bool force)
+void StringAligned::SetString(const char* str, bool force)
 {
   // Lock object for changes
   LockVisObject();
@@ -168,7 +186,7 @@ void String::SetString(const char* str, bool force)
     string = str;
     // Since this function accept only pointer to constant string - clear length
     length = 0u;
-    // Recalculate size based on string length, font and scale
+    // Recalculate size based on font and scale
     RecalculateSize();
     // Invalidate area for new string(needed if new string longer than old)
     InvalidateObjArea();
@@ -180,7 +198,7 @@ void String::SetString(const char* str, bool force)
 // *****************************************************************************
 // ***   SetString   ***********************************************************
 // *****************************************************************************
-void String::SetString(char* buf, uint32_t len, const char* format, ...)
+void StringAligned::SetString(char* buf, uint32_t len, const char* format, ...)
 {
   // Argument list
   va_list arglist;
@@ -198,7 +216,7 @@ void String::SetString(char* buf, uint32_t len, const char* format, ...)
 // *****************************************************************************
 // ***   Printf   **************************************************************
 // *****************************************************************************
-void String::Printf(const char* format, ...)
+void StringAligned::Printf(const char* format, ...)
 {
   // If we don't have valid buffer - don't do anything
   if((string != nullptr) && (length != 0u))
@@ -220,7 +238,7 @@ void String::Printf(const char* format, ...)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
+void StringAligned::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 {
   // Pointer to string. Will increment for get characters. Placed there because
   // of SetStringPtr() function existence.
@@ -234,8 +252,28 @@ void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
     // Number of bytes need skipped for draw line
     uint32_t skip_bytes = ((line - y_start) / scale) * GetFontBytePerChar() / GetFontH();
 
-    // While we have symbols
-    while(*str != '\0')
+    // Calculate alignment
+    if(alignment == CENTER)
+    {
+      x += (width - length_pixels) / 2;
+    }
+    else if(alignment == RIGHT)
+    {
+      x += width - length_pixels;
+    }
+    else
+    {
+      ; // Do nothing
+    }
+
+    // Find valid visible boundary
+    int32_t visible_x_start = x_start - start_x;
+    int32_t visible_x_end = x_end - start_x;
+    if(visible_x_start < 0) visible_x_start = 0;
+    if(visible_x_end >= n) visible_x_end = n - 1;
+
+    // While we have symbols and still didn't reach object end
+    while((*str != '\0') && (x < visible_x_end))
     {
       uint32_t b = 0;
       uint32_t w = 0;
@@ -252,7 +290,7 @@ void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
         for(uint8_t i = 0u; i < scale; i++)
         {
           // Put color in buffer only if visible
-          if((x >= 0) && (x < n))
+          if((x >= visible_x_start) && (x <= visible_x_end))
           {
             if((b&1) == 1)
             {
@@ -280,7 +318,7 @@ void String::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
 // *****************************************************************************
 // ***   Put line in buffer   **************************************************
 // *****************************************************************************
-void String::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
+void StringAligned::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 {
   // Pointer to string
   register const char* str = string;
@@ -332,7 +370,7 @@ void String::DrawInBufH(color_t* buf, int32_t n, int32_t row, int32_t start_y)
 // *****************************************************************************
 // ***   Private:  SetString   *************************************************
 // *****************************************************************************
-void String::SetString(char* buf, uint32_t len, const char* format, va_list& arglist)
+void StringAligned::SetString(char* buf, uint32_t len, const char* format, va_list& arglist)
 {
   if((buf != nullptr) && (len != 0u))
   {
@@ -344,7 +382,7 @@ void String::SetString(char* buf, uint32_t len, const char* format, va_list& arg
     string = buf;
     // Set length to use PrintString() function later
     length = len;
-    // Recalculate size based on string length, font and scale
+    // Recalculate size based on font and scale
     RecalculateSize();
     // Invalidate area for new string(needed if new string longer than old)
     InvalidateObjArea();
@@ -354,10 +392,13 @@ void String::SetString(char* buf, uint32_t len, const char* format, va_list& arg
 // *****************************************************************************
 // ***   Private: RecalculateSize   ********************************************
 // *****************************************************************************
-void String::RecalculateSize()
+void StringAligned::RecalculateSize()
 {
-  width = GetFontW() * ((string == nullptr) ? 0 : strlen(string)) * scale;
+  // Calculated string full length in pixels
+  length_pixels = strlen(string) * GetFontW() * scale;
+  // Calculate height
   height = GetFontH() * scale;
+  // Calculate end X and Y
   x_end = x_start + width - 1;
   y_end = y_start + height - 1;
 }

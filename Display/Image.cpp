@@ -241,17 +241,23 @@ void ImagePalette::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t sta
   if((line >= y_start) && (line <= y_end) && (img != nullptr) && (palette != nullptr))
   {
     // Find start x position
-    int32_t start = x_start - start_x;
-    // Prevent write in memory before buffer
-    if(start < 0) start = 0;
-    // Find start x position
     int32_t end = x_end - start_x;
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
     if(end > 0)
     {
-      int idx = (line - y_start) * width;
+      // Find idx in the image buffer
+      uint32_t idx = (line - y_start) * width;
+      // Find start x position
+      int32_t start = x_start - start_x;
+      // Prevent write in memory before buffer
+      if(start < 0)
+      {
+        // Minus minus - plus
+        idx -= start;
+        start = 0;
+      }
       for(int32_t i = start; i <= end; i++)
       {
         buf[i] = palette[img[idx++]];
@@ -365,17 +371,23 @@ void ImageBitmap::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
   if((line >= y_start) && (line <= y_end) && (img != nullptr))
   {
     // Find start x position
-    int32_t start = x_start - start_x;
-    // Prevent write in memory before buffer
-    if(start < 0) start = 0;
-    // Find start x position
     int32_t end = x_end - start_x;
     // Prevent buffer overflow
     if(end >= n) end = n - 1;
     // Have sense draw only if end pointer in buffer
     if(end > 0)
     {
-      int32_t idx = (line - y_start) * width;
+      // Find idx in the image buffer
+      uint32_t idx = (line - y_start) * width;
+      // Find start x position
+      int32_t start = x_start - start_x;
+      // Prevent write in memory before buffer
+      if(start < 0)
+      {
+        // Minus minus - plus
+        idx -= start;
+        start = 0;
+      }
       for(int32_t i = start; i <= end; i++)
       {
         buf[i] = img[idx++];
@@ -495,11 +507,14 @@ void ImageBinary::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
 
     // Find start x position
     int32_t start = x_start - start_x;
+    // Sub index inside byte
+    uint8_t sub_idx = 0u;
     // Prevent write in memory before buffer
     if(start < 0)
     {
       // Minus minus - plus
       idx -= start / 8;
+      sub_idx = -(start % 8);
       start = 0;
     }
     // Find start x position
@@ -509,7 +524,6 @@ void ImageBinary::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t star
     // Have sense draw only if end pointer in buffer
     if(end > 0)
     {
-      uint8_t sub_idx = 0u;
       // Draw image
       for(int32_t i = start; i <= end; i++)
       {

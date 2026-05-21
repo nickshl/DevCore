@@ -284,7 +284,7 @@ void SoundDrv::Tone(uint16_t freq)
   if((freq > 11) && (mute == false))
   {
     // Calculate prescaler
-    uint32_t prescaler = (HAL_RCC_GetHCLKFreq()/100U) / freq;
+    uint32_t prescaler = (HAL_RCC_GetHCLKFreq()/100u) / freq;
     // Set the Prescaler value
     htim->Instance->PSC = (uint32_t)prescaler;
     // Generate an update event to reload the Prescaler and the repetition

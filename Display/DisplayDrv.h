@@ -59,6 +59,7 @@
 #include "VisList.h"
 #include "Primitives.h"
 #include "Strng.h"
+#include <StringAligned.h>
 #include "MultiLineString.h"
 #include "Image.h"
 #include "TiledMap.h"

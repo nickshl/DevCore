@@ -361,8 +361,8 @@ void Line::SetParams(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_t c)
   y_start = y1;
   x_end = x2;
   y_end = y2;
-  width  = (x1 < x2) ? (x2 - x1) : (x1 - x2) + 1; // Width is one more than coordinates difference
-  height = (y1 < y2) ? (y2 - y1) : (y1 - y2) + 1; // Height is one more than coordinates difference
+  width  = ((x1 < x2) ? (x2 - x1) : (x1 - x2)) + 1; // Width is one more than coordinates difference
+  height = ((y1 < y2) ? (y2 - y1) : (y1 - y2)) + 1; // Height is one more than coordinates difference
   // Invalidate area for new position/size
   InvalidateObjArea();
   // Unlock object after changes
@@ -407,7 +407,7 @@ void Line::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
     if(y == line)
     {
       // Go and draw line
-      do
+      while(x != end_x)
       {
         if((x >= 0) && (x < n)) buf[x] = color;
         const int32_t error2 = error * 2;
@@ -421,7 +421,8 @@ void Line::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x)
           break;
         }
       }
-      while((x != end_x) || (y != y_end));
+      // Draw last dot if x is equal to end_x
+      if((x == end_x) && (x >= 0) && (x < n)) buf[x] = color;
     }
   }
 }

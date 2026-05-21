@@ -98,7 +98,7 @@ class AppTask
             uint16_t queue_len = 0u, uint16_t queue_msg_size = 0u,
             void* task_msg_p = nullptr, uint32_t task_interval_ms = 0u,
             bool tmr_priority = false) :
-      ctrl_queue((queue_len + 2U), sizeof(CtrlQueueMsg)),
+      ctrl_queue((queue_len + 2u), sizeof(CtrlQueueMsg)),
       task_queue(queue_len, queue_msg_size), task_msg_ptr(task_msg_p),
       timer(task_interval_ms, RtosTimer::REPEATING, TimerCallback, (void*)this),
       timer_priority(tmr_priority), stack_size(stk_size),

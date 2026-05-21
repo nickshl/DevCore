@@ -1,14 +1,14 @@
 //******************************************************************************
-//  @file MultiLineString.h
+//  @file StringAligned.h
 //  @author Nicolai Shlapunov
 //
-//  @details DevCore: MultiLineString Visual Object Class, header
+//  @details DevCore: StringAligned Visual Object Class, header
 //
 //  @section LICENSE
 //
 //   Software License Agreement (BSD License)
 //
-//   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//   Copyright (c) 2026, Devtronic & Nicolai Shlapunov
 //   All rights reserved.
 //
 //   Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
 //
 //******************************************************************************
 
-#ifndef MultiLineString_h
-#define MultiLineString_h
+#ifndef StringAligned_h
+#define StringAligned_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -52,10 +52,12 @@
 #include "Font_10x18.h"
 #include "Font_12x16.h"
 
+#include <stdarg.h> // for va_list
+
 // *****************************************************************************
-// ***   MultiLineString Class   ***********************************************
+// ***   StringAligned Class   *************************************************
 // *****************************************************************************
-class MultiLineString : public VisObject
+class StringAligned : public VisObject
 {
   public:
     // *************************************************************************
@@ -72,32 +74,31 @@ class MultiLineString : public VisObject
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    MultiLineString() {};
- 
-    // *************************************************************************
+    StringAligned() {};
+
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    MultiLineString(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
+    StringAligned(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, Font& font);
 
     // *************************************************************************
     // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    MultiLineString(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
+    StringAligned(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
     // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, Font& font);
+    void SetParams(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, Font& font);
 
     // *************************************************************************
     // ***   Public: SetParams   ***********************************************
     // *************************************************************************
-    void SetParams(const char* str, int32_t x, int32_t y, color_t tc, color_t bgc, Font& font);
+    void SetParams(const char* str, alignment_t algnmnt, int32_t x, int32_t y, uint32_t w, color_t tc, color_t bgc, Font& font);
 
     // *************************************************************************
-    // ***   Public: SetString   ***********************************************
+    // ***   Public: SetAlignment   ********************************************
     // *************************************************************************
-    void SetString(const char* str, bool force = false);
+    void SetAlignment(alignment_t algnmnt);
 
     // *************************************************************************
     // ***   Public: GetString   ***********************************************
@@ -107,7 +108,22 @@ class MultiLineString : public VisObject
     // *************************************************************************
     // ***   Public: SetString   ***********************************************
     // *************************************************************************
+    void SetString(const char* str, bool force = false);
+
+    // *************************************************************************
+    // ***   Public: SetString   ***********************************************
+    // *************************************************************************
     void SetString(char* buffer, uint32_t n, const char* format, ...);
+
+    // *************************************************************************
+    // ***   Public: Printf   **************************************************
+    // *************************************************************************
+    void Printf(const char* format, ...);
+
+    // *************************************************************************
+    // ***   Public: SetStringPtr   ********************************************
+    // *************************************************************************
+    void SetStringPtr(const char* str) {string = str; length = 0u;}
 
     // *************************************************************************
     // ***   Public: SetColor   ************************************************
@@ -120,6 +136,11 @@ class MultiLineString : public VisObject
     void SetFont(Font& font);
 
     // *************************************************************************
+    // ***   Public: GetFont   *************************************************
+    // *************************************************************************
+    Font& GetFont() {return *font_ptr;}
+
+    // *************************************************************************
     // ***   Public: SetScale   ************************************************
     // *************************************************************************
     void SetScale(uint8_t s);
@@ -128,21 +149,6 @@ class MultiLineString : public VisObject
     // ***   Public: GetScale   ************************************************
     // *************************************************************************
     uint8_t GetScale(void) {return scale;}
-
-    // *************************************************************************
-    // ***   Public: SetSpacing   **********************************************
-    // *************************************************************************
-    void SetSpacing(uint8_t s);
-
-    // *************************************************************************
-    // ***   Public: GetSpacinge   *********************************************
-    // *************************************************************************
-    uint8_t GetSpacinge(void) {return spacing;}
-
-    // *************************************************************************
-    // ***   Public: SetAlignment   ********************************************
-    // *************************************************************************
-    void SetAlignment(alignment_t a);
 
     // *************************************************************************
     // ***   Public: Put line in buffer   **************************************
@@ -157,21 +163,25 @@ class MultiLineString : public VisObject
     // *************************************************************************
     // ***   Public: GetFontW   ************************************************
     // *************************************************************************
-    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharW());}
+    uint32_t GetFontW() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetCharW());}
 
     // *************************************************************************
     // ***   Public: GetFontH   ************************************************
     // *************************************************************************
-    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetCharH());}
+    uint32_t GetFontH() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetCharH());}
 
     // *************************************************************************
     // ***   Public: GetFontBytePerChar   **************************************
     // *************************************************************************
-    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0U : font_ptr->GetBytesPerChar());}
+    uint32_t GetFontBytePerChar() {return ((font_ptr == nullptr) ? 0u : font_ptr->GetBytesPerChar());}
 
   private:
     // Pointer to string
     const char* string = nullptr;
+    // Length of buffer(0 - we can't use SetString as printf style)
+    uint16_t length = 0u;
+    // Length of string in pixels
+    uint16_t length_pixels = 0u;
     // Text color
     color_t txt_color = 0u;
     // Background color
@@ -182,34 +192,19 @@ class MultiLineString : public VisObject
     Font* font_ptr = nullptr;
     // Is background transparent ?
     bool transpatent_bg = false;
-    // Left alignment
+
+    // Alignment by left side
     alignment_t alignment = LEFT;
-    // Spacing
-    uint8_t spacing = 0u;
-
-    // Line height: character height multiplied by scale and added spacing
-    uint8_t line_height = 1u;
-    // String line number
-    int32_t str_line = -1;
-    // String pointer
-    const char* str_ptr;
-    // Line length
-    uint16_t str_len = 0u;
 
     // *************************************************************************
-    // ***   Private: GetStringCount   *****************************************
+    // ***   Private: SetString   **********************************************
     // *************************************************************************
-    uint32_t GetStringCount(const char* str);
+    void SetString(char* buf, uint32_t len, const char* format, va_list& arglist);
 
     // *************************************************************************
-    // ***   Private: GetStringLength   ****************************************
+    // ***   Private: RecalculateSize   ****************************************
     // *************************************************************************
-    uint32_t GetStringLength(const char* str);
-
-    // *************************************************************************
-    // ***   Private: GetLongestLineLength   ***********************************
-    // *************************************************************************
-    uint32_t GetLongestLineLength(const char* str);
+    void RecalculateSize();
 };
 
 #endif
