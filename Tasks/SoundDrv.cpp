@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file SoundDrv.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file SoundDrv.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Sound Driver Class, implementation
+// @details DevCore: Sound Driver Class, implementation
 //
-//  @copyright Copyright (c) 2017, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2017, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -22,7 +22,7 @@
 
 #if defined(SOUNDDRV_ENABLED)
 
-#include "Rtos.h"
+#include "DevCfgRtos.h"
 
 // *****************************************************************************
 // ***   Public: Get Instance   ************************************************

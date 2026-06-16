@@ -1,49 +1,53 @@
-//******************************************************************************
-//  @file DevCfg.h
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file DevCfg.h
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Config file, header
+// @details DevCore: Config file, header
 //
-//  @section LICENSE
+// @section COPYRIGHT
 //
-//   Software License Agreement (Modified BSD License)
+//  Copyright (c) 2016-2026, Devtronic & Nicolai Shlapunov
+//  All rights reserved.
 //
-//   Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//   All rights reserved.
+// @section LICENSE
 //
-//   Redistribution and use in source and binary forms, with or without
-//   modification, are permitted provided that the following conditions are met:
+//  SPDX-License-Identifier: BSD-3-Clause
 //
-//   1. Redistributions of source code must retain the above copyright
-//      notice, this list of conditions and the following disclaimer.
-//   2. Redistributions in binary form must reproduce the above copyright
-//      notice, this list of conditions and the following disclaimer in the
-//      documentation and/or other materials provided with the distribution.
-//   3. Neither the name of the Devtronic nor the names of its contributors
-//      may be used to endorse or promote products derived from this software
-//      without specific prior written permission.
-//   4. Redistribution and use of this software other than as permitted under
-//      this license is void and will automatically terminate your rights under
-//      this license.
+//  Software License Agreement (BSD 3-Clause License)
 //
-//   THIS SOFTWARE IS PROVIDED BY DEVTRONIC ''AS IS'' AND ANY EXPRESS OR IMPLIED
-//   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//   IN NO EVENT SHALL DEVTRONIC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-//   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-//   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-//   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
 //
-//  @section SUPPORT
+//  1. Redistributions of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
 //
-//******************************************************************************
+//  3. Neither the name of Devtronic nor the names of its contributors may be
+//     used to endorse or promote products derived from this software without
+//     specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+// @section SUPPORT
+//
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
+//
+// *****************************************************************************
 
 #ifndef DevCfg_h
 #define DevCfg_h
@@ -51,14 +55,16 @@
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
-#include "Result.h"
-#include "Rtos.h"
+#include "Framework/Result.h"
+#include "DevCfgRtos.h"
 #include "main.h"
+
+#include <new> // for std::nothrow_t and std::bad_alloc
 
 // *****************************************************************************
 // ***   User configuration include   ******************************************
 // *****************************************************************************
-#include "DefCfgUsr.h"
+#include "DevCfgUsr.h"
 
 // *****************************************************************************
 // ***   HAL Hardware includes or dummies   ************************************
@@ -225,9 +231,9 @@ typedef uint16_t color_t;
 enum Color
 {
   COLOR_BLACK           = 0x0000, //   0,   0,   0
-  COLOR_VERYDARKGREY    = 0xEF7B, //  32,  32,  32
-  COLOR_DARKGREY        = 0xEF7B, //  64,  64,  64
-  COLOR_GREY            = 0xEF7B, // 128, 128, 128
+  COLOR_VERYDARKGREY    = 0x0421, //  32,  32,  32
+  COLOR_DARKGREY        = 0x0842, //  64,  64,  64
+  COLOR_GREY            = 0x1084, // 128, 128, 128
   COLOR_LIGHTGREY       = 0x18C6, // 192, 192, 192
   COLOR_WHITE           = 0xFFFF, // 255, 255, 255
 
@@ -277,9 +283,9 @@ enum Color
   COLOR_RED             = 0x04, // 1, 0, 0
   COLOR_YELLOW          = 0x05, // 1, 0, 1
   COLOR_GREEN           = 0x02, // 0, 1, 0
-  COLOR_CYAN            = 0x06, // 0, 0, 0
+  COLOR_CYAN            = 0x06, // 1, 1, 0
   COLOR_BLUE            = 0x01, // 0, 0, 1
-  COLOR_MAGENTA         = 0x03, // 0, 1, 0
+  COLOR_MAGENTA         = 0x03, // 0, 1, 1
   COLOR_WHITE           = 0x07, // 1, 1, 1
 
   // Color mapped to basic colors
@@ -305,19 +311,27 @@ enum Color
   #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #endif
 
-// Break macro - useful for debugging
-#define Break() asm volatile("bkpt #0")
+// If Break() macro isn't defined - just define it as empty
+#if !defined(Break)
+  #define Break()
+#endif
 
 // *****************************************************************************
 // ***   Overloaded operators   ************************************************
 // *****************************************************************************
+// Standard new operators
 void* operator new(size_t sz);
 void* operator new[](size_t sz);
-void operator delete(void* p);
-void operator delete[](void* p);
-void* operator new(size_t size, void* p);
-void* operator new[](size_t size, void* p);
-void operator delete(void*, void*);
-void operator delete[](void*, void*);
+// std::nothrow new operators
+void* operator new(size_t sz, const std::nothrow_t&) noexcept;
+void* operator new[](size_t sz, const std::nothrow_t&) noexcept;
+// Standard delete operators
+void operator delete(void* p) noexcept;
+void operator delete[](void* p) noexcept;
+void operator delete(void* p, size_t) noexcept;
+void operator delete[](void* p, size_t) noexcept;
+// std::nothrow delete operators
+void operator delete(void* p, const std::nothrow_t&) noexcept;
+void operator delete[](void* p, const std::nothrow_t&) noexcept;
 
 #endif

@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file DisplayDrv.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file DisplayDrv.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Display Driver Class, implementation
+// @details DevCore: Display Driver Class, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -34,6 +34,28 @@ DisplayDrv& DisplayDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Public: Init Display Driver Task   ************************************
 // *****************************************************************************
+Result DisplayDrv::InitTask(IDisplay& in_display)
+{
+  // Save display driver pointer
+  display = &in_display;
+  // Set width and height variables for screen
+  width = display->GetWidth();
+  height = display->GetHeight();
+  // Check if we have enough buffer size to draw display line in any orientation
+  if((display->GetPixelDataCnt(width) > (int32_t)sizeof(scr_buf[0u])) || display->GetPixelDataCnt(height) > (int32_t)sizeof(scr_buf[0u]))
+  {
+    Break();
+  }
+  // No touch driver - set pointer to nullptr, it is ok, since we  check this
+  // condition everywhere where we using this pointer
+  touch = nullptr;
+  // Create task
+  return AppTask::InitTask();
+}
+
+// *****************************************************************************
+// ***   Public: Init Display Driver Task   ************************************
+// *****************************************************************************
 Result DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
 {
   // Save display driver pointer
@@ -41,9 +63,12 @@ Result DisplayDrv::InitTask(IDisplay& in_display, ITouchscreen& in_touch)
   // Set width and height variables for screen
   width = display->GetWidth();
   height = display->GetHeight();
-  // Store new touch pointer. It may point to nullptr it no ITouchscreen object
-  // passed, but it is ok, since we  check this condition everywhere where we
-  // using this pointer
+  // Check if we have enough buffer size to draw display line in any orientation
+  if((display->GetPixelDataCnt(width) > (int32_t)sizeof(scr_buf[0u])) || display->GetPixelDataCnt(height) > (int32_t)sizeof(scr_buf[0u]))
+  {
+    Break();
+  }
+  // Store touch driver pointer
   touch = &in_touch;
   // Create task
   return AppTask::InitTask();
@@ -168,7 +193,7 @@ Result DisplayDrv::Loop()
           for(uint32_t i = 0u; i < DISPLAY_MAX_BUF_LEN; i++) scr_buf[scr_line_idx][i] = bkg_color;
           // Take semaphore before draw line
           line_mutex.Lock();
-          // Draw list to buf                TODO: UPDATE_LEFT_RIGHT is not works correctly if area_x isn't centered on a display
+          // Draw list to buf                  TODO: UPDATE_LEFT_RIGHT is not works correctly if area_x isn't centered on a display
           if(update_mode == UPDATE_LEFT_RIGHT) list.DrawInBufH(scr_buf[scr_line_idx], pixels_cnt, end_y - i, start_x);
           else                                 list.DrawInBufW(scr_buf[scr_line_idx], pixels_cnt, i, start_x);
           // Give semaphore after changes
@@ -501,7 +526,7 @@ bool DisplayDrv::GetTouchXY(int32_t& x, int32_t& y)
   if(touch != nullptr)
   {
     // Try to take mutex. 1 ms should be enough.
-    if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+    if(touchscreen_mutex.Lock(RtosTick::MsToTicks(1u)) == Result::RESULT_OK)
     {
       // If display driver gets touch coordinates and touch still present
       if(is_touch && touch->IsTouched())
@@ -538,7 +563,7 @@ bool DisplayDrv::IsTouched()
   if(touch != nullptr)
   {
     // Try to take mutex. 1 ms should be enough.
-    if(touchscreen_mutex.Lock(1U) == Result::RESULT_OK)
+    if(touchscreen_mutex.Lock(1u) == Result::RESULT_OK)
     {
       // Get status
       touched = touch->IsTouched();
@@ -620,11 +645,14 @@ void DisplayDrv::TouchCalibrate()
     // Calc coefs
     int32_t kx = ((x2 - x1) * ITouchscreen::COEF) / (width  - 2*10);
     int32_t ky = ((y2 - y1) * ITouchscreen::COEF) / (height - 2*10);
-    int32_t bx = 10 - (x1 * ITouchscreen::COEF) / kx;
-    int32_t by = 10 - (y1 * ITouchscreen::COEF) / ky;
-
-    // Save calibration
-    touch->SetCalibrationConsts(kx, ky, bx, by);
+    // kx and ky can't be zero, otherwise divide by zero occurs
+    if((kx != 0) && (ky != 0))
+    {
+      int32_t bx = 10 - (x1 * ITouchscreen::COEF) / kx;
+      int32_t by = 10 - (y1 * ITouchscreen::COEF) / ky;
+      // Save calibration
+      touch->SetCalibrationConsts(kx, ky, bx, by);
+    }
 
     // Hide box
     box.Hide();

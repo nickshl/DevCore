@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file Font_12x16.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file Font_12x16.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Font 12x16 implementation, implementation
+// @details DevCore: Font 12x16 implementation, implementation
 //
-//  @copyright Copyright (c) 2019, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2019, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************

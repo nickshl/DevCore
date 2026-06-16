@@ -1,5 +1,5 @@
 //******************************************************************************
-//  @file DevCfg.h
+//  @file DefCfgUsr.h
 //  @author Nicolai Shlapunov
 //
 //  @details DevCore: Config file, header
@@ -16,11 +16,15 @@
 #include "stm32f4xx.h"
 
 // *****************************************************************************
+// ***   RTOS Wrapper   ********************************************************
+// *****************************************************************************
+#define FREERTOS_WRAPPER
+
+// *****************************************************************************
 // ***   Configuration   *******************************************************
 // *****************************************************************************
 
 //#define DWT_ENABLED
-//#define UITASK_ENABLED
 //#define INPUTDRV_ENABLED
 //#define SOUNDDRV_ENABLED
 
@@ -32,10 +36,6 @@
 #define APPLICATION_TASK_STACK_SIZE 1024u
 // *** Applications tasks priorities   *****************************************
 #define APPLICATION_TASK_PRIORITY (tskIDLE_PRIORITY + 2U)
-
-// *****************************************************************************
-// ***   Display Configuration   ***********************************************
-// *****************************************************************************
 
 // *****************************************************************************
 // ***   Display Configuration   ***********************************************
@@ -55,7 +55,7 @@
 
 // By uncommentimng this line, display task will update only specific area than
 // have to be updated
-//#define UPDATE_AREA_ENABLE
+//#define UPDATE_AREA_ENABLED
 
 // In some cases one area isn't enough. In case of changes in small areas far
 // away on a large display, it makes sense to have multiple areas that can be
@@ -67,3 +67,13 @@
 //#define DISPLAY_DEBUG_INFO
 //#define DISPLAY_DEBUG_AREA
 //#define DISPLAY_DEBUG_TOUCH
+
+// *****************************************************************************
+// ***   Break() macro   *******************************************************
+// *****************************************************************************
+
+// Break macro: in case something goes wrong(like error happen), DevCore uses
+// Break() call. This macro should be defined either as break command for
+// debugging purposes, or as an assert. In this example it defined as break
+// command for ARM MCUs.
+#define Break() asm volatile("bkpt #0")

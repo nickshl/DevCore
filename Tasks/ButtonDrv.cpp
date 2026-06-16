@@ -1,25 +1,25 @@
-//******************************************************************************
-//  @file ButtonDrv.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file ButtonDrv.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Button Driver Class, implementation
+// @details DevCore: Button Driver Class, implementation
 //
-//  @copyright Copyright (c) 2023, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2023, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "ButtonDrv.h"
-#include "Rtos.h"
+#include "DevCfgRtos.h"
 
 #include <cstdlib>
 
@@ -93,6 +93,9 @@ Result ButtonDrv::Setup()
 // *****************************************************************************
 Result ButtonDrv::Loop()
 {
+  // Lock mutex
+  mutex.Lock();
+
   // Process all buttons
   for(uint32_t i = 0u, mask = 1u; i < number_of_buttons; i++, mask <<= 1u)
   {
@@ -106,24 +109,32 @@ Result ButtonDrv::Loop()
       {
         if(btn_cbl->mask & mask)
         {
+          // Copy callback list entry before releasing the mutex
+          CallbackListEntry btn_cbl_data = *btn_cbl;
+          // Release mutex before call callback
+          mutex.Release();
+
           // If there is AppTask pointer
-          if(btn_cbl->callback_task != nullptr)
+          if(btn_cbl_data.callback_task != nullptr)
           {
             // Call it via AppTask callback mechanism to execute callback in target task
-            btn_cbl->callback_task->Callback(btn_cbl->callback, btn_cbl->obj_ptr, this);
+            btn_cbl_data.callback_task->Callback(btn_cbl_data.callback, btn_cbl_data.obj_ptr, this);
           }
           // Otherwise if there is callback
-          else if(btn_cbl->callback != nullptr)
+          else if(btn_cbl_data.callback != nullptr)
           {
             // Call callback directly in ButtonDrv task(semaphores in other task may be needed!)
-            btn_cbl->callback(btn_cbl->obj_ptr, this);
+            btn_cbl_data.callback(btn_cbl_data.obj_ptr, this);
           }
           else
           {
             ; // Do nothing - MISRA rule
-            // In case both pointers are null we don't need to do anythyng.
+            // In case both pointers are null we don't need to do anything.
             // Subscriber "mask" those buttons to make it unoperable.
           }
+
+          // Lock mutex again before break the cycle
+          mutex.Lock();
           // Only first handler gets notification
           break;
         }
@@ -132,8 +143,12 @@ Result ButtonDrv::Loop()
     }
   }
 
+  // Release mutes
+  mutex.Release();
+
   // Pause until next tick
   RtosTick::DelayUntilMs(last_wake_ticks, 1u);
+
   // Always run
   return Result::RESULT_OK;
 }
@@ -148,6 +163,9 @@ void ButtonDrv::AddButtonsCallbackHandler(AppTask* callback_task, CallbackPtr ca
   cble.callback = callback;
   cble.obj_ptr = obj_ptr;
   cble.mask = mask;
+
+  // Lock mutex
+  mutex.Lock();
 
   // If callback list is empty
   if(btn_callback_list == nullptr)
@@ -181,6 +199,9 @@ void ButtonDrv::AddButtonsCallbackHandler(AppTask* callback_task, CallbackPtr ca
       btn_callback_list = &cble;
     }
   }
+
+  // Release mutes
+  mutex.Release();
 }
 
 // *****************************************************************************
@@ -188,11 +209,18 @@ void ButtonDrv::AddButtonsCallbackHandler(AppTask* callback_task, CallbackPtr ca
 // *****************************************************************************
 void ButtonDrv::DeleteButtonsCallbackHandler(CallbackListEntry& cble)
 {
+  // Lock mutex
+  mutex.Lock();
+
   // If requested first element in list
   if(btn_callback_list == &cble)
   {
     btn_callback_list = cble.next;
-    btn_callback_list->prev = nullptr;
+    // If we don't have elements in list - can't set prev pointer
+    if(btn_callback_list != nullptr)
+    {
+      btn_callback_list->prev = nullptr;
+    }
   }
   else // Otherwise
   {
@@ -217,6 +245,9 @@ void ButtonDrv::DeleteButtonsCallbackHandler(CallbackListEntry& cble)
       }
     }
   }
+
+  // Release mutes
+  mutex.Release();
 }
 
 // *****************************************************************************

@@ -1,8 +1,8 @@
 // *****************************************************************************
-// @file ICallback.h
+// @file DevCfgRtosWrapper.h
 // @author Nicolai Shlapunov
 //
-// @details DevCore: Callback interface, header
+// @details DevCore: Rtos Wrapper include file, header
 //
 // @section COPYRIGHT
 //
@@ -49,40 +49,29 @@
 //
 // *****************************************************************************
 
-#ifndef ICallback_h
-#define ICallback_h
+#ifndef DevCfgRtosWrapper_h
+#define DevCfgRtosWrapper_h
 
 // *****************************************************************************
-// ***   Includes   ************************************************************
+// ***   User configuration include   ******************************************
 // *****************************************************************************
-#include "DevCfg.h"
+#include "DevCfgUsr.h"
 
 // *****************************************************************************
-// ***   Callback Interface   **************************************************
+// ***   RTOS Wrapper Headers   ************************************************
 // *****************************************************************************
-class ICallback
-{
-  public:
-    // *************************************************************************
-    // ***   Public: Constructor   *********************************************
-    // *************************************************************************
-    explicit ICallback() {};
 
-    // *************************************************************************
-    // ***   Public: Destructor   **********************************************
-    // *************************************************************************
-    virtual ~ICallback() {};
-
-    // *************************************************************************
-    // ***   Public: Callback   ************************************************
-    // *************************************************************************
-    virtual void Callback(void* ptr) = 0;
-
-  private:
-    // *************************************************************************
-    // ***   Private: Constructors and assign operator - prevent copying   *****
-    // *************************************************************************
-    ICallback(const ICallback&);
-};
+// ***   FreeRTOS Headers   ****************************************************
+#if defined(FREERTOS_WRAPPER)
+  #include "FreeRtosWrapper/Rtos.h"
+  #include "FreeRtosWrapper/RtosMutex.h"
+  #include "FreeRtosWrapper/RtosQueue.h"
+  #include "FreeRtosWrapper/RtosRecursiveMutex.h"
+  #include "FreeRtosWrapper/RtosSemaphore.h"
+  #include "FreeRtosWrapper/RtosTick.h"
+  #include "FreeRtosWrapper/RtosTimer.h"
+#else
+  #error "No RTOS wrapper specified"
+#endif
 
 #endif

@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file UiMenu.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file UiMenu.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: UI Menu Class, implementation
+// @details DevCore: UI Menu Class, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************

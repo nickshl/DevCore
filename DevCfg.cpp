@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file DevCfg.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file DevCfg.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Config file, implementation
+// @details DevCore: Config file, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -25,7 +25,18 @@
 // *****************************************************************************
 void* operator new(size_t sz)
 {
-    return pvPortMalloc(sz);
+  void* ptr = Rtos::Alloc(sz);
+
+  if(ptr == nullptr)
+  { 
+#if defined(__cpp_exceptions)
+    throw std::bad_alloc();
+#else
+    Break();
+#endif
+  }
+
+  return ptr;
 }
 
 // *****************************************************************************
@@ -33,53 +44,80 @@ void* operator new(size_t sz)
 // *****************************************************************************
 void* operator new[](size_t sz)
 {
-    return pvPortMalloc(sz);
+  void* ptr = Rtos::Alloc(sz);
+
+  if(ptr == nullptr)
+  { 
+#if defined(__cpp_exceptions)
+    throw std::bad_alloc();
+#else
+    Break();
+#endif
+  }
+
+  return ptr;
+}
+
+// *****************************************************************************
+// ***   new operator   ********************************************************
+// *****************************************************************************
+void* operator new(size_t sz, const std::nothrow_t&) noexcept
+{
+  return Rtos::Alloc(sz);
+}
+
+// *****************************************************************************
+// ***   new operator for arrays   *********************************************
+// *****************************************************************************
+void* operator new[](size_t sz, const std::nothrow_t&) noexcept
+{
+  return Rtos::Alloc(sz);
 }
 
 // *****************************************************************************
 // ***   delete operator   *****************************************************
 // *****************************************************************************
-void operator delete(void* p)
+void operator delete(void* p) noexcept
 {
-    vPortFree(p);
+  Rtos::Free(p);
 }
 
 // *****************************************************************************
 // ***   delete operator for arrays   ******************************************
 // *****************************************************************************
-void operator delete[](void* p)
+void operator delete[](void* p) noexcept
 {
-    vPortFree(p);
+  Rtos::Free(p);
 }
 
 // *****************************************************************************
-// ***   Placement new operator   **********************************************
+// ***   delete operator for arrays   ******************************************
 // *****************************************************************************
-void* operator new(size_t size, void* p)
+void operator delete(void* p, size_t) noexcept
 {
-    (void)size;
-    return p;
+  Rtos::Free(p);
 }
 
 // *****************************************************************************
-// ***   Placement new operator for arrays   ***********************************
+// ***   delete operator for arrays   ******************************************
 // *****************************************************************************
-void* operator new[](size_t size, void* p)
+void operator delete[](void* p, size_t) noexcept
 {
-    (void)size;
-    return p;
+  Rtos::Free(p);
 }
 
 // *****************************************************************************
-// ***   Placement delete operator   *******************************************
+// ***   delete operator for arrays   ******************************************
 // *****************************************************************************
-void operator delete(void*, void*)
+void operator delete(void* p, const std::nothrow_t&) noexcept
 {
+  Rtos::Free(p);
 }
 
 // *****************************************************************************
-// ***   Placement delete operator for arrays   ********************************
+// ***   delete operator for arrays   ******************************************
 // *****************************************************************************
-void operator delete[](void*, void*)
+void operator delete[](void* p, const std::nothrow_t&) noexcept
 {
+  Rtos::Free(p);
 }

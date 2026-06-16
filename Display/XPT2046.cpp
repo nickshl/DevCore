@@ -1,24 +1,24 @@
-//******************************************************************************
-//  @file XPT2046.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file XPT2046.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: XPT2046 Low Level Driver Class, implementation
+// @details DevCore: XPT2046 Low Level Driver Class, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
-#include <XPT2046.h>
+#include "Display/XPT2046.h"
 
 // *****************************************************************************
 // ***   Public: Init touchscreen   ********************************************
@@ -211,13 +211,21 @@ bool XPT2046::GetXY(int32_t& x, int32_t& y)
 // *****************************************************************************
 Result XPT2046::SetCalibrationConsts(int32_t nkx, int32_t nky, int32_t nbx, int32_t nby)
 {
-  // Save calibration constants
-  kx = nkx;
-  ky = nky;
-  bx = nbx;
-  by = nby;
-  // Always Ok
-  return Result::RESULT_OK;
+  Result result = Result::ERR_BAD_PARAMETER;
+
+  // New kx and ky can't be zero, otherwise divide by zero occurs
+  if((nkx != 0) && (nky != 0))
+  {
+    // Save calibration constants
+    kx = nkx;
+    ky = nky;
+    bx = nbx;
+    by = nby;
+    // Successful result
+    result = Result::RESULT_OK;
+  }
+
+  return result;
 }
 
 // *****************************************************************************

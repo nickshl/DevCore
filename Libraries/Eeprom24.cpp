@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file Eeprom24.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file Eeprom24.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: EEPROM 24C*** driver, implementation
+// @details DevCore: EEPROM 24C*** driver, implementation
 //
-//  @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -122,17 +122,15 @@ Result Eeprom24::Write(uint16_t addr, uint8_t* tx_buf_ptr, uint16_t size)
       {
         // Check device response
         result = iic.IsDeviceReady(I2C_ADDR);
-        // Clear repetition counter for tracking timeout
-        repetition_cnt = 0u;
         // Wait until write operation finished
-        while(result.IsBad())
+        for(uint8_t reperition = 0u; result.IsBad(); reperition++)
         {
           // Delay 1 ms for start writing
           RtosTick::DelayMs(1u);
           // Check is device ready
           result = iic.IsDeviceReady(I2C_ADDR);
           // Check timeout
-          if(repetition_cnt > WRITING_TIMEOUT_MS)
+          if(reperition > repetition_cnt)
           {
             result = Result::ERR_I2C_TIMEOUT;
             break;

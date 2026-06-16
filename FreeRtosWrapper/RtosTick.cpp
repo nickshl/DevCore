@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file RtosTick.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file RtosTick.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: FreeRTOS Tick Wrapper Class, implementation
+// @details DevCore: FreeRTOS Tick Wrapper Class, implementation
 //
-//  @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -49,23 +49,8 @@ uint32_t RtosTick::GetTickCount()
 // *****************************************************************************
 uint32_t RtosTick::GetTickDifference(uint32_t start_val, uint32_t cur_val)
 {
-  uint32_t result = 0u;
-
-  // Check overflow
-  if(start_val > cur_val)
-  {
-    // start_val can be greater cur_val only if tick counter rollover.
-    // If ticks rollover, we should calculate deference between maximum
-    // uint32 value and start value, then add current tick count
-    result = (UINT32_MAX - start_val) + cur_val;
-  }
-  else
-  {
-    result = cur_val - start_val;
-  }
-
   // Return result
-  return result;
+  return(cur_val - start_val);
 }
 
 // *****************************************************************************
@@ -129,7 +114,7 @@ void RtosTick::DelayUntilMs(uint32_t& last_wake_ticks, uint32_t time_ms)
 // *****************************************************************************
 uint32_t RtosTick::MsToTicks(uint32_t time_ms)
 {
-  return(time_ms * portTICK_PERIOD_MS);
+  return(time_ms / portTICK_PERIOD_MS);
 }
 
 // *****************************************************************************
@@ -137,6 +122,6 @@ uint32_t RtosTick::MsToTicks(uint32_t time_ms)
 // *****************************************************************************
 uint32_t RtosTick::TicksToMs(uint32_t ticks)
 {
-  return(ticks / portTICK_PERIOD_MS);
+  return(ticks * portTICK_PERIOD_MS);
 }
 

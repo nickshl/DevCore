@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file FT6236.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file FT6236.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: FT6236 Low Level Driver Class, implementation
+// @details DevCore: FT6236 Low Level Driver Class, implementation
 //
-//  @copyright Copyright (c) 2023, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2023, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************

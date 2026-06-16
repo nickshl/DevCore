@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file RtosQueue.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file RtosQueue.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: FreeRTOS Rtos Wrapper Class, implementation
+// @details DevCore: FreeRTOS Rtos Wrapper Class, implementation
 //
-//  @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -291,13 +291,23 @@ Result RtosQueue::Receive(void* item, uint32_t timeout_ms)
     }
     else
     {
-      // Receive item from the queue
-      res = xQueueReceive(queue, item, RtosTick::MsToTicks(timeout_ms));
-      // Check empty error
-      if(res == errQUEUE_EMPTY)
+      // Receive item from the queue if timeout set as UINT32_MAX, use
+      // portMAX_DELAY to block the task. If INCLUDE_vTaskSuspend is set to '0'
+      // then specifying the block time as  portMAX_DELAY will cause the task
+      // resume after 0xFFFFFFFF ticks. This is why we need do{}while there,
+      // otherwise after 4,294,967,295 ms(49.7 days) without any messages
+      // ERR_QUEUE_EMPTY will be returned
+      do
       {
-        result = Result::ERR_QUEUE_EMPTY;
+        // Receive item from the queue
+        res = xQueueReceive(queue, item, (timeout_ms == UINT32_MAX) ? portMAX_DELAY : RtosTick::MsToTicks(timeout_ms));
+        // Check empty error
+        if(res == errQUEUE_EMPTY)
+        {
+          result = Result::ERR_QUEUE_EMPTY;
+        }
       }
+      while((timeout_ms == UINT32_MAX) && (result == Result::ERR_QUEUE_EMPTY));
     }
     // Check result
     if(res == pdPASS)
@@ -325,15 +335,38 @@ Result RtosQueue::Peek(void* item, uint32_t timeout_ms) const
     // Check handler mode
     if(Rtos::IsInHandlerMode())
     {
-      // Peek message from ISR
-      res = xQueuePeekFromISR(queue, item);
+      if(IsEmpty() == false)
+      {
+        // Peek message from ISR
+        res = xQueuePeekFromISR(queue, item);
+      }
+      else
+      {
+        // Queue is empty - nothing to read
+        result = Result::ERR_QUEUE_EMPTY;
+      }
     }
     else
     {
-      // Peek message
-      res = xQueuePeek(queue, item, RtosTick::MsToTicks(timeout_ms));
+      // Peek message from the queue if timeout set as UINT32_MAX, use
+      // portMAX_DELAY to block the task. If INCLUDE_vTaskSuspend is set to '0'
+      // then specifying the block time as  portMAX_DELAY will cause the task
+      // resume after 0xFFFFFFFF ticks. This is why we need do{}while there,
+      // otherwise after 4,294,967,295 ms(49.7 days) without any messages
+      // ERR_QUEUE_EMPTY will be returned
+      do
+      {
+        // Peek message
+        res = xQueuePeek(queue, item, (timeout_ms == UINT32_MAX) ? portMAX_DELAY : RtosTick::MsToTicks(timeout_ms));
+        // Check empty error
+        if(res == errQUEUE_EMPTY)
+        {
+          result = Result::ERR_QUEUE_EMPTY;
+        }
+      }
+      while((timeout_ms == UINT32_MAX) && (result == Result::ERR_QUEUE_EMPTY));
     }
-    // Check result
+    // Check good result
     if(res == pdPASS)
     {
       result = Result::RESULT_OK;

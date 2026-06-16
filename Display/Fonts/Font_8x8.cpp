@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file Font_8x8.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file Font_8x8.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Font 8x8 implementation, implementation
+// @details DevCore: Font 8x8 implementation, implementation
 //
-//  @copyright Copyright (c) 2019, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2019, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************

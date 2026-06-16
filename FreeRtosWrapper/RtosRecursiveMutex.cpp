@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file RtosRecursiveMutex.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file RtosRecursiveMutex.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: FreeRTOS Mutex Wrapper Class, implementation
+// @details DevCore: FreeRTOS Mutex Wrapper Class, implementation
 //
-//  @copyright Copyright (c) 2022, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2022, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
@@ -24,7 +24,7 @@
 #if (configUSE_RECURSIVE_MUTEXES == 1)
 
 // *****************************************************************************
-// ***   Constructor   **********************************************************
+// ***   Constructor   *********************************************************
 // *****************************************************************************
 RtosRecursiveMutex::RtosRecursiveMutex()
 {

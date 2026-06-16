@@ -1,19 +1,19 @@
-//******************************************************************************
-//  @file Vl53l0x.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file Vl53l0x.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: STM TOF VL53L0X Driver driver, implementation
+// @details DevCore: STM TOF VL53L0X Driver driver, implementation
 //
-//  @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2018, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************

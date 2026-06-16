@@ -1,25 +1,25 @@
-//******************************************************************************
-//  @file AppTask.cpp
-//  @author Nicolai Shlapunov
+// *****************************************************************************
+// @file AppTask.cpp
+// @author Nicolai Shlapunov
 //
-//  @details DevCore: Application Task Base Class, implementation
+// @details DevCore: Application Task Base Class, implementation
 //
-//  @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
-//             All rights reserved.
+// @copyright Copyright (c) 2016, Devtronic & Nicolai Shlapunov
+//            All rights reserved.
 //
-//  @section SUPPORT
+// @section SUPPORT
 //
-//   Devtronic invests time and resources providing this open source code,
-//   please support Devtronic and open-source hardware/software by
-//   donations and/or purchasing products from Devtronic.
+//  Devtronic invests time and resources providing this open source code,
+//  please support Devtronic and open-source hardware/software by
+//  donations and/or purchasing products from Devtronic.
 //
-//******************************************************************************
+// *****************************************************************************
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "AppTask.h"
-#include "RtosMutex.h"
+#include "DevCfgRtos.h"
 
 // *****************************************************************************
 // ***   Static variables   ****************************************************
@@ -120,7 +120,7 @@ Result AppTask::CreateTask()
 // *****************************************************************************
 // ***   SendTaskMessage function   ********************************************
 // *****************************************************************************
-Result AppTask::SendTaskMessage(const void* task_msg, bool is_task_priority, bool is_ctrl_priority)
+Result AppTask::SendTaskMessage(void* task_msg, bool is_task_priority, bool is_ctrl_priority)
 {
   Result result = Result::RESULT_OK;
 
@@ -155,8 +155,11 @@ Result AppTask::SendTaskMessage(const void* task_msg, bool is_task_priority, boo
       // prevent it stuck, we can do non blocking read from the task queue.
       // The problem: we can add message to the front and to the back, but we
       // can remove message only from the front. As result, we can lost
-      // previously added message and not the one we added just now.
-      task_queue.Receive(task_msg_ptr, 0u);
+      // previously added message and not the one we added just now. We also
+      // reading this message into the buffer provided by caller, so caller
+      // shouldn't expect that the message will stay intact after
+      // SendTaskMessage() call if it returns an error.
+      task_queue.Receive(task_msg, 0u);
 
       // Set specific error to indicate that we lost message, but not the one we
       // just added(ERR_QUEUE_WRITE would indicate that).
@@ -185,7 +188,7 @@ Result AppTask::IntLoop()
     // Buffer for control message
     CtrlQueueMsg ctrl_msg;
     // Read on the control queue
-    result = ctrl_queue.Receive(&ctrl_msg, timer.GetTimerPeriod() * 2u);
+    result = ctrl_queue.Receive(&ctrl_msg,  timer.IsActive() ? timer.GetTimerPeriod() * 2u : UINT32_MAX);
     // If successful
     if(result.IsGood())
     {
