@@ -59,10 +59,12 @@
 #include "Interfaces/IIic.h"
 
 // *****************************************************************************
-// ***   This driver can be compiled only if UART configured in CubeMX   *******
+// ***   This driver can be compiled only if I2C configured in CubeMX   ********
 // *****************************************************************************
-#ifndef HAL_I2C_MODULE_ENABLED
-  typedef uint32_t I2C_HandleTypeDef; // Dummy I2C handle for header compilation
+#ifdef HAL_I2C_MODULE_ENABLED
+#include "i2c.h"
+#else
+typedef uint32_t I2C_HandleTypeDef; // Dummy I2C handle for compilation
 #endif
 
 // *****************************************************************************

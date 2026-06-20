@@ -63,6 +63,12 @@
 
 // ***   FreeRTOS Headers   ****************************************************
 #if defined(FREERTOS_WRAPPER)
+  // Defines
+  #define RTOS_MINIMAL_STACK_SIZE  configMINIMAL_STACK_SIZE
+  #define RTOS_IDLE_TASK_PRIORITY  tskIDLE_PRIORITY
+  #define RTOS_TIMER_TASK_PRIORITY configTIMER_TASK_PRIORITY
+  #define RTOS_MAX_PRIORITIES      configMAX_PRIORITIES
+  // Includes
   #include "FreeRtosWrapper/Rtos.h"
   #include "FreeRtosWrapper/RtosMutex.h"
   #include "FreeRtosWrapper/RtosQueue.h"

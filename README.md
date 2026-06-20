@@ -22,7 +22,7 @@ Written by Nicolai Shlapunov (Devtronic). Licensed under the BSD-3-Clause licens
    - [Display System](#display-system)
    - [Writing a Custom Visual Object](#writing-a-custom-visual-object)
    - [UI Engine](#ui-engine)
-   - [Input & Sound](#input--sound)
+   - [Buttons & Sound](#buttons--sound)
 5. [Talking to Hardware](#talking-to-hardware)
    - [Hardware Abstraction Interfaces](#hardware-abstraction-interfaces)
    - [MCU Peripheral Drivers](#mcu-peripheral-drivers)
@@ -109,7 +109,6 @@ Copy `DevCfgUsrExample.h` into your project, rename it to **`DevCfgUsr.h`** on y
 
 // Optional subsystems — define what you need:
 // #define SOUNDDRV_ENABLED
-// #define DWT_ENABLED
 // #define UPDATE_AREA_ENABLED
 ```
 
@@ -625,14 +624,9 @@ void MyObject::DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t start_x
 
 ### UI Engine
 
-`UiEngine.h` pulls in all the UI classes. **Set expectations first: this part of DevCore is exploratory.** The widgets grew out of experiments (largely for the [DevBoy](https://github.com/nickshl/devboy) handheld project), and `UiButton` is the only one that is more or less ready to use as-is. Treat the others as working starting points to read, adapt, or replace rather than finished components — the display system underneath them is solid, and writing your own widget on top of it is covered in [Writing a Custom Visual Object](#writing-a-custom-visual-object).
+The UI engine provides three touch widgets — `UiButton`, `UiCheckbox`, and `UiScroll` — each available individually and all pulled in by `<DevCore.h>`. All three are `VisObject`s: you `Show()` them, they live on screen, `DisplayDrv` routes touch to them, and they report back through callbacks.
 
-The classes come in **two distinct kinds**, and the distinction matters:
-
-- **Widgets** — `UiButton`, `UiCheckbox`, `UiScroll` — are `VisObject`s. You `Show()` them, they live on screen, `DisplayDrv` routes touch to them, and they report back through callbacks.
-- **Modal controls** — `UiMenu`, `UiMsgBox` — are *not* `VisObject`s. Each is a composite that owns a set of visual objects and (for `UiMenu`) a blocking `Run()` loop that executes **in your calling task** until the user makes a choice.
-
-**Maturity varies — set expectations accordingly.** The widget set grew out of UI exploration (largely on the author's DevBoy project) rather than as a finished toolkit. `UiButton` is the one component that is more or less ready for real use. The others — `UiCheckbox`, `UiScroll`, and especially the modal `UiMenu`/`UiMsgBox` — are functional exploration pieces: usable as-is in simple cases, but mainly valuable as reference code. The supported extension path for anything they don't cover is writing your own `VisObject` ([previous section](#writing-a-custom-visual-object)). Expect rough edges and API churn outside `UiButton` — the signature wrinkle below is one example.
+**Set expectations: this part of DevCore is exploratory.** The widgets grew out of experiments (largely for the [DevBoy](https://github.com/nickshl/devboy) handheld project). `UiButton` is the one that is more or less ready to use as-is; `UiCheckbox` and `UiScroll` are functional but rougher — usable in simple cases, but as much reference code as finished components. (Earlier modal controls, `UiMenu` and `UiMsgBox`, were removed because they depended on the DevBoy-specific input task; these three survived precisely because they are self-contained `VisObject`s with no such dependency.) For anything the widgets don't cover, the supported path is writing your own `VisObject` — the display system underneath is solid, and that's covered in [Writing a Custom Visual Object](#writing-a-custom-visual-object). Expect rough edges and API churn outside `UiButton`; the signature wrinkle below is one example.
 
 > `UiButton::SetCallback` takes the task by **pointer** (`AppTask*`), while `UiCheckbox::SetCallback` takes it by **reference** (`AppTask&`).
 
@@ -683,56 +677,11 @@ int32_t pos = scroll.GetScrollPos();
 scroll.Show(5);
 ```
 
-#### `UiMenu` — a modal, blocking menu
-
-`UiMenu` is built from an array of `MenuItem` structs and driven by **`Run()`**, which blocks the calling task until the user enters an item or backs out. The item callbacks are **plain function pointers** (not the `AppTask` callback machinery) and execute inside `Run()` — i.e. in your task.
-
-```cpp
-// MenuItem fields: { caption, enter-callback, value-string callback, ptr, add_param }
-//   void  EnterCb(void* ptr, uint32_t add_param);
-//   char* GetStrCb(void* ptr, char* buf, uint32_t n, uint32_t add_param);
-UiMenu::MenuItem items[] =
-{
-  { "Brightness", OnBrightness, GetBrightnessStr, this, 0 },
-  { "Volume",     OnVolume,     GetVolumeStr,     this, 0 },
-  { "About",      OnAbout,      nullptr,          this, 0 },
-};
-
-UiMenu menu("Settings", items, 3 /*items_cnt*/,
-            0 /*current_pos*/,
-            &Font_8x12::GetInstance() /*header font*/,
-            &Font_8x12::GetInstance() /*items font*/,
-            0, 0, 240, 320 /*x,y,w,h*/);
-
-menu.Run();          // blocks; redraws ~10×/s; returns when the user exits
-```
-
-`Show()` and `Hide()` (both take **no arguments** — z-order is managed internally) exist for manual control, but `Run()` calls `Show()` itself; normal usage is just `Run()`.
-
-Selection moves via the embedded touch scrollbar and, **when `INPUTDRV_ENABLED` is defined**, the up/down inputs; *enter* and *back* come from the InputDrv right/left inputs. Without `INPUTDRV_ENABLED` there is currently no enter/back source, so `Run()` cannot return — in practice `UiMenu` is operable only on DevBoy-style hardware today. On anything else, treat it as reference code for building your own menu (a `VisList` of `String`s plus a `UiScroll` covers most of it).
-
-#### `UiMsgBox`
-
-A modal dialog; most layout parameters default sensibly (centred on screen):
-
-```cpp
-UiMsgBox box("Delete all data?", "Confirm",
-             &Font_8x12::GetInstance(),   // message font
-             &Font_8x12::GetInstance());  // header font
-
-box.Show();          // z defaults to 0xFFFFFFF0 — effectively always on top
-// ... later ...
-box.Hide();
-
-box.Run(1500);       // convenience: Show → UpdateDisplay → wait 1500 ms → Hide
-                     // (blocks the calling task for the duration)
-```
-
 ---
 
-### Input & Sound
+### Buttons & Sound
 
-These are `AppTask` singletons that feed the UI layer. `ButtonDrv` is always compiled and general-purpose; `SoundDrv` and `InputDrv` sit behind config defines — and `InputDrv` is specific to one board, covered last.
+These are `AppTask` singletons. `ButtonDrv` is always compiled and general-purpose; `SoundDrv` sits behind a config define.
 
 #### `ButtonDrv`
 
@@ -761,13 +710,14 @@ btn.SetButtonDoubleDelay(250);   // ms
 
 #### `SoundDrv`  *(requires `SOUNDDRV_ENABLED`)*
 
-Drives a buzzer through a PWM timer channel.
+Drives a buzzer through PWM. It depends on the `IPwm` interface rather than a timer directly, so it isn't tied to STM32 — you hand it a PWM driver (the bundled `StHalPwm` wraps an STM32 timer channel; see [MCU Peripheral Drivers](#mcu-peripheral-drivers)). The task starts the PWM once at 0% duty and silences/sounds the buzzer by changing duty cycle (0% for silence, so the output sits at its inactive level and the buzzer draws no current), never by stopping the timer.
 
 ```cpp
-SoundDrv& snd = SoundDrv::GetInstance();
-snd.InitTask(htim3, /*channel=*/TIM_CHANNEL_1, buzzer_gpio);   // timer by reference
+StHalPwm pwm(htim3, TIM_CHANNEL_1);   // PWM driver: timer handle + channel
 
-snd.Click();                       // short UI click
+SoundDrv& snd = SoundDrv::GetInstance();
+snd.InitTask(pwm);                    // IPwm& only
+
 snd.Beep(1000, 100);               // 1000 Hz for 100 ms — BLOCKS the caller
 ```
 
@@ -788,18 +738,6 @@ const uint16_t melody[] =
 snd.PlaySound(melody, 4, /*temp_ms=*/150);    // optional 4th arg: repeat = false
 // snd.IsSoundPlayed();  snd.StopSound();
 snd.Mute(true);
-```
-
-#### `InputDrv`  *(requires `INPUTDRV_ENABLED`)* — DevBoy hardware only
-
-`InputDrv` was written for the author's **DevBoy** project and is shaped entirely around that board: two expansion ports (`EXT_LEFT`/`EXT_RIGHT`), each carrying buttons (`BTN_UP/LEFT/DOWN/RIGHT`) and a rotary encoder with two buttons, read through a timer and an ADC. It ships in the repository because DevBoy builds (and `UiMenu`) use it — it is **not** a general-purpose input layer, and on other hardware you almost certainly want `ButtonDrv`, or a small `AppTask` of your own, instead.
-
-```cpp
-InputDrv& in = InputDrv::GetInstance();
-in.InitTask(&htim2, &hadc1);
-
-bool pressed = in.GetButtonState(InputDrv::EXT_LEFT, InputDrv::BTN_UP);
-int32_t enc  = in.GetEncoderState(InputDrv::EXT_RIGHT);
 ```
 
 ---
@@ -852,6 +790,7 @@ bool done = uart.IsTxComplete();
 
 **`ITouchscreen`** — `IsTouched()`, `GetXY()`, `GetRawXY()`, `SetRotation()`, `SetCalibrationConsts()`; shares the `Rotation` enum with `IDisplay`.
 **`IDisplay`** — the low-level pixel interface implemented by the LCD drivers and consumed by `DisplayDrv`.
+**`IPwm`** — PWM channel control: `SetFrequency()`, `SetDutyCycle()` (duty as a fraction of 65535), `StartPwm()`/`StopPwm()`, plus `GetFrequency()`/`GetDutyCycle()`. `SoundDrv` drives the buzzer through it.
 **`ICallback`** — a one-method interface (`virtual void Callback(void* ptr) = 0`) for objects that accept typed callbacks without a function pointer.
 
 ### MCU Peripheral Drivers
@@ -869,8 +808,9 @@ StHalUart uart(huart2);                            // UART_HandleTypeDef&
 - **`StHalIicThreadSafe`** — a *separate* I2C driver (also constructed from an `I2C_HandleTypeDef&`) that guards every bus operation with a mutex, for buses shared by multiple tasks. It is **not** a wrapper around `StHalIic` — use one or the other.
 - **`StHalSpi`** — blocking + DMA SPI; 8/16-bit transfers, TX/RX-only modes, manual CS for display streaming.
 - **`StHalUart`** — blocking UART with configurable timeouts.
+- **`StHalPwm`** — `IPwm` over an STM32 timer channel: `StHalPwm(TIM_HandleTypeDef&, channel)`. It assumes the timer and channel are configured for PWM in STM32CubeMX (as with the other HAL drivers); frequency and duty changes then poke the timer registers directly (`PSC`/`ARR`/`CCR`), and it derives the prescaler so the period always fits a 16-bit auto-reload, keeping the math identical across 16- and 32-bit timers.
 
-**`DwtCycleCounter`** — cycle-accurate profiling via the Cortex-M DWT unit (compiled only with `DWT_ENABLED`):
+**`DwtCycleCounter`** — cycle-accurate profiling via the Cortex-M DWT unit. It compiles automatically when the MCU's CMSIS headers expose the DWT cycle-counter registers (the necessary `DWT`/`CoreDebug` symbols), and is a no-op otherwise — there's no enable flag to set. On Cortex-M7 it also performs the required DWT register unlock; on other cores that step is skipped.
 
 ```cpp
 DwtCycleCounter::Init();
@@ -1120,12 +1060,9 @@ All settings live in your `DevCfgUsr.h`. Defaults shown are what `DevCfg.h` appl
 | `DISPLAY_DEBUG_INFO` | off | Overlay an FPS counter |
 | `DISPLAY_DEBUG_AREA` | off | Tint updated regions to visualise redraws |
 | `DISPLAY_DEBUG_TOUCH` | off | Draw a marker at the touch point |
-| `INPUTDRV_ENABLED` | off | Compile in the `InputDrv` task — DevBoy-specific hardware; also the only source of UiMenu's enter/back inputs |
 | `SOUNDDRV_ENABLED` | off | Compile in the `SoundDrv` task |
-| `DWT_ENABLED` | off | Enable the DWT cycle counter |
 | `DISPLAY_DRV_TASK_STACK_SIZE` | 1024 | `DisplayDrv` stack (words) |
 | `DISPLAY_DRV_TASK_PRIORITY` | idle+1 | `DisplayDrv` priority |
-| `INPUT_DRV_TASK_STACK_SIZE` / `INPUT_DRV_TASK_PRIORITY` | min / idle+2 | `InputDrv` |
 | `SOUND_DRV_TASK_STACK_SIZE` / `SOUND_DRV_TASK_PRIORITY` | min / idle+3 | `SoundDrv` |
 
 Two macros in `DevCfgUsrExample.h` — `APPLICATION_TASK_STACK_SIZE` and `APPLICATION_TASK_PRIORITY` — are **conventions for your own tasks**, not framework inputs; DevCore never reads them.
@@ -1147,9 +1084,10 @@ DevCore/
 ├── FreeRtosWrapper/      Rtos · RtosQueue · RtosMutex · RtosRecursiveMutex ·
 │                         RtosSemaphore · RtosTimer · RtosTick
 │
-├── Interfaces/           IGpio · IIic · ISpi · IUart · IDisplay · ITouchscreen · ICallback
+├── Interfaces/           IGpio · IIic · ISpi · IUart · IPwm · IDisplay ·
+│                         ITouchscreen · ICallback
 ├── Drivers/              StHalGpio · StHalIic · StHalIicThreadSafe · StHalSpi ·
-│                         StHalUart · DwtCycleCounter   (STM32 HAL implementations)
+│                         StHalUart · StHalPwm · DwtCycleCounter   (STM32 HAL impls)
 ├── Libraries/            BoschBME280 · Mlx90614 · Vl53l0x · Tcs34725 · Eeprom24 · FramMB85
 │
 ├── Display/              DisplayDrv (render task)
@@ -1162,10 +1100,9 @@ DevCore/
 │   ├── UpdateAreaProcessor                       (dirty-region tracking)
 │   └── Font.h + Fonts/  (Font_4x6 … Font_12x16)  (bitmap fonts, singletons)
 │
-├── UiEngine/             UiButton · UiCheckbox · UiScroll   (VisObject widgets;
-│                                                             UiButton the most mature)
-│                         UiMenu · UiMsgBox                  (modal controls — exploration-grade)
-├── Tasks/                ButtonDrv · InputDrv (DevBoy-specific) · SoundDrv
+├── UiEngine/             UiButton · UiCheckbox · UiScroll   (VisObject widgets,
+│                                                             exploratory; UiButton most ready)
+├── Tasks/                ButtonDrv · SoundDrv
 └── Math/                 CircularBuffer · FIFO · RollingAverage · MedianListFilter ·
                           MedianSortFilter · Hysteresis · Crc32
 ```

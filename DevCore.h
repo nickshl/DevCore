@@ -55,7 +55,7 @@
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
-#include <DevCfgRtos.h>
+#include "DevCfgRtos.h"
 #include "DevCfg.h"
 
 // *****************************************************************************
@@ -77,6 +77,7 @@
 #include "Interfaces/ISpi.h"
 #include "Interfaces/ITouchscreen.h"
 #include "Interfaces/IUart.h"
+#include "Interfaces/IPwm.h"
 
 // ***   Display Headers   *****************************************************
 #include "Display/DisplayDrv.h"
@@ -110,6 +111,7 @@
 #include "Drivers/StHalIicThreadSafe.h"
 #include "Drivers/StHalSpi.h"
 #include "Drivers/StHalUart.h"
+#include "Drivers/StHalPwm.h"
 
 // ***   Libraries Headers   ***************************************************
 #include "Libraries/BoschBME280.h"
@@ -134,5 +136,7 @@
 
 // ***   UiEngine Headers   ****************************************************
 #include "UiEngine/UiButton.h"
+#include "UiEngine/UiCheckbox.h"
+#include "UiEngine/UiScroll.h"
 
 #endif

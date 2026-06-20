@@ -1,8 +1,8 @@
 // *****************************************************************************
-// @file DwtCycleCounter.cpp
+// @file StHalPwm.h
 // @author Nicolai Shlapunov
 //
-// @details DevCore: Cortex DWT Cycle counter driver, header
+// @details DevCore: STM32 HAL PWM driver, header
 //
 // @section COPYRIGHT
 //
@@ -49,44 +49,78 @@
 //
 // *****************************************************************************
 
-#ifndef DwtCycleCounter_h
-#define DwtCycleCounter_h
+#ifndef StHalPwm_h
+#define StHalPwm_h
 
 // *****************************************************************************
 // ***   Includes   ************************************************************
 // *****************************************************************************
 #include "DevCfg.h"
-
-#if defined(HAL_RCC_MODULE_ENABLED) && defined(DWT)
+#include "Interfaces/IPwm.h"
 
 // *****************************************************************************
-// ***   DwtCycleCounter Class   ***********************************************
+// ***   This driver can be compiled only if Timer configured in CubeMX   ******
 // *****************************************************************************
-class DwtCycleCounter
+#ifdef HAL_TIM_MODULE_ENABLED
+#include "tim.h"
+#else
+typedef uint32_t TIM_HandleTypeDef; // Dummy TIM handle for compilation
+#endif
+
+// *****************************************************************************
+// ***   STM32 HAL PWM Driver Class   ******************************************
+// *****************************************************************************
+class StHalPwm : public IPwm
 {
   public:
     // *************************************************************************
-    // ***   Init   ************************************************************
+    // ***   Public: Constructor   *********************************************
     // *************************************************************************
-    static Result Init();
+    StHalPwm(TIM_HandleTypeDef& tim, uint32_t ch) : htim(tim), channel(ch) {Init();}
 
     // *************************************************************************
-    // ***   GetClockCounter   *************************************************
+    // ***   Public: Init   ****************************************************
     // *************************************************************************
-    static inline uint32_t GetClockCounter() {return(DWT->CYCCNT);}
+    virtual Result Init();
 
     // *************************************************************************
-    // ***   DelayUs   *********************************************************
+    // ***   Public: GetFrequency   ********************************************
     // *************************************************************************
-    static inline void DelayUs(volatile uint32_t delay_us)
-    {
-      uint32_t initial_ticks = DWT->CYCCNT;
-      uint32_t ticks = (HAL_RCC_GetHCLKFreq() / 1000000u);
-      delay_us *= ticks;
-      while ((DWT->CYCCNT - initial_ticks) < delay_us - ticks);
-    }
+    virtual Result GetFrequency(uint32_t& freq);
+
+    // *************************************************************************
+    // ***   Public: GetDutyCycle   ********************************************
+    // *************************************************************************
+    virtual Result GetDutyCycle(uint16_t& duty) {duty = duty_cycle; return Result::RESULT_OK;}
+
+    // *************************************************************************
+    // ***   Public: SetFrequency   ********************************************
+    // *************************************************************************
+    virtual Result SetFrequency(uint32_t freq);
+
+    // *************************************************************************
+    // ***   Public: SetDutyCycle   ********************************************
+    // *************************************************************************
+    virtual Result SetDutyCycle(uint16_t duty);
+
+    // *************************************************************************
+    // ***   Public: StartPwm   ************************************************
+    // *************************************************************************
+    virtual Result StartPwm(void);
+
+    // *************************************************************************
+    // ***   Public: StopPwm   *************************************************
+    // *************************************************************************
+    virtual Result StopPwm(void);
+
+  private:
+    // Duty cycle (0% by default)
+    uint16_t duty_cycle = 0u;
+
+    // Timer handle
+    TIM_HandleTypeDef& htim;
+    // Timer channel
+    uint32_t channel;
 };
-
-#endif
 
 #endif

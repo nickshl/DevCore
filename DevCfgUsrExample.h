@@ -10,6 +10,9 @@
 //
 //******************************************************************************
 
+#ifndef DevCfgUsr_h
+#define DevCfgUsr_h
+
 // *****************************************************************************
 // ***   Include for hardware   ************************************************
 // *****************************************************************************
@@ -21,21 +24,13 @@
 #define FREERTOS_WRAPPER
 
 // *****************************************************************************
-// ***   Configuration   *******************************************************
-// *****************************************************************************
-
-//#define DWT_ENABLED
-//#define INPUTDRV_ENABLED
-//#define SOUNDDRV_ENABLED
-
-// *****************************************************************************
 // ***   Tasks stack size and priorities configuration   ***********************
 // *****************************************************************************
 
 // *** Applications tasks stack sizes   ****************************************
-#define APPLICATION_TASK_STACK_SIZE 1024u
+#define APPLICATION_TASK_STACK_SIZE (1024u)
 // *** Applications tasks priorities   *****************************************
-#define APPLICATION_TASK_PRIORITY (tskIDLE_PRIORITY + 2U)
+#define APPLICATION_TASK_PRIORITY (RTOS_IDLE_TASK_PRIORITY + 3u)
 
 // *****************************************************************************
 // ***   Display Configuration   ***********************************************
@@ -46,7 +41,7 @@
 // For example ILI9488 uses 18 bit color(3 bytes per pixel) and if 16 bit color
 // is used(2 bytes per pixel) in order to prepare data display driver need 1.5
 // times more memory
-#define DISPLAY_MAX_BUF_LEN 320
+#define DISPLAY_MAX_BUF_LEN 320u
 
 // Color depth used by display
 //#define COLOR_24BIT
@@ -77,3 +72,5 @@
 // debugging purposes, or as an assert. In this example it defined as break
 // command for ARM MCUs.
 #define Break() asm volatile("bkpt #0")
+
+#endif

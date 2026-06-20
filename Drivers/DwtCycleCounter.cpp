@@ -21,7 +21,7 @@
 
 #include "DwtCycleCounter.h"
 
-#if defined(DWT_ENABLED)
+#if defined(HAL_RCC_MODULE_ENABLED) && defined(CoreDebug) && defined(DWT) && defined(DWT_CTRL_CYCCNTENA_Msk) && defined(CoreDebug_DEMCR_TRCENA_Msk)
 
 // *****************************************************************************
 // ***   Init   ****************************************************************
@@ -34,8 +34,10 @@ Result DwtCycleCounter::Init()
   CoreDebug->DEMCR &= ~CoreDebug_DEMCR_TRCENA_Msk; // ~0x01000000;
   // Enable TRC
   CoreDebug->DEMCR |=  CoreDebug_DEMCR_TRCENA_Msk; // 0x01000000;
-  // Unlock debug register
-  DWT->LAR = 0xC5ACCE55;
+#if defined(__CM7_REV) || defined(__CORTEX_M7)
+  // Unlock DWT registers
+  DWT->LAR = 0xC5ACCE55U;
+#endif
   // Disable clock cycle counter
   DWT->CTRL &= ~DWT_CTRL_CYCCNTENA_Msk; //~0x00000001;
   // Enable clock cycle counter
@@ -49,7 +51,7 @@ Result DwtCycleCounter::Init()
     // Check if clock cycle counter has started
     if(DWT->CYCCNT == 0)
     {
-        result = Result::ERR_CANNOT_EXECUTE; // Counter did not counted cycles by some reason
+        result = Result::ERR_CANNOT_EXECUTE; // Counter did not counted cycles for some reason
     }
   }
   else

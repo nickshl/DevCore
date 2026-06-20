@@ -61,8 +61,10 @@
 // *****************************************************************************
 // ***   This driver can be compiled only if GPIO configured in CubeMX   *******
 // *****************************************************************************
-#ifndef HAL_GPIO_MODULE_ENABLED
-  typedef uint32_t GPIO_TypeDef;
+#ifdef HAL_GPIO_MODULE_ENABLED
+#include "gpio.h"
+#else
+typedef uint32_t GPIO_TypeDef; // Dummy handle for compilation
 #endif
 
 // *****************************************************************************

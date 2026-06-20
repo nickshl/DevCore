@@ -104,7 +104,7 @@ class IUart
     virtual Result Write(uint8_t* tx_buf_ptr, uint32_t size) {return Result::ERR_NOT_IMPLEMENTED;}
 
     // *************************************************************************
-    // ***   Public: Constructor   *********************************************
+    // ***   Public: IsTxComplete   ********************************************
     // *************************************************************************
     virtual bool IsTxComplete(void) {return true;}
 

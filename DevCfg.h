@@ -53,13 +53,14 @@
 #define DevCfg_h
 
 // *****************************************************************************
-// ***   Includes   ************************************************************
+// ***   Result include to include Result enum   *******************************
 // *****************************************************************************
 #include "Framework/Result.h"
-#include "DevCfgRtos.h"
-#include "main.h"
 
-#include <new> // for std::nothrow_t and std::bad_alloc
+// *****************************************************************************
+// ***   DevCfgRtos to include RTOS wrapper   **********************************
+// *****************************************************************************
+#include "DevCfgRtos.h"
 
 // *****************************************************************************
 // ***   User configuration include   ******************************************
@@ -67,83 +68,60 @@
 #include "DevCfgUsr.h"
 
 // *****************************************************************************
+// ***   Other includes   ******************************************************
+// *****************************************************************************
+#include "main.h"
+#include <new> // for std::nothrow_t and std::bad_alloc
+
+// *****************************************************************************
 // ***   HAL Hardware includes or dummies   ************************************
 // *****************************************************************************
 
-// ***   ADC   *****************************************************************
-#ifdef HAL_ADC_MODULE_ENABLED
-#include "adc.h"
-#else
-typedef uint32_t ADC_HandleTypeDef; // Dummy ADC handle for compilation
-#endif
-// ***   USART   ***************************************************************
-#if defined(HAL_USART_MODULE_ENABLED) || defined(HAL_UART_MODULE_ENABLED)
-#include "usart.h"
-#else
-typedef uint32_t UART_HandleTypeDef; // Dummy UART handle for compilation
-#endif
-// ***   SPI   *****************************************************************
-#ifdef HAL_SPI_MODULE_ENABLED
-#include "spi.h"
-#else
-typedef uint32_t SPI_HandleTypeDef; // Dummy SPI handle for compilation
-#endif
-// ***   I2C   *****************************************************************
-#ifdef HAL_I2C_MODULE_ENABLED
-#include "i2c.h"
-#else
-typedef uint32_t I2C_HandleTypeDef; // Dummy I2C handle for compilation
-#endif
-// ***   TIM   *****************************************************************
-#ifdef HAL_TIM_MODULE_ENABLED
-#include "tim.h"
-#else
-typedef uint32_t TIM_HandleTypeDef; // Dummy TIM handle for compilation
-#endif
-// ***   DAC   *****************************************************************
-#ifdef HAL_DAC_MODULE_ENABLED
-#include "dac.h"
-#else
-typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
-#endif
+//// ***   ADC   *****************************************************************
+//#ifdef HAL_ADC_MODULE_ENABLED
+//#include "adc.h"
+//#else
+//typedef uint32_t ADC_HandleTypeDef; // Dummy ADC handle for compilation
+//#endif
+
+//// ***   DAC   *****************************************************************
+//#ifdef HAL_DAC_MODULE_ENABLED
+//#include "dac.h"
+//#else
+//typedef uint32_t DAC_HandleTypeDef; // Dummy DAC handle for compilation
+//#endif
 
 // *****************************************************************************
 // ***   System tasks stack sizes   ********************************************
 // *****************************************************************************
 #if !defined(DISPLAY_DRV_TASK_STACK_SIZE)
-  #define DISPLAY_DRV_TASK_STACK_SIZE 1024u
+  #define DISPLAY_DRV_TASK_STACK_SIZE (1024u)
 #endif
-#if !defined(UI_TASK_STACK_SIZE)
-  #define UI_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
-#endif
-#if !defined(INPUT_DRV_TASK_STACK_SIZE)
-  #define INPUT_DRV_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#if !defined(BUTTON_DRV_TASK_STACK_SIZE)
+  #define BUTTON_DRV_TASK_STACK_SIZE RTOS_MINIMAL_STACK_SIZE
 #endif
 #if !defined(SOUND_DRV_TASK_STACK_SIZE)
-  #define SOUND_DRV_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+  #define SOUND_DRV_TASK_STACK_SIZE (RTOS_MINIMAL_STACK_SIZE)
 #endif
 
 // *****************************************************************************
 // ***   System tasks priorities   *********************************************
 // *****************************************************************************
 #if !defined(DISPLAY_DRV_TASK_PRIORITY)
-  #define DISPLAY_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 1U)
+  #define DISPLAY_DRV_TASK_PRIORITY (RTOS_IDLE_TASK_PRIORITY + 1u)
 #endif
-#if !defined(INPUT_DRV_TASK_PRIORITY)
-  #define INPUT_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 2U)
+#if !defined(BUTTON_DRV_TASK_PRIORITY)
+  #define BUTTON_DRV_TASK_PRIORITY (RTOS_IDLE_TASK_PRIORITY + 2u)
 #endif
 #if !defined(SOUND_DRV_TASK_PRIORITY)
-  #define SOUND_DRV_TASK_PRIORITY (tskIDLE_PRIORITY + 3U)
-#endif
-#if !defined(UI_TASK_PRIORITY)
-  #define UI_TASK_PRIORITY (tskIDLE_PRIORITY + 4U)
+  #define SOUND_DRV_TASK_PRIORITY (RTOS_IDLE_TASK_PRIORITY + 2u)
 #endif
 
 // Timer Task priority should be high. Otherwise if some task with highest
 // priority will take over for long enough period, timer task wont be able to
 // call timer callback for AppTask. If AppTask will not receive timer message
 // within two times of timer period it will error out(queue empty error).
-#if (configTIMER_TASK_PRIORITY != (configMAX_PRIORITIES - 1u))
+#if (RTOS_TIMER_TASK_PRIORITY != (RTOS_MAX_PRIORITIES - 1u))
   #warning "When Timer Task priority isn't highest"
 #endif
 

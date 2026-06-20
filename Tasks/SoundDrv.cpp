@@ -20,8 +20,6 @@
 // *****************************************************************************
 #include "SoundDrv.h"
 
-#if defined(SOUNDDRV_ENABLED)
-
 #include "DevCfgRtos.h"
 
 // *****************************************************************************
@@ -38,14 +36,10 @@ SoundDrv& SoundDrv::GetInstance(void)
 // *****************************************************************************
 // ***   Public: Init Sound Driver Task   **************************************
 // *****************************************************************************
-Result SoundDrv::InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer)
+Result SoundDrv::InitTask(IPwm& pwm)
 {
   // Save timer handle
-  htim = &htm;
-  // Save channel
-  channel = ch;
-  // Save GPIO
-  buzzer_gpio = &buzzer;
+  pwm_drv = &pwm;
   // Create task
   return AppTask::InitTask();
 }
@@ -57,6 +51,10 @@ Result SoundDrv::Setup()
 {
   // Init ticks variable
   last_wake_ticks = RtosTick::GetTickCount();
+  // Initiate PWM with 0 duty cycle
+  pwm_drv->SetDutyCycle(0u);   // 0% duty cycle - silence
+  pwm_drv->SetFrequency(440u); // Randomly selected frequency
+  pwm_drv->StartPwm();
   // Always ok
   return Result::RESULT_OK;
 }
@@ -73,28 +71,28 @@ Result SoundDrv::Loop()
   // Delay for playing one frequency
   uint32_t current_delay_ms = delay_ms;
   // If no current melody or melody size is zero - skip playing
-  if((sound_table != nullptr) && (sound_table_size != 0U))
+  if((sound_table != nullptr) && (sound_table_size != 0u))
   {
     // Set flag that still playing sound
     is_playing = true;
     // If frequency greater than 18 Hz
-    if(((uint32_t)sound_table[sound_table_position] >> 4U) > 0x12U)
+    if(((uint32_t)sound_table[sound_table_position] >> 4u) > 0x12u)
     {
-      Tone(sound_table[sound_table_position] >> 4U);
+      Tone(sound_table[sound_table_position] >> 4u);
     }
     else
     {
       // Otherwise "play" silence
-      Tone(0U);
+      Tone(0u);
     }
 
     // Init ticks variable
-    if(sound_table_position == 0U)
+    if(sound_table_position == 0u)
     {
       last_wake_ticks = RtosTick::GetTickCount();
     }
     // Get retry counter from table and calculate delay
-    current_delay_ms *= sound_table[sound_table_position] & 0x0FU;
+    current_delay_ms *= sound_table[sound_table_position] & 0x0Fu;
 
     // Increase array index
     sound_table_position++;
@@ -105,7 +103,7 @@ Result SoundDrv::Loop()
       if(repeat == true)
       {
         // Reset index for play melody from beginning
-        sound_table_position = 0U;
+        sound_table_position = 0u;
       }
       else
       {
@@ -132,22 +130,6 @@ Result SoundDrv::Loop()
 
   // Always run
   return Result::RESULT_OK;
-}
-
-// *****************************************************************************
-// ***   Public: Click function   **********************************************
-// *****************************************************************************
-void SoundDrv::Click()
-{
-  if((mute == false) && (sound_table != nullptr) && (buzzer_gpio != nullptr))
-  {
-    // Set Speaker output pin for click
-    buzzer_gpio->SetHigh();
-    // Read when actual state changed
-    while(buzzer_gpio->IsLow());
-    // Clear Speaker output pin
-    buzzer_gpio->SetLow();
-  }
 }
 
 // *****************************************************************************
@@ -182,7 +164,7 @@ void SoundDrv::PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms
   // Format of sounds: 0x***#, where *** frequency, # - delay in temp_ms intervals
 
   // If pointer is not nullptr, if size & freq time greater than zero
-  if((melody != nullptr) && (size > 0U) && (temp_ms > 0U))
+  if((melody != nullptr) && (size > 0u) && (temp_ms > 0u))
   {
     // If already playing any melody
     if(IsSoundPlayed() == true)
@@ -198,7 +180,7 @@ void SoundDrv::PlaySound(const uint16_t* melody, uint16_t size, uint16_t temp_ms
     // Set time for one frequency
     delay_ms = temp_ms;
     // Set initial index for melody
-    sound_table_position = 0;
+    sound_table_position = 0u;
     // Set melody size
     sound_table_size = size;
     // Set melody pointer
@@ -221,15 +203,15 @@ void SoundDrv::StopSound(void)
   // Clear sound table pointer
   sound_table = nullptr;
   // Clear sound table size
-  sound_table_size = 0;
+  sound_table_size = 0u;
   // Clear sound table index
-  sound_table_position = 0;
+  sound_table_position = 0u;
   // Set time for one frequency
   delay_ms = 100U;
   // Set repeat flag for melody
   repeat = false;
   // Stop sound
-  Tone(0);
+  Tone(0u);
   // Give mutex after stop playing sound
   melody_mutex.Release();
 }
@@ -244,7 +226,7 @@ void SoundDrv::Mute(bool mute_flag)
   // If mute flag is set - call Tone() for stop tone
   if(mute == true)
   {
-    Tone(0U);
+    Tone(0u);
   }
 }
 
@@ -270,36 +252,13 @@ bool SoundDrv::IsSoundPlayed(void)
 // *****************************************************************************
 void SoundDrv::Tone(uint16_t freq)
 {
-  // FIX ME: rewrite comment
-  // Òàéìåð çàïóñêàåòñÿ ñ ïàðàìåòðàìè:
-  // Clock source: System Clock
-  // Mode: CTC top = OCR2
-  // OC2 output: Toggle on compare match
-  // È ñ ðàçíûìè äåëèòåëÿìè äëÿ ðàçíûõ ÷àñòîò, ïîòîìó êàê:
-  // ïðè äåëèòåëå 64 íåâîçìîæíî ïîëó÷èòü ÷àñòîòó íèæå ~750Ãö
-  // ïðè äåëèòåëå 256 íà ÷àñòîòàõ > ~1500Ãö âûñîêà ïîãðåøíîñòü ãåíåðàöèè
-  // Äåëåíèå íà 4 àðãóìåíòîâ äëÿ òîãî, ÷òî áû AVR_Clock_Freq/x íå ïðåâûñèëî word
-  // Äåëåíèå íà äâà â êîíöå, ïîòîìó êàê íóæåí ïîëóïåðèîä
-  // Åñëè çâóê îòêëþ÷åí - òàéìåð îñòàíàâëèâàåòñÿ è ñíèìàåòñÿ íàïðÿæåíèå ñ ïèùàëêè
-  if((freq > 11) && (mute == false))
+  if((freq > 20u) && (mute == false))
   {
-    // Calculate prescaler
-    uint32_t prescaler = (HAL_RCC_GetHCLKFreq()/100u) / freq;
-    // Set the Prescaler value
-    htim->Instance->PSC = (uint32_t)prescaler;
-    // Generate an update event to reload the Prescaler and the repetition
-    // counter(only for TIM1 and TIM8) value immediately
-    htim->Instance->EGR = TIM_EGR_UG;
-    // Start timer in Output Compare match mode
-    (void) HAL_TIM_OC_Start(htim, channel);
+    pwm_drv->SetFrequency(freq);
+    pwm_drv->SetDutyCycle(UINT16_MAX / 2u); // 50% duty cycle
   }
   else
   {
-    // Stop timer
-    HAL_TIM_OC_Stop(htim, channel);
-    // Clear Speaker output pin for decrease power consumer
-    if(buzzer_gpio != nullptr) buzzer_gpio->SetLow();
+    pwm_drv->SetDutyCycle(0u); // 0% duty cycle - silence
   }
 }
-
-#endif

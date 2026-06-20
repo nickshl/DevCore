@@ -58,6 +58,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdint>
 
 #include "DevCfg.h"
 #include "DevCfgRtos.h"
@@ -139,7 +140,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Public: Lock display   ********************************************
     // *************************************************************************
-    inline Result LockDisplay(uint32_t wait_ms = portMAX_DELAY) {return frame_mutex.Lock(wait_ms);}
+    inline Result LockDisplay(uint32_t wait_ms = UINT32_MAX) {return frame_mutex.Lock(wait_ms);}
 
     // *************************************************************************
     // ***   Public: Unlock display   ******************************************
@@ -149,7 +150,7 @@ class DisplayDrv : public AppTask
     // *************************************************************************
     // ***   Public: Lock display line   ***************************************
     // *************************************************************************
-    inline Result LockDisplayLine(uint32_t wait_ms = portMAX_DELAY) {return line_mutex.Lock(wait_ms);}
+    inline Result LockDisplayLine(uint32_t wait_ms = UINT32_MAX) {return line_mutex.Lock(wait_ms);}
 
     // *************************************************************************
     // ***   Public: Unlock display line   *************************************

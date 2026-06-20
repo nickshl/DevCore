@@ -59,10 +59,12 @@
 #include "Interfaces/ISpi.h"
 
 // *****************************************************************************
-// ***   This driver can be compiled only if UART configured in CubeMX   *******
+// ***   This driver can be compiled only if SPI configured in CubeMX   *******
 // *****************************************************************************
-#ifndef HAL_SPI_MODULE_ENABLED
-  typedef uint32_t SPI_HandleTypeDef; // Dummy SPI handle for header compilation
+#ifdef HAL_SPI_MODULE_ENABLED
+#include "spi.h"
+#else
+typedef uint32_t SPI_HandleTypeDef; // Dummy SPI handle for compilation
 #endif
 
 // *****************************************************************************

@@ -57,10 +57,9 @@
 // *****************************************************************************
 #include "DevCfg.h"
 
-#if defined(SOUNDDRV_ENABLED)
-
 #include "Framework/AppTask.h"
 #include "Interfaces/IGpio.h"
+#include "Interfaces/IPwm.h"
 #include "DevCfgRtos.h"
 
 // *****************************************************************************
@@ -84,7 +83,7 @@ class SoundDrv : public AppTask
     // *************************************************************************
     // ***   Public: Init Sound Driver Task   **********************************
     // *************************************************************************
-    virtual Result InitTask(TIM_HandleTypeDef& htm, uint32_t ch, IGpio& buzzer);
+    virtual Result InitTask(IPwm& pwm);
 
     // *************************************************************************
     // ***   Public: Sound Driver Setup   **************************************
@@ -95,11 +94,6 @@ class SoundDrv : public AppTask
     // ***   Public: Sound Driver Loop   ***************************************
     // *************************************************************************
     virtual Result Loop();
-
-    // *************************************************************************
-    // ***   Public: Click function   ******************************************
-    // *************************************************************************
-    void Click();
 
     // *************************************************************************
     // ***   Public: Beep function   *******************************************
@@ -127,13 +121,8 @@ class SoundDrv : public AppTask
     bool IsSoundPlayed(void);
 
   private:
-    // Timer handle
-    TIM_HandleTypeDef* htim = nullptr;
-    // Timer channel
-    uint32_t channel = 0u;
-
-    // Reference to buzzer GPIO
-    IGpio *buzzer_gpio = nullptr;
+    // point to PWM driver
+    IPwm *pwm_drv = nullptr;
 
     // Ticks variable
     uint32_t last_wake_ticks = 0u;
@@ -168,10 +157,7 @@ class SoundDrv : public AppTask
     // *************************************************************************
     // ** Private constructor: Only GetInstance() allow to access this class ***
     // *************************************************************************
-    SoundDrv() : AppTask(SOUND_DRV_TASK_STACK_SIZE, SOUND_DRV_TASK_PRIORITY,
-                         "SoundDrv") {};
+    SoundDrv() : AppTask(SOUND_DRV_TASK_STACK_SIZE, SOUND_DRV_TASK_PRIORITY, "SoundDrv") {};
 };
-
-#endif
 
 #endif

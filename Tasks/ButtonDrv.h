@@ -197,7 +197,7 @@ class ButtonDrv : public AppTask
     // *************************************************************************
     // ** Private constructor. Only GetInstance() allow to access this class. **
     // *************************************************************************
-    ButtonDrv() : AppTask(INPUT_DRV_TASK_STACK_SIZE, INPUT_DRV_TASK_PRIORITY, "ButtonDrv") {};
+    ButtonDrv() : AppTask(BUTTON_DRV_TASK_STACK_SIZE, BUTTON_DRV_TASK_STACK_SIZE, "ButtonDrv") {};
 };
 
 #endif
