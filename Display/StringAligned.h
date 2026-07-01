@@ -192,18 +192,18 @@ class StringAligned : public VisObject
   private:
     // Pointer to string
     const char* string = nullptr;
-    // Length of buffer(0 - we can't use SetString as printf style)
-    uint16_t length = 0u;
-    // Length of string in pixels
-    uint16_t length_pixels = 0u;
+    // Font type
+    Font* font_ptr = nullptr;
     // Text color
     color_t txt_color = 0u;
     // Background color
     color_t bg_color = 0u;
+    // Length of buffer(0 - we can't use SetString as printf style)
+    uint16_t length = 0u;
+    // Length of string in pixels
+    uint16_t length_pixels = 0u;
     // Scale
     uint8_t scale = 1u;
-    // Font type
-    Font* font_ptr = nullptr;
     // Is background transparent ?
     bool transpatent_bg = false;
 

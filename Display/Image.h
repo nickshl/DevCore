@@ -126,14 +126,14 @@ class Image : public VisObject
     virtual void DrawInBufW(color_t* buf, int32_t n, int32_t line, int32_t x = 0);
 
   protected:
-    // Bits per pixel
-    uint8_t bits_per_pixel = 0u;
     // Pointer to the image
     const void* img = nullptr;
     // Pointer to the palette
     const color_t* palette = nullptr;
     // Transparent color (-1 no transparent colors)
     int32_t transparent_color = -1;
+    // Bits per pixel
+    uint8_t bits_per_pixel = 0u;
     // Horizontal mirror
     bool hor_mirror = false;
 };

@@ -186,29 +186,28 @@ class MultiLineString : public VisObject
   private:
     // Pointer to string
     const char* string = nullptr;
+    // Font type
+    Font* font_ptr = nullptr;
+    // String pointer
+    const char* str_ptr;
+    // String line number
+    int32_t str_line = -1;
     // Text color
     color_t txt_color = 0u;
     // Background color
     color_t bg_color = 0u;
+    // Line length
+    uint16_t str_len = 0u;
     // Scale
     uint8_t scale = 1u;
-    // Font type
-    Font* font_ptr = nullptr;
+    // Spacing
+    uint8_t spacing = 0u;
+    // Line height: character height multiplied by scale and added spacing
+    uint8_t line_height = 1u;
     // Is background transparent ?
     bool transpatent_bg = false;
     // Left alignment
     alignment_t alignment = LEFT;
-    // Spacing
-    uint8_t spacing = 0u;
-
-    // Line height: character height multiplied by scale and added spacing
-    uint8_t line_height = 1u;
-    // String line number
-    int32_t str_line = -1;
-    // String pointer
-    const char* str_ptr;
-    // Line length
-    uint16_t str_len = 0u;
 
     // *************************************************************************
     // ***   Private: GetStringCount   *****************************************
